@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BK Operations India - Enterprise QSR Platform</title>
+    <meta name="description" content="BK Operations India - Enterprise restaurant chain, QSR and franchise operations management.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js for premium enterprise dashboard graphics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons via CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS for client-side Excel parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+    <!-- MAIN PLATFORM STRUCTURE -->
+    <div class="app-layout">
+        <!-- 1. Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <div class="sidebar-brand-icon">👑</div>
+                    <span>BK Operations India</span>
+                </div>
+            </div>
+
+            <!-- Role Selector Dropdown -->
+            <div class="role-dropdown-container" style="position: relative;">
+                <div class="role-select-box" id="roleSelectBtn">
+                    <div class="role-select-box-info">
+                        <i data-lucide="shield"></i>
+                        <span id="currentRoleText">Head Office Operations</span>
+                    </div>
+                    <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
+                </div>
+                <div class="role-options-panel" id="roleDropdownPanel">
+                    <div class="role-option" data-role="owner">Franchise Owner</div>
+                    <div class="role-option" data-role="bm-mumbai">Branch Manager - Mumbai Bandra</div>
+                    <div class="role-option" data-role="bm-delhi">Branch Manager - Delhi Connaught Place</div>
+                    <div class="role-option" data-role="bm-bangalore">Branch Manager - Bangalore Indiranagar</div>
+                </div>
+            </div>
+
+            <!-- Main Sidebar Navigation Links -->
+            <nav class="sidebar-nav">
+                <!-- Group 1: General -->
+                <div class="nav-group">
+                    <div class="nav-group-title">Main</div>
+                    <div class="nav-item active" data-target="dashboard">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Dashboard</span>
+                    </div>
+                </div>
+
+                <!-- Group 2: National Operations (HO Specific) -->
+                <div class="nav-group" id="hoNavGroup">
+                    <div class="nav-group-title">National Command</div>
+                    <div class="nav-item" data-target="national-overview">
+                        <i data-lucide="globe"></i>
+                        <span>National Overview</span>
+                    </div>
+                </div>
+
+                <!-- Group 3: Regional (AM Specific) -->
+                <div class="nav-group" id="amNavGroup">
+                    <div class="nav-group-title">Regional Command</div>
+                    <div class="nav-item" data-target="area-manager">
+                        <i data-lucide="layers"></i>
+                        <span>Area Monitoring</span>
+                    </div>
+                </div>
+
+                <!-- Group 4: Store Operations -->
+                <div class="nav-group">
+                    <div class="nav-group-title">Store Operations</div>
+                    <div class="nav-item" data-target="sop-management">
+                        <i data-lucide="book-open"></i>
+                        <span>SOP Management</span>
+                    </div>
+                    <div class="nav-item" data-target="opening-checklist">
+                        <i data-lucide="clipboard-check"></i>
+                        <span>Opening Checklist</span>
+                    </div>
+                    <div class="nav-item" data-target="closing-checklist">
+                        <i data-lucide="clipboard-x"></i>
+                        <span>Closing Checklist</span>
+                    </div>
+                </div>
+
+                <!-- Group 5: Inventory & Costing -->
+                <div class="nav-group">
+                    <div class="nav-group-title">Inventory & Costs</div>
+                    <div class="nav-item" data-target="inventory-overview">
+                        <i data-lucide="package"></i>
+                        <span>Inventory Management</span>
+                    </div>
+                    <div class="nav-item" data-target="purchase-requests">
+                        <i data-lucide="shopping-cart"></i>
+                        <span>Purchase Requests</span>
+                    </div>
+                    <div class="nav-item" data-target="recipe-management">
+                        <i data-lucide="sandwich"></i>
+                        <span>Recipe Costing</span>
+                    </div>
+                    <div class="nav-item" data-target="wastage-management">
+                        <i data-lucide="trash-2"></i>
+                        <span>Wastage Control</span>
+                    </div>
+                </div>
+
+                <!-- Group 6: Human Resources -->
+                <div class="nav-group">
+                    <div class="nav-group-title">Employees</div>
+                    <div class="nav-item" data-target="attendance-system">
+                        <i data-lucide="users"></i>
+                        <span>Attendance Tracker</span>
+                    </div>
+                </div>
+
+                <!-- Group 7: Reports -->
+                <div class="nav-group">
+                    <div class="nav-group-title">Reporting</div>
+                    <div class="nav-item" data-target="day-end-report">
+                        <i data-lucide="file-text"></i>
+                        <span>Day End Report</span>
+                    </div>
+                </div>
+
+                <!-- Group 8: System Settings -->
+                <div class="nav-group" id="settingsNavGroup">
+                    <div class="nav-group-title">Configuration</div>
+                    <div class="nav-item" data-target="settings-panel">
+                        <i data-lucide="settings"></i>
+                        <span>Settings</span>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 2. Main content wrapper -->
+        <div class="content-wrapper">
+            <!-- App Header -->
+            <header class="app-header">
+                <div class="header-search">
+                    <i data-lucide="search" style="width: 16px; height: 16px; color: var(--text-tertiary);"></i>
+                    <input type="text" placeholder="Search transactions, SOPs, audits...">
+                </div>
+                <div class="header-actions">
+                    <!-- Theme Toggle -->
+                    <div class="header-btn" id="themeToggleBtn" title="Toggle Light/Dark theme">
+                        <i data-lucide="moon" id="themeToggleIcon" style="width: 18px; height: 18px;"></i>
+                    </div>
+                    <!-- Notifications -->
+                    <div class="header-btn" id="notificationsTriggerBtn" title="Notifications Center">
+                        <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+                        <span class="header-btn-badge"></span>
+                    </div>
+
+                    <!-- User badge -->
+                    <div class="user-profile-badge">
+                        <div class="user-avatar" id="headerUserAvatar">HO</div>
+                        <div class="user-info">
+                            <div id="headerUserName">Ops Administrator</div>
+                            <div style="font-size: 0.7rem; color: var(--text-tertiary);" id="headerUserRole">Head Office</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Panel containing screens -->
+            <main class="main-panel">
+
+                <!-- SCREEN 1: DASHBOARD -->
+                <div class="app-screen active" id="screen-dashboard">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1 id="dashboardWelcomeTitle">Welcome Back, National Ops Lead</h1>
+                            <p>Here is your franchise operational summary for today across India.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-secondary" id="dashGenReportBtn">
+                                <i data-lucide="file-down"></i> Generate Report
+                            </button>
+                            <button class="saas-btn saas-btn-primary" id="dashGlobalCreateBtn">
+                                <i data-lucide="plus"></i> Quick Action
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active Shift Banner for Crew/Kitchen Staff -->
+                    <div id="dashboardActiveShiftBanner" style="display:none; background:var(--orange-light); border: 1px solid var(--orange-primary); padding: 16px 24px; border-radius: var(--radius-md); margin-bottom: 24px; justify-content: space-between; align-items: center;">
+                        <div style="display:flex; align-items:center; gap:16px;">
+                            <div style="width: 12px; height: 12px; background:var(--success); border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+                            <div>
+                                <div style="font-weight:800; font-size:1rem; color:var(--orange-primary);">ACTIVE SHIFT RUNNING</div>
+                                <div style="font-size:0.8rem; color:var(--text-secondary);" id="dashboardShiftDetails">Punched in at --:-- • Device: --</div>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:0.75rem; color:var(--text-tertiary); font-weight:700; text-transform:uppercase;">Working Hours</div>
+                            <div style="font-size:1.6rem; font-weight:800; font-family:monospace; color:var(--text-primary);" id="dashboardLiveTimer">00:00:00</div>
+                        </div>
+                    </div>
+
+                    <!-- 6 Top KPI Cards -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span>Today's Sales</span>
+                                <i data-lucide="indian-rupee"></i>
+                            </div>
+                            <div class="kpi-value" id="kpi-sales">₹2,84,500</div>
+                            <div class="kpi-meta"><span class="trend-up">▲ +6.4%</span> vs last week</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span>Food Cost %</span>
+                                <i data-lucide="percent"></i>
+                            </div>
+                            <div class="kpi-value" id="kpi-foodcost">28.4%</div>
+                            <div class="kpi-meta"><span class="trend-up" style="color: var(--success);">▼ -0.8%</span> target: 29.0%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span>Inventory Value</span>
+                                <i data-lucide="package"></i>
+                            </div>
+                            <div class="kpi-value" id="kpi-invhealth">₹14,50,000</div>
+                            <div class="kpi-meta">512 SKU types</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span>Wastage Cost</span>
+                                <i data-lucide="trash-2" style="color: var(--danger);"></i>
+                            </div>
+                            <div class="kpi-value" id="kpi-waste" style="color: var(--danger);">₹12,450</div>
+                            <div class="kpi-meta"><span class="trend-down">▲ +4.2%</span> check Mumbai</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span>Staff Attendance</span>
+                                <i data-lucide="users"></i>
+                            </div>
+                            <div class="kpi-value" id="kpi-attendance">95.4%</div>
+                            <div class="kpi-meta">420 / 440 checked in</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">
+                                <span>SOP Compliance</span>
+                                <i data-lucide="shield-check"></i>
+                            </div>
+                            <div class="kpi-value" id="kpi-sop">94.2%</div>
+                            <div class="kpi-meta"><span class="trend-up">▲ +1.5%</span> top standard</div>
+                        </div>
+                    </div>
+
+                    <!-- Row of 5 Quick Action Buttons -->
+                    <div style="display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap;">
+                        <button class="saas-btn saas-btn-secondary" id="quickSopBtn">
+                            <i data-lucide="plus-circle" style="color: var(--orange-primary);"></i> Add Stock
+                        </button>
+                        <button class="saas-btn saas-btn-secondary" id="quickInvBtn">
+                            <i data-lucide="trash-2" style="color: var(--danger);"></i> Record Wastage
+                        </button>
+                        <button class="saas-btn saas-btn-secondary" id="quickWastageBtn">
+                            <i data-lucide="users" style="color: var(--orange-primary);"></i> Mark Attendance
+                        </button>
+                        <button class="saas-btn saas-btn-secondary" id="quickReportBtn">
+                            <i data-lucide="plus" style="color: var(--success);"></i> Create SOP
+                        </button>
+                        <button class="saas-btn saas-btn-secondary" id="quickEmpBtn">
+                            <i data-lucide="file-text" style="color: var(--success);"></i> Generate EOD Report
+                        </button>
+                    </div>
+
+                    <!-- 6 Live Widgets Grid -->
+                    <div class="widgets-grid">
+                        <!-- Widget 1: Today's Revenue -->
+                        <div class="widget-card">
+                            <div class="widget-title">
+                                <span>Today's Revenue Curve</span>
+                                <span class="pill-badge pill-badge-success">LIVE</span>
+                            </div>
+                            <div class="widget-body" style="height: 200px; position: relative;">
+                                <canvas id="dashSalesChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Widget 2: Best Selling Items -->
+                        <div class="widget-card">
+                            <div class="widget-title">
+                                <span>Best Selling Items (Today)</span>
+                                <i data-lucide="flame" style="color: var(--orange-primary); width:18px; height:18px;"></i>
+                            </div>
+                            <div class="widget-body" style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; font-size:0.85rem;">
+                                    <span style="font-weight: 700;">1. Whopper® Veg Burger</span>
+                                    <span style="color: var(--text-secondary);">1,420 units sold</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; font-size:0.85rem;">
+                                    <span style="font-weight: 700;">2. Paneer King Royale</span>
+                                    <span style="color: var(--text-secondary);">980 units sold</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; font-size:0.85rem;">
+                                    <span style="font-weight: 700;">3. BK Golden Fries</span>
+                                    <span style="color: var(--text-secondary);">840 units sold</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget 3: Low Stock Alerts -->
+                        <div class="widget-card">
+                            <div class="widget-title">
+                                <span>Low Stock Alerts</span>
+                                <span class="pill-badge pill-badge-warning">3 Alerts</span>
+                            </div>
+                            <div class="widget-body" style="display: flex; flex-direction: column; gap: 10px;" id="widgetInventoryAlerts">
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover); padding: 8px 12px; border-radius: 6px; border-left: 4px solid var(--orange-primary);">
+                                    <div style="font-size:0.75rem;">
+                                        <div style="font-weight:700;">Whopper Sesame Buns</div>
+                                        <div style="color:var(--text-tertiary);">Mumbai Bandra • 45 pieces left</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover); padding: 8px 12px; border-radius: 6px; border-left: 4px solid var(--danger);">
+                                    <div style="font-size:0.75rem;">
+                                        <div style="font-weight:700;">Paneer Blocks (5kg pack)</div>
+                                        <div style="color:var(--text-tertiary);">Delhi Connaught Pl • 2 packets left</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget 4: Pending Tasks -->
+                        <div class="widget-card">
+                            <div class="widget-title">
+                                <span>Pending Task Audits</span>
+                                <span style="font-size:0.75rem; color:var(--text-tertiary);">SOP Compliance</span>
+                            </div>
+                            <div class="widget-body" style="display: flex; flex-direction: column; gap: 10px; font-size:0.8rem;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Mumbai Bandra Broiler Calibration</span>
+                                    <span style="color: var(--danger); font-weight:700;">OVERDUE</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Bangalore Indiranagar Temp Log</span>
+                                    <span style="color: var(--warning); font-weight:700;">PENDING</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget 5: Attendance Summary -->
+                        <div class="widget-card">
+                            <div class="widget-title">
+                                <span>Attendance Summary</span>
+                                <span style="font-size:0.75rem; color:var(--text-tertiary);">Shifts Today</span>
+                            </div>
+                            <div class="widget-body" style="display: flex; flex-direction: column; gap: 10px; font-size:0.8rem;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Mumbai Region (120 Staff)</span>
+                                    <span style="font-weight:700; color:var(--success);">98.0%</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Delhi Region (150 Staff)</span>
+                                    <span style="font-weight:700; color:var(--success);">96.5%</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Bangalore Region (90 Staff)</span>
+                                    <span style="font-weight:700; color: var(--danger);">91.2%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget 6: Store Performance -->
+                        <div class="widget-card">
+                            <div class="widget-title">
+                                <span>Top Stores Performance</span>
+                                <span style="font-size:0.75rem; color:var(--text-tertiary);">Monthly SOP Rank</span>
+                            </div>
+                            <div class="widget-body" style="display: flex; flex-direction: column; gap: 10px; font-size:0.8rem;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>1. Mumbai Bandra West</span>
+                                    <span style="font-weight:700; color:var(--success);">98.4%</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>2. Delhi Connaught Place</span>
+                                    <span style="font-weight:700; color:var(--success);">96.8%</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>3. Bangalore Indiranagar</span>
+                                    <span style="font-weight:700; color:var(--warning);">89.1%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCREEN 2: NATIONAL OVERVIEW (HEAD OFFICE ONLY) -->
+                <div class="app-screen" id="screen-national-overview">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>National Overview Dashboard</h1>
+                            <p>Global consolidated statistics across 500+ active outlets in India.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('Exporting national summary metrics to Excel...')">Download Excel</button>
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('Consolidated report sent to email distribution list!')">Send to Email</button>
+                            <button class="saas-btn saas-btn-primary" onclick="alert('Daily notification reports scheduled successfully.')">Schedule Reports</button>
+                        </div>
+                    </div>
+
+                    <!-- HO National KPIs -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-header">Total Indian Outlets</div>
+                            <div class="kpi-value">512</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Total Consolidated Revenue</div>
+                            <div class="kpi-value">₹24,80,450</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Total Consolidated Wastage</div>
+                            <div class="kpi-value">₹1,18,420</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Indian Inventory Value</div>
+                            <div class="kpi-value">₹84,50,000</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Consolidated SOP Score</div>
+                            <div class="kpi-value">95.4%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Active Staff Strength</div>
+                            <div class="kpi-value">4,820</div>
+                        </div>
+                    </div>
+
+                    <!-- Map Grid -->
+                    <div class="india-map-grid">
+                        <div class="map-visual-placeholder">
+                            <div style="font-size: 1.5rem; font-weight:800; color: var(--text-tertiary); z-index:1; pointer-events:none;">INDIA NETWORK MAP</div>
+                            <!-- State Markers simulating map locations -->
+                            <div class="map-node active" style="top: 35%; left: 45%;" id="mapDelhiNode">Delhi NCR</div>
+                            <div class="map-node" style="top: 55%; left: 35%;" id="mapMumbaiNode">Maharashtra</div>
+                            <div class="map-node" style="top: 75%; left: 42%;" id="mapBangaloreNode">Karnataka</div>
+                        </div>
+
+                        <!-- Info details side box -->
+                        <div class="widget-card">
+                            <div class="widget-title" id="mapRegionTitle">Delhi NCR Region Performance</div>
+                            <div class="widget-body" id="mapRegionBody" style="display:flex; flex-direction:column; gap:16px;">
+                                <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                                    <span>Active Outlets</span>
+                                    <span style="font-weight:700;">142 stores</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                                    <span>Consolidated Sales</span>
+                                    <span style="font-weight:700; color: var(--success);">₹8,45,000</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                                    <span>Wastage Cost</span>
+                                    <span style="font-weight:700; color: var(--danger);">₹38,200 (4.5%)</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                                    <span>SOP compliance rating</span>
+                                    <span style="font-weight:700; color: var(--success);">96.5%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCREEN 3: AREA MONITORING (AREA MANAGER ONLY) -->
+                <div class="app-screen" id="screen-area-manager">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Area Manager Command Console</h1>
+                            <p>Compare outlet metrics, approve purchase requests, and check performance scores.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('Area performance summary downloaded!')">Download Report</button>
+                            <button class="saas-btn saas-btn-primary" id="btnCompareAreaStores">Compare Stores</button>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard grid -->
+                    <div class="saas-table-container">
+                        <div style="padding: 16px; font-weight:700; border-bottom: 1px solid var(--border);">Outlet Performance Rankings (Maharashtra Zone)</div>
+                        <table class="saas-table">
+                            <thead>
+                                <tr>
+                                    <th>Outlet Name</th>
+                                    <th>Daily Revenue</th>
+                                    <th>Food Cost %</th>
+                                    <th>Wastage Cost</th>
+                                    <th>Attendance</th>
+                                    <th>SOP Compliance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-weight: 700;">BK Mumbai Bandra West</td>
+                                    <td>₹2,84,500</td>
+                                    <td style="font-weight:600; color:var(--success);">28.4%</td>
+                                    <td>₹12,450</td>
+                                    <td>98.5%</td>
+                                    <td style="font-weight:600; color:var(--success);">94.2%</td>
+                                    <td><button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;" onclick="alert('Routing to store details...')">View Details</button></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 700;">BK Mumbai Andheri East</td>
+                                    <td>₹1,95,000</td>
+                                    <td style="font-weight:600; color:var(--success);">28.9%</td>
+                                    <td>₹8,200</td>
+                                    <td>94.0%</td>
+                                    <td style="font-weight:600; color:var(--success);">95.1%</td>
+                                    <td><button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;">View Details</button></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 700;">BK Pune Kothrud</td>
+                                    <td>₹1,45,000</td>
+                                    <td style="font-weight:600; color:var(--danger);">31.2%</td>
+                                    <td style="color:var(--danger); font-weight:600;">₹16,400</td>
+                                    <td>90.5%</td>
+                                    <td style="font-weight:600; color:var(--danger);">88.4%</td>
+                                    <td><button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;">View Details</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SCREEN 4: SOP MANAGEMENT -->
+                <div class="app-screen" id="screen-sop-management">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Standard Operating Procedures (SOP)</h1>
+                            <p>Configure SOP guidelines, assign priorities, and track kitchen completions.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('SOP archived.')">Archive SOP</button>
+                            <button class="saas-btn saas-btn-primary" id="btnCreateSopTop">Create SOP</button>
+                        </div>
+                    </div>
+
+                    <!-- Search and filters -->
+                    <div style="display: flex; gap: 16px; margin-bottom: 24px; align-items: center;">
+                        <div class="header-search" style="width: 280px; background: var(--bg-card);">
+                            <i data-lucide="search" style="width: 16px; height: 16px; color: var(--text-tertiary);"></i>
+                            <input type="text" placeholder="Search SOPs..." id="sopSearchInput">
+                        </div>
+                        <select class="saas-form-select" style="width: 150px; background: var(--bg-card);" id="sopFilterSelect">
+                            <option value="all">All Intervals</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+
+                    <!-- SOP Table -->
+                    <div class="saas-table-container">
+                        <table class="saas-table" id="sopTable">
+                            <thead>
+                                <tr>
+                                    <th>Task Name</th>
+                                    <th>Assigned To</th>
+                                    <th>Store</th>
+                                    <th>Status</th>
+                                    <th>Completion %</th>
+                                    <th>Due Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sopTableBody">
+                                <tr data-recurrence="daily">
+                                    <td style="font-weight: 700;">Whopper Broiler Calibration</td>
+                                    <td>Kitchen Supervisor</td>
+                                    <td>Mumbai Bandra</td>
+                                    <td><span class="pill-badge pill-badge-danger">OVERDUE</span></td>
+                                    <td><span style="font-weight:700;">40%</span></td>
+                                    <td>11:00 AM</td>
+                                    <td>
+                                        <button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;" onclick="alert('Viewing detail...')">View</button>
+                                        <button class="saas-btn saas-btn-primary" style="padding: 4px 8px; font-size:0.75rem; background:var(--success); border:none;" onclick="alert('SOP Approved!')">Approve</button>
+                                        <button class="saas-btn saas-btn-danger" style="padding: 4px 8px; font-size:0.75rem;" onclick="alert('SOP Rejected.')">Reject</button>
+                                    </td>
+                                </tr>
+                                <tr data-recurrence="daily">
+                                    <td style="font-weight: 700;">Deep Fryer Salting Standard</td>
+                                    <td>Kitchen Staff</td>
+                                    <td>Delhi Connaught Pl</td>
+                                    <td><span class="pill-badge pill-badge-warning">PENDING</span></td>
+                                    <td><span style="font-weight:700;">75%</span></td>
+                                    <td>2:00 PM</td>
+                                    <td>
+                                        <button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;">View</button>
+                                        <button class="saas-btn saas-btn-primary" style="padding: 4px 8px; font-size:0.75rem; background:var(--success); border:none;">Approve</button>
+                                        <button class="saas-btn saas-btn-danger" style="padding: 4px 8px; font-size:0.75rem;">Reject</button>
+                                    </td>
+                                </tr>
+                                <tr data-recurrence="weekly">
+                                    <td style="font-weight: 700;">Cold storage audit log</td>
+                                    <td>Store Manager</td>
+                                    <td>Bangalore Indiranagar</td>
+                                    <td><span class="pill-badge pill-badge-success">COMPLETED</span></td>
+                                    <td><span style="font-weight:700;">100%</span></td>
+                                    <td>Yesterday</td>
+                                    <td>
+                                        <button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;">View</button>
+                                        <button class="saas-btn saas-btn-primary" style="padding: 4px 8px; font-size:0.75rem; background:var(--success); border:none;">Approve</button>
+                                        <button class="saas-btn saas-btn-danger" style="padding: 4px 8px; font-size:0.75rem;">Reject</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SCREEN 5: DAILY OPENING CHECKLIST -->
+                <div class="app-screen" id="screen-opening-checklist">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Daily Opening Checklist</h1>
+                            <p>Check off crucial kitchen safety, clean standards, and staff counts before operating.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('Evidence photos uploaded successfully!')">
+                                <i data-lucide="camera"></i> Upload Photos
+                            </button>
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('Checklist draft saved.')">Save Draft</button>
+                            <button class="saas-btn saas-btn-primary" style="background: var(--success); box-shadow:none;" id="btnCompleteOpeningChecklist">Mark Completed</button>
+                        </div>
+                    </div>
+
+                    <div class="checklist-grid">
+                        <div class="checklist-tasks-panel">
+                            <h3 style="font-weight: 800; margin-bottom: 20px;">Store Opening Audits</h3>
+                            <div class="checklist-item checked" data-type="opening" data-index="0">
+                                <div class="checklist-checkbox-box">✓</div>
+                                <div>
+                                    <div class="checklist-item-title">Kitchen Cleaning Done</div>
+                                    <div class="checklist-item-meta">All food surfaces wiped and floor scrubbed.</div>
+                                </div>
+                            </div>
+                            <div class="checklist-item" data-type="opening" data-index="1">
+                                <div class="checklist-checkbox-box"></div>
+                                <div>
+                                    <div class="checklist-item-title">Gas & Equipment Checked</div>
+                                    <div class="checklist-item-meta">Verify broiler valves and fryer elements are active.</div>
+                                </div>
+                            </div>
+                            <div class="checklist-item" data-type="opening" data-index="2">
+                                <div class="checklist-checkbox-box"></div>
+                                <div>
+                                    <div class="checklist-item-title">Refrigeration Temperature Logged</div>
+                                    <div class="checklist-item-meta">Chiller temperature must read between 1°C and 4°C.</div>
+                                </div>
+                            </div>
+                            <div class="checklist-item" data-type="opening" data-index="3">
+                                <div class="checklist-checkbox-box"></div>
+                                <div>
+                                    <div class="checklist-item-title">Raw Material Verified</div>
+                                    <div class="checklist-item-meta">Check starting levels of vegetables, buns, and chicken items.</div>
+                                </div>
+                            </div>
+                            <div class="checklist-item" data-type="opening" data-index="4">
+                                <div class="checklist-checkbox-box"></div>
+                                <div>
+                                    <div class="checklist-item-title">Staff Attendance Completed</div>
+                                    <div class="checklist-item-meta">Verify all AM shift personnel are clocked in on time.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <div class="widget-card">
+                                <div class="widget-title">Checklist Progress</div>
+                                <div style="text-align: center; padding: 20px 0;">
+                                    <div style="font-size: 3.5rem; font-weight: 800; color: var(--orange-primary);" id="openingProgressPct">20%</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">1 out of 5 Tasks Completed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCREEN 6: DAILY CLOSING CHECKLIST -->
+                <div class="app-screen" id="screen-closing-checklist">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Daily Closing Checklist</h1>
+                            <p>Secure registers, verify ending inventory, and deep clean kitchen zones.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('Closing report PDF downloaded.')">Download Report</button>
+                            <button class="saas-btn saas-btn-secondary" id="btnSaveClosing">Save Progress</button>
+                            <button class="saas-btn saas-btn-primary" style="background: var(--success); box-shadow:none;" id="btnSubmitClosing">Submit for Approval</button>
+                        </div>
+                    </div>
+
+                    <div class="checklist-grid">
+                        <div class="checklist-tasks-panel">
+                            <h3 style="font-weight: 800; margin-bottom: 20px;">Store Closing Audits</h3>
+                            <div class="checklist-item" data-type="closing" data-index="0">
+                                <div class="checklist-checkbox-box"></div>
+                                <div>
+                                    <div class="checklist-item-title">Cash Reconciliation Done</div>
+                                    <div class="checklist-item-meta">Verify counted register vault amounts match expected POS values.</div>
+                                </div>
+                            </div>
+                            <div class="checklist-item" data-type="closing" data-index="1">
+                                <div class="checklist-checkbox-box"></div>
+                                <div>
+                                    <div class="checklist-item-title">Inventory Count Completed</div>
+                                    <div class="checklist-item-meta">Enter closing stock volumes of critical ingredients.</div>
+                                </div>
+                            </div>
+                            <div class="checklist-item" data-type="closing" data-index="2">
+                                <div class="checklist-checkbox-box"></div>
+                                <div>
+                                    <div class="checklist-item-title">Wastage Entry Submitted</div>
+                                    <div class="checklist-item-meta">Log all dropped or expired batch counts into waste manager.</div>
+                                </div>
+                            </div>
+                            <div class="checklist-item" data-type="closing" data-index="3">
+                                <div class="checklist-checkbox-box"></div>
+                                <div>
+                                    <div class="checklist-item-title">Deep Cleaning Completed</div>
+                                    <div class="checklist-item-meta">Scrape broiler components and filter fryer oils.</div>
+                                </div>
+                            </div>
+                            <div class="checklist-item" data-type="closing" data-index="4">
+                                <div class="checklist-checkbox-box"></div>
+                                <div>
+                                    <div class="checklist-item-title">Store Closed & Locked</div>
+                                    <div class="checklist-item-meta">Disarm gas valves, shut power switches, lock final exits.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <div class="widget-card">
+                                <div class="widget-title">Checklist Progress</div>
+                                <div style="text-align: center; padding: 20px 0;">
+                                    <div style="font-size: 3.5rem; font-weight: 800; color: var(--orange-primary);" id="closingProgressPct">0%</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">0 out of 5 Tasks Completed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCREEN 7: INVENTORY OVERVIEW -->
+                <div class="app-screen" id="screen-inventory-overview">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Inventory Overview</h1>
+                            <p>Real-time ingredient levels with support for Indian measurement units.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('Adjusting stock level...')">Stock Adjustment</button>
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('Routing transfer stock module...')">Stock Transfer</button>
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('Opening physical inventory audit log...')">Physical Audit</button>
+                            <button class="saas-btn saas-btn-primary" id="btnCreateInventoryTop">Add Stock</button>
+                        </div>
+                    </div>
+
+                    <!-- Inventory dashboard metrics -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px;">
+                        <div class="widget-card" style="padding: 16px;">
+                            <div style="font-size:0.75rem; color:var(--text-tertiary); font-weight:700;">TOTAL STOCK VALUE</div>
+                            <div style="font-size:1.5rem; font-weight:800; margin-top:8px;">₹14,50,000</div>
+                        </div>
+                        <div class="widget-card" style="padding: 16px;">
+                            <div style="font-size:0.75rem; color:var(--text-tertiary); font-weight:700;">LOW STOCK ITEMS</div>
+                            <div style="font-size:1.5rem; font-weight:800; color:var(--warning); margin-top:8px;">3 SKU Types</div>
+                        </div>
+                        <div class="widget-card" style="padding: 16px;">
+                            <div style="font-size:0.75rem; color:var(--text-tertiary); font-weight:700;">NEAR EXPIRY PRODUCTS</div>
+                            <div style="font-size:1.5rem; font-weight:800; color:var(--danger); margin-top:8px;">2 SKUs</div>
+                        </div>
+                        <div class="widget-card" style="padding: 16px;">
+                            <div style="font-size:0.75rem; color:var(--text-tertiary); font-weight:700;">TODAY'S CONSUMPTION</div>
+                            <div style="font-size:1.5rem; font-weight:800; color:var(--success); margin-top:8px;">₹48,200</div>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="saas-table-container">
+                        <table class="saas-table" id="inventoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Category</th>
+                                    <th>Current Quantity</th>
+                                    <th>Unit</th>
+                                    <th>Minimum Level</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <tr>
+                                    <td style="font-weight: 700;">Whopper Sesame Buns</td>
+                                    <td>Bakery Breads</td>
+                                    <td>120</td>
+                                    <td>Piece</td>
+                                    <td>100</td>
+                                    <td><span class="pill-badge pill-badge-success">OK</span></td>
+                                    <td>
+                                        <button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;">Adjust Stock</button>
+                                        <button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;">Transfer</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 700;">Raw Chicken Patties (Whopper)</td>
+                                    <td>Frozen Foods</td>
+                                    <td>45</td>
+                                    <td>Box</td>
+                                    <td>80</td>
+                                    <td><span class="pill-badge pill-badge-warning">LOW STOCK</span></td>
+                                    <td>
+                                        <button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;">Adjust Stock</button>
+                                        <button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;">Transfer</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 700;">Cheddar Cheese Slices</td>
+                                    <td>Dairy Packets</td>
+                                    <td>320</td>
+                                    <td>Piece</td>
+                                    <td>150</td>
+                                    <td><span class="pill-badge pill-badge-success">OK</span></td>
+                                    <td>
+                                        <button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;">Adjust Stock</button>
+                                        <button class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size:0.75rem;">Transfer</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SCREEN 8: PURCHASE REQUESTS -->
+                <div class="app-screen" id="screen-purchase-requests">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Purchase Requests</h1>
+                            <p>Manage procurement requests and track approval flows (Store Manager → Area Manager → Head Office).</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-primary" id="btnCreatePrTop">Create Request</button>
+                        </div>
+                    </div>
+
+                    <div class="wastage-form-container">
+                        <!-- Create Purchase Request form -->
+                        <div class="wastage-logger-card">
+                            <h3 style="font-weight: 800; margin-bottom: 20px;">Create Purchase Request</h3>
+                            <form id="prForm">
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label" for="prItemSelect">Item Name</label>
+                                    <select class="saas-form-select" id="prItemSelect">
+                                        <option value="Whopper Sesame Buns">Whopper Sesame Buns</option>
+                                        <option value="Raw Chicken Patties">Raw Chicken Patties</option>
+                                        <option value="Cheddar Cheese Slices">Cheddar Cheese Slices</option>
+                                        <option value="Cooking Oil (Litre)">Cooking Oil (Litre)</option>
+                                    </select>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label" for="prQtyInput">Quantity Required</label>
+                                    <input type="number" class="saas-form-input" id="prQtyInput" placeholder="e.g. 50" required>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label" for="prSupplierSelect">Supplier Partner</label>
+                                    <select class="saas-form-select" id="prSupplierSelect">
+                                        <option value="Fortune Foods India">Fortune Foods India</option>
+                                        <option value="Amul Dairy Logistics">Amul Dairy Logistics</option>
+                                        <option value="Standard Foods Distribution">Standard Foods Distribution</option>
+                                    </select>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label" for="prDateInput">Required By Date</label>
+                                    <input type="date" class="saas-form-input" id="prDateInput" required value="2026-06-15">
+                                </div>
+                                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px;">Submit Request</button>
+                            </form>
+                        </div>
+
+                        <!-- Active Approval Requests list -->
+                        <div>
+                            <div class="widget-card" style="margin-bottom: 24px;">
+                                <div class="widget-title">Stateful Approval Timeline Pipeline</div>
+                                <div style="display:flex; flex-direction:column; gap:16px;" id="activePrContainer">
+                                    <div style="background:var(--bg-hover); padding:16px; border-radius:8px; border: 1px solid var(--border);" id="pr-demo-1">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; margin-bottom:8px;">
+                                            <span style="font-weight:700;">Whopper Sesame Buns (80 Pieces)</span>
+                                            <span style="font-size:0.75rem; color:var(--text-tertiary);">BK Soho • Req: 15 June</span>
+                                        </div>
+                                        <div class="approval-flow-wrapper">
+                                            <div class="approval-step approved">
+                                                <div class="approval-step-dot">✓</div>
+                                                <span>Store Mgr</span>
+                                            </div>
+                                            <div class="approval-step-line approved"></div>
+                                            <div class="approval-step active" id="pr-step-am">
+                                                <div class="approval-step-dot">2</div>
+                                                <span>Area Mgr</span>
+                                            </div>
+                                            <div class="approval-step-line"></div>
+                                            <div class="approval-step" id="pr-step-ho">
+                                                <div class="approval-step-dot">3</div>
+                                                <span>Head Office</span>
+                                            </div>
+                                        </div>
+                                        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:16px;" class="pr-actions-wrapper">
+                                            <button class="saas-btn saas-btn-secondary" style="padding: 4px 10px; font-size:0.75rem; background: var(--danger-light); color: var(--danger);" onclick="rejectPR('pr-demo-1')">Reject Request</button>
+                                            <button class="saas-btn saas-btn-primary" style="padding: 4px 10px; font-size:0.75rem; background: var(--success); border:none;" onclick="approvePR('pr-demo-1')">Approve Request</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCREEN 9: RECIPE Master -->
+                <div class="app-screen" id="screen-recipe-management">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Recipe Master Master</h1>
+                            <p>Configure ingredients portioning and auto-calculate food cost margins.</p>
+                        </div>
+                        <div class="screen-actions" id="recipeScreenActions">
+                            <button class="saas-btn saas-btn-secondary" id="btnBulkImportRecipes" onclick="openModal('modalBulkImportRecipes')" style="margin-right: 8px;">Bulk Import</button>
+                            <button class="saas-btn saas-btn-primary" id="btnCreateRecipe" onclick="openModal('modalCreateRecipe')">Create Recipe</button>
+                        </div>
+                    </div>
+
+                    <div class="recipes-grid" id="recipesGrid">
+                        <!-- Dynamic Recipe Cards -->
+                    </div>
+                </div>
+
+                <!-- SCREEN 10: WASTAGE MANAGEMENT -->
+                <div class="app-screen" id="screen-wastage-management">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Wastage Control Center</h1>
+                            <p>Log spoiled QSR ingredients, check daily leakage logs and outlet wastage metrics.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('Exporting wastage data...')" id="btnExportWaste">Export CSV</button>
+                        </div>
+                    </div>
+
+                    <div class="wastage-form-container">
+                        <!-- Record Wastage Form -->
+                        <div class="wastage-logger-card">
+                            <h3 style="font-weight: 800; margin-bottom: 20px;">Record Wastage</h3>
+                            <form id="wastageForm">
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label" for="wasteStoreSelect">Store Name</label>
+                                    <select class="saas-form-select" id="wasteStoreSelect">
+                                        <option value="Mumbai Bandra">BK Mumbai Bandra</option>
+                                        <option value="Delhi Connaught Place">BK Delhi Connaught Place</option>
+                                        <option value="Bangalore Indiranagar">BK Bangalore Indiranagar</option>
+                                    </select>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label" for="wasteItemSelect">Item Name</label>
+                                    <select class="saas-form-select" id="wasteItemSelect">
+                                        <option value="Whopper Sesame Buns">Whopper Sesame Buns</option>
+                                        <option value="Chicken patties">Chicken patties</option>
+                                        <option value="Cheddar Cheese Slices">Cheddar Cheese Slices</option>
+                                    </select>
+                                </div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                                    <div class="saas-form-group">
+                                        <label class="saas-form-label" for="wasteQtyInput">Quantity</label>
+                                        <input type="number" class="saas-form-input" id="wasteQtyInput" placeholder="e.g. 15" required>
+                                    </div>
+                                    <div class="saas-form-group">
+                                        <label class="saas-form-label" for="wasteUnitSelect">Unit</label>
+                                        <select class="saas-form-select" id="wasteUnitSelect">
+                                            <option value="Piece">Piece</option>
+                                            <option value="Kg">Kg</option>
+                                            <option value="Gram">Gram</option>
+                                            <option value="Litre">Litre</option>
+                                            <option value="Packet">Packet</option>
+                                            <option value="Tray">Tray</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label" for="wasteReasonSelect">Reason</label>
+                                    <select class="saas-form-select" id="wasteReasonSelect">
+                                        <option value="Expired">Expired</option>
+                                        <option value="Burnt">Burnt</option>
+                                        <option value="Spillage">Spillage</option>
+                                        <option value="Preparation Error">Preparation Error</option>
+                                        <option value="Customer Return">Customer Return</option>
+                                        <option value="Damaged Packaging">Damaged Packaging</option>
+                                    </select>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label">Photo Reference</label>
+                                    <button type="button" class="saas-btn saas-btn-secondary" style="width:100%; display:flex; justify-content:center; gap:8px;" onclick="alert('Camera initialized... Evidence photo captured.')">
+                                        <i data-lucide="camera"></i> Photo Upload
+                                    </button>
+                                </div>
+                                <div style="display:flex; gap:16px;">
+                                    <button type="button" class="saas-btn saas-btn-secondary" style="flex:1;" onclick="alert('Wastage entry rejected.')">Reject</button>
+                                    <button type="submit" class="saas-btn saas-btn-primary" style="flex:1;">Submit Wastage</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Right pane: Analytics -->
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <div class="widget-card">
+                                <div class="widget-title">Daily Wastage Cost (₹)</div>
+                                <div style="height: 180px; position: relative;">
+                                    <canvas id="wastageScreenChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="saas-table-container">
+                                <div style="padding: 16px; font-weight:700; border-bottom: 1px solid var(--border);">Active Wastage Logs</div>
+                                <table class="saas-table" id="wastageLogsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Item Name</th>
+                                            <th>Quantity</th>
+                                            <th>Reason</th>
+                                            <th>Outlet</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="font-weight: 700;">Chicken patties</td>
+                                            <td>20 Piece</td>
+                                            <td><span class="pill-badge pill-badge-danger">Expired</span></td>
+                                            <td>Mumbai Bandra</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="font-weight: 700;">Whopper Sesame Buns</td>
+                                            <td>12 Piece</td>
+                                            <td><span class="pill-badge pill-badge-secondary">Spillage</span></td>
+                                            <td>Delhi Connaught Pl</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCREEN 11: ATTENDANCE TRACKER (DYNAMICAL CREW & MANAGER VIEWS) -->
+                <div class="app-screen" id="screen-attendance-system">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Staff Attendance Tracker</h1>
+                            <p id="attendanceSubtitle">Manage punch parameters, check historical records, or request leaves.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <span style="font-weight:700; color:var(--orange-primary);" id="currentUserLabel">Signed In: John Doe</span>
+                        </div>
+                    </div>
+
+                    <!-- 1. CREW MEMBER / KITCHEN STAFF ATTENDANCE PANEL -->
+                    <div id="crewAttendanceSection" style="display:none; grid-template-columns: 1fr 1.2fr; gap: 32px;">
+                        <div class="attendance-punch-card">
+                            <h3 style="font-weight:800; font-size:1.15rem;">Shift Punch Console</h3>
+                            <p style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;" id="crewShiftSchedule">AM Shift: 06:00 - 14:00</p>
+                            
+                            <div class="digital-clock-display" id="attendanceLiveTimer">21:03:01</div>
+                            
+                            <div>
+                                <button class="punch-btn-large in" id="btnPunchInLarge">PUNCH IN</button>
+                                <button class="punch-btn-large out" id="btnPunchOutLarge" style="display:none;">PUNCH OUT</button>
+                            </div>
+
+                            <div style="display:flex; justify-content:space-around; margin-top:16px; border-top:1px solid var(--border); padding-top:20px; text-align:left; font-size:0.8rem;">
+                                <div>
+                                    <span style="color:var(--text-tertiary);">Status</span>
+                                    <div style="font-weight:700; margin-top:4px;" id="crewPunchStatus"><span class="pill-badge pill-badge-secondary">OUT</span></div>
+                                </div>
+                                <div>
+                                    <span style="color:var(--text-tertiary);">Working Hours</span>
+                                    <div style="font-weight:700; margin-top:4px;" id="crewWorkingHours">0h 0m</div>
+                                </div>
+                                <div>
+                                    <span style="color:var(--text-tertiary);">Late Arrival</span>
+                                    <div style="font-weight:700; margin-top:4px;" id="crewLateArrival">No</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Crew Leave request & personal logs -->
+                        <div style="display:flex; flex-direction:column; gap:24px;">
+                            <div class="widget-card">
+                                <div class="widget-title">Apply for Leave</div>
+                                <form id="formCrewLeave">
+                                    <div class="saas-form-group">
+                                        <label class="saas-form-label">Leave Date</label>
+                                        <input type="date" class="saas-form-input" required id="leaveRequestDate">
+                                    </div>
+                                    <div class="saas-form-group">
+                                        <label class="saas-form-label">Reason</label>
+                                        <input type="text" class="saas-form-input" placeholder="e.g. Medical emergency" required id="leaveRequestReason">
+                                    </div>
+                                    <button type="submit" class="saas-btn saas-btn-primary" style="width:100%;">Submit Request</button>
+                                </form>
+                            </div>
+
+                            <div class="saas-table-container">
+                                <div style="padding:16px; font-weight:700; border-bottom:1px solid var(--border);">Your Shift Punch History</div>
+                                <table class="saas-table" id="personalPunchTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Punch In</th>
+                                            <th>Punch Out</th>
+                                            <th>Hours</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="personalPunchTableBody">
+                                        <!-- Javascript filled -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. MANAGER / ADMIN ATTENDANCE MONITOR CONSOLE -->
+                    <div id="managerAttendanceSection" style="display:block;">
+                        <!-- KPI Row -->
+                        <div class="kpi-grid" style="margin-bottom:24px;">
+                            <div class="kpi-card" style="padding:16px;">
+                                <div class="kpi-header">Total Store Staff</div>
+                                <div class="kpi-value" id="mgr-stat-total">14</div>
+                            </div>
+                            <div class="kpi-card" style="padding:16px;">
+                                <div class="kpi-header">Punched In Today</div>
+                                <div class="kpi-value" id="mgr-stat-present">12</div>
+                            </div>
+                            <div class="kpi-card" style="padding:16px;">
+                                <div class="kpi-header">Absent Staff</div>
+                                <div class="kpi-value" id="mgr-stat-absent">2</div>
+                            </div>
+                            <div class="kpi-card" style="padding:16px;">
+                                <div class="kpi-header">Late Arrivals</div>
+                                <div class="kpi-value" style="color:var(--warning);" id="mgr-stat-late">2</div>
+                            </div>
+                            <div class="kpi-card" style="padding:16px;">
+                                <div class="kpi-header">Overtime Hours</div>
+                                <div class="kpi-value" style="color:var(--success);" id="mgr-stat-ot">1.5 hrs</div>
+                            </div>
+                            <div class="kpi-card" style="padding:16px;">
+                                <div class="kpi-header">Pending Leaves</div>
+                                <div class="kpi-value" id="mgr-stat-leaves">1</div>
+                            </div>
+                        </div>
+
+                        <!-- Live Feed & Leave requests grid -->
+                        <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:32px;">
+                            <div class="saas-table-container">
+                                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding-right:16px;">
+                                    <div style="display:flex;">
+                                        <button class="mgr-tab-btn active" id="btnTabShiftLogs">Active Shifts</button>
+                                        <button class="mgr-tab-btn" id="btnTabDirectory">Employee Directory</button>
+                                    </div>
+                                    <button class="saas-btn saas-btn-primary" id="btnManagerAddEmployee" style="padding: 6px 12px; font-size:0.8rem;">
+                                        <i data-lucide="user-plus" style="width: 14px; height: 14px;"></i> Add Employee
+                                    </button>
+                                </div>
+                                
+                                <div id="tabContentShiftLogs">
+                                    <div style="padding: 12px 16px; display:flex; justify-content:space-between; align-items:center; background:var(--bg-sidebar); border-bottom:1px solid var(--border);">
+                                        <div style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);" id="lblShiftLogsCount">12 Staff Present</div>
+                                        <select class="saas-form-select" id="managerShiftLogsFilter" style="width:130px; padding: 4px 8px; font-size:0.75rem;">
+                                            <option value="today">Today</option>
+                                            <option value="week">This Week</option>
+                                            <option value="month">This Month</option>
+                                        </select>
+                                    </div>
+                                    <table class="saas-table" id="managerShiftLogsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Staff Member</th>
+                                                <th>Scheduled Shift</th>
+                                                <th>Punch In</th>
+                                                <th>Punch Out</th>
+                                                <th>Working Hours</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="managerShiftLogsTableBody">
+                                            <!-- JS populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div id="tabContentDirectory" style="display:none;">
+                                    <table class="saas-table" id="managerDirectoryTable">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Mobile</th>
+                                                <th>Role</th>
+                                                <th>Pass Status</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="managerDirectoryTableBody">
+                                            <!-- JS populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; flex-direction:column; gap:24px;">
+                                <!-- Leave Requests Box -->
+                                <div class="widget-card">
+                                    <div class="widget-title">Pending Leave Approvals</div>
+                                    <div style="display:flex; flex-direction:column; gap:12px;" id="leaveApprovalsList">
+                                        <!-- JS populated -->
+                                    </div>
+                                </div>
+
+                                <!-- Employee punch logs search query lookup -->
+                                <div class="widget-card">
+                                    <div class="widget-title">Search Employee Punch History</div>
+                                    <div class="saas-form-group">
+                                        <label class="saas-form-label">Select Employee</label>
+                                        <select class="saas-form-select" id="historySearchEmployeeSelect">
+                                            <!-- JS populated -->
+                                        </select>
+                                    </div>
+                                    <div class="saas-table-container" style="max-height:180px; overflow-y:auto; box-shadow:none; border-radius:4px; margin-bottom:0;">
+                                        <table class="saas-table" style="font-size:0.75rem;">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Punch In</th>
+                                                    <th>Hours</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="historySearchResultTableBody">
+                                                <!-- JS populated -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCREEN 12: DAY END REPORT (EOD) -->
+                <div class="app-screen" id="screen-day-end-report">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Daily Shift EOD Report</h1>
+                            <p>Generate daily reconciliation statement and share results with regional partners.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('EOD PDF exported!')">Export PDF</button>
+                            <button class="saas-btn saas-btn-secondary" onclick="alert('EOD Excel sheet exported!')">Export Excel</button>
+                            <button class="saas-btn saas-btn-secondary" style="background: #25D366; color:white; border-color:transparent;" id="btnWhatsAppShare">
+                                <i data-lucide="message-square"></i> Share WhatsApp
+                            </button>
+                            <button class="saas-btn saas-btn-primary" style="background: var(--success); box-shadow:none;" id="btnGenerateEod">Generate EOD</button>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="kpi-grid" style="margin-bottom: 40px;">
+                        <div class="kpi-card">
+                            <div class="kpi-header">Gross Sales</div>
+                            <div class="kpi-value">₹2,84,500</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Net Sales</div>
+                            <div class="kpi-value">₹2,41,820</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Orders Completed</div>
+                            <div class="kpi-value">1,420</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Average Order Value</div>
+                            <div class="kpi-value">₹170.20</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Food Cost %</div>
+                            <div class="kpi-value">28.4%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Inventory Consumed</div>
+                            <div class="kpi-value">340 kg</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Staff Attendance</div>
+                            <div class="kpi-value">95.4%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-header">Wastage Cost</div>
+                            <div class="kpi-value" style="color:var(--danger);">₹12,450</div>
+                        </div>
+                    </div>
+
+                    <!-- DRS Reconciliation matches -->
+                    <div class="saas-table-container">
+                        <div style="padding: 16px; font-weight:700; border-bottom: 1px solid var(--border);">DRS Cash Drawer Matching</div>
+                        <table class="saas-table">
+                            <thead>
+                                <tr>
+                                    <th>Register</th>
+                                    <th>POS Expected Cash</th>
+                                    <th>Actual Counted Cash</th>
+                                    <th>Variance</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-weight: 700;">POS Register 01</td>
+                                    <td>₹1,45,000.00</td>
+                                    <td>₹1,45,000.00</td>
+                                    <td style="font-weight: 600; color: var(--success);">₹0.00</td>
+                                    <td><span class="pill-badge pill-badge-success">MATCHED</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 700;">POS Register 02</td>
+                                    <td>₹96,820.00</td>
+                                    <td>₹96,800.00</td>
+                                    <td style="font-weight: 600; color: var(--danger);">-₹20.00</td>
+                                    <td><span class="pill-badge pill-badge-warning">TOLERANCE OK</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SCREEN 13: SETTINGS -->
+                <div class="app-screen" id="screen-settings-panel">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>System Configuration & Settings</h1>
+                            <p>Configure regional parameters, user access groups and security credentials.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-primary" onclick="alert('Settings parameters saved!')">Save Parameters</button>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 32px;">
+                        <h3 style="font-weight: 800; margin-bottom: 24px;">Global Enterprise Configurations</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                            <div class="saas-form-group">
+                                <label class="saas-form-label">Franchise Enterprise ID</label>
+                                <input type="text" class="saas-form-input" value="BK-GLOBAL-INDIA-9840" disabled>
+                            </div>
+                            <div class="saas-form-group">
+                                <label class="saas-form-label">Target Food Cost Percentage</label>
+                                <input type="text" class="saas-form-input" value="29.0%">
+                            </div>
+                            <div class="saas-form-group">
+                                <label class="saas-form-label">Automatic Reorder Threshold</label>
+                                <select class="saas-form-select">
+                                    <option value="15%">15% Minimum Stock</option>
+                                    <option value="25%">25% Minimum Stock</option>
+                                    <option value="35%">35% Minimum Stock</option>
+                                </select>
+                            </div>
+                            <div class="saas-form-group">
+                                <label class="saas-form-label">Notification Defrost Temp Warning</label>
+                                <input type="text" class="saas-form-input" value="-12°C">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- 3. SLIDE-OUT NOTIFICATIONS CENTER DRAWER -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <div class="notification-drawer" id="notificationDrawer">
+        <div class="drawer-header">
+            <h3>Notifications Center</h3>
+            <div class="drawer-close" id="drawerCloseBtn">
+                <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+            </div>
+        </div>
+        <div class="drawer-body" id="drawerNotificationsList">
+            <!-- Alert 1: Low Stock Alert -->
+            <div class="alert-item" id="notif-1">
+                <div class="alert-item-header">
+                    <span style="color: var(--danger);"><i data-lucide="alert-triangle" style="width:14px; height:14px; display:inline-block;"></i> LOW STOCK</span>
+                    <span style="font-weight:500; font-size:0.7rem; color:var(--text-tertiary);">Just Now</span>
+                </div>
+                <div class="alert-item-body">
+                    <strong>Whopper Sesame Buns</strong> count dropped below threshold at Mumbai Bandra. Current: 45 pieces.
+                </div>
+                <div class="alert-actions">
+                    <button class="alert-action-btn resolve" onclick="resolveNotification('notif-1')">Resolve</button>
+                    <button class="alert-action-btn" onclick="dismissNotification('notif-1')">Dismiss</button>
+                </div>
+            </div>
+
+            <!-- Alert 2: Attendance Missing -->
+            <div class="alert-item" id="notif-2">
+                <div class="alert-item-header">
+                    <span style="color: var(--warning);"><i data-lucide="users" style="width:14px; height:14px; display:inline-block;"></i> ATTENDANCE MISSING</span>
+                    <span style="font-weight:500; font-size:0.7rem; color:var(--text-tertiary);">10 mins ago</span>
+                </div>
+                <div class="alert-item-body">
+                    Roster attendance not punched in by AM Shift staff members in Bangalore Indiranagar store.
+                </div>
+                <div class="alert-actions">
+                    <button class="alert-action-btn resolve" onclick="resolveNotification('notif-2')">Resolve</button>
+                    <button class="alert-action-btn" onclick="dismissNotification('notif-2')">Dismiss</button>
+                </div>
+            </div>
+
+            <!-- Alert 3: SOP Overdue -->
+            <div class="alert-item" id="notif-3">
+                <div class="alert-item-header">
+                    <span style="color: var(--danger);"><i data-lucide="clock" style="width:14px; height:14px; display:inline-block;"></i> SOP OVERDUE</span>
+                    <span style="font-weight:500; font-size:0.7rem; color:var(--text-tertiary);">30 mins ago</span>
+                </div>
+                <div class="alert-item-body">
+                    <strong>Whopper Broiler Calibration</strong> standard task is overdue. Not checked by 11:00 AM.
+                </div>
+                <div class="alert-actions">
+                    <button class="alert-action-btn resolve" onclick="resolveNotification('notif-3')">Resolve</button>
+                    <button class="alert-action-btn" onclick="dismissNotification('notif-3')">Dismiss</button>
+                </div>
+            </div>
+
+            <!-- Alert 4: Near Expiry Inventory -->
+            <div class="alert-item" id="notif-4">
+                <div class="alert-item-header">
+                    <span style="color: var(--warning);"><i data-lucide="shield-alert" style="width:14px; height:14px; display:inline-block;"></i> NEAR EXPIRY</span>
+                    <span style="font-weight:500; font-size:0.7rem; color:var(--text-tertiary);">1 hr ago</span>
+                </div>
+                <div class="alert-item-body">
+                    Cheddar cheese batch in Delhi Connaught Place expires in 48 hours.
+                </div>
+                <div class="alert-actions">
+                    <button class="alert-action-btn resolve" onclick="resolveNotification('notif-4')">Resolve</button>
+                    <button class="alert-action-btn" onclick="dismissNotification('notif-4')">Dismiss</button>
+                </div>
+            </div>
+
+            <!-- Alert 5: High Wastage Alert -->
+            <div class="alert-item" id="notif-5">
+                <div class="alert-item-header">
+                    <span style="color: var(--danger);"><i data-lucide="trash-2" style="width:14px; height:14px; display:inline-block;"></i> HIGH WASTAGE</span>
+                    <span style="font-weight:500; font-size:0.7rem; color:var(--text-tertiary);">2 hrs ago</span>
+                </div>
+                <div class="alert-item-body">
+                    BK Mumbai Bandra recorded wastage value above threshold parameters (₹12,450).
+                </div>
+                <div class="alert-actions">
+                    <button class="alert-action-btn resolve" onclick="resolveNotification('notif-5')">Resolve</button>
+                    <button class="alert-action-btn" onclick="dismissNotification('notif-5')">Dismiss</button>
+                </div>
+            </div>
+
+            <!-- Alert 6: Sales Drop Alert -->
+            <div class="alert-item" id="notif-6">
+                <div class="alert-item-header">
+                    <span style="color: var(--warning);"><i data-lucide="trending-down" style="width:14px; height:14px; display:inline-block;"></i> SALES DROP</span>
+                    <span style="font-weight:500; font-size:0.7rem; color:var(--text-tertiary);">4 hrs ago</span>
+                </div>
+                <div class="alert-item-body">
+                    Pune Kothrud store reports sales level dropped 12% vs last Thursday.
+                </div>
+                <div class="alert-actions">
+                    <button class="alert-action-btn resolve" onclick="resolveNotification('notif-6')">Resolve</button>
+                    <button class="alert-action-btn" onclick="dismissNotification('notif-6')">Dismiss</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. GLOBAL FLOATING ACTION BUTTON (FAB) -->
+    <div class="fab-container">
+        <div class="fab-main" id="fabMainBtn" title="Quick Actions Menu">
+            <i data-lucide="plus" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div class="fab-menu" id="fabMenuOptions">
+            <div class="fab-menu-item" id="fabAddStockBtn">
+                <i data-lucide="package-plus" style="width:16px; height:16px;"></i>
+                <span>Add Stock</span>
+            </div>
+            <div class="fab-menu-item" id="fabAddWasteBtn">
+                <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
+                <span>Add Wastage</span>
+            </div>
+            <div class="fab-menu-item" id="fabCreateSopBtn">
+                <i data-lucide="book-open" style="width:16px; height:16px;"></i>
+                <span>Create SOP</span>
+            </div>
+            <div class="fab-menu-item" id="fabGenReportBtn">
+                <i data-lucide="file-text" style="width:16px; height:16px;"></i>
+                <span>Generate Report</span>
+            </div>
+            <div class="fab-menu-item" id="fabAddEmployeeBtn">
+                <i data-lucide="user-plus" style="width:16px; height:16px;"></i>
+                <span>Add Employee</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. INTERACTIVE CRUD MODAL WINDOWS -->
+    
+    <!-- Modal 1: Create SOP -->
+    <div class="modal-overlay" id="modalCreateSop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New SOP Standard</h3>
+                <div class="modal-close" onclick="closeModal('modalCreateSop')">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </div>
+            </div>
+            <form id="formCreateSop">
+                <div class="saas-form-group">
+                    <label class="saas-form-label">SOP Standard Title</label>
+                    <input type="text" class="saas-form-input" placeholder="e.g. Broiler Temperature Verification" required id="sopTitleInput">
+                </div>
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Department</label>
+                    <select class="saas-form-select" id="sopDeptInput">
+                        <option value="Kitchen Crew">Kitchen Crew</option>
+                        <option value="Service Team">Service Team</option>
+                        <option value="Store Managers">Store Managers</option>
+                    </select>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Priority</label>
+                        <select class="saas-form-select" id="sopPriorityInput">
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Frequency</label>
+                        <select class="saas-form-select" id="sopFreqInput">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Instructions Text</label>
+                    <input type="text" class="saas-form-input" placeholder="e.g. Broiler gas dial at 4..." required id="sopInstructionsInput">
+                </div>
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Photo Reference Link</label>
+                    <input type="text" class="saas-form-input" value="https://bkops.in/ref-3920.jpg" disabled>
+                </div>
+                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px;">Create SOP</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: Add Inventory Stock -->
+    <div class="modal-overlay" id="modalAddInventory">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Inventory Item</h3>
+                <div class="modal-close" onclick="closeModal('modalAddInventory')">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </div>
+            </div>
+            <form id="formAddInventory">
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Item Name</label>
+                    <input type="text" class="saas-form-input" placeholder="e.g. Paneer Blocks" required id="invItemLabel">
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Category</label>
+                        <select class="saas-form-select" id="invCategorySelect">
+                            <option value="Frozen Foods">Frozen Foods</option>
+                            <option value="Bakery Breads">Bakery Breads</option>
+                            <option value="Dairy Packets">Dairy Packets</option>
+                        </select>
+                    </div>
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Indian Unit</label>
+                        <select class="saas-form-select" id="invUnitSelect">
+                            <option value="Piece">Piece</option>
+                            <option value="Kg">Kg</option>
+                            <option value="Gram">Gram</option>
+                            <option value="Litre">Litre</option>
+                            <option value="ML">ML</option>
+                            <option value="Packet">Packet</option>
+                            <option value="Tray">Tray</option>
+                            <option value="Box">Box</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Current Quantity</label>
+                        <input type="number" class="saas-form-input" placeholder="e.g. 50" required id="invStartingStock">
+                    </div>
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Minimum Level</label>
+                        <input type="number" class="saas-form-input" placeholder="e.g. 15" required id="invReorderLevel">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Unit Cost (₹)</label>
+                        <input type="number" step="0.01" class="saas-form-input" placeholder="e.g. 15.50" required id="invUnitCost">
+                    </div>
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Expiry Date</label>
+                        <input type="date" class="saas-form-input" required id="invExpiryDate">
+                    </div>
+                </div>
+                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px;">Add Stock</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2B: Edit Inventory Item -->
+    <div class="modal-overlay" id="modalEditInventory">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Inventory Item</h3>
+                <div class="modal-close" onclick="closeModal('modalEditInventory')">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </div>
+            </div>
+            <form id="formEditInventory">
+                <input type="hidden" id="editInvItemId">
+                
+                <!-- Static Card for Non-editable Item Name -->
+                <div style="background: var(--bg-sidebar); border: 1px solid var(--border); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+                    <span style="font-size: 0.7rem; color: var(--text-tertiary); font-weight: 700; display: block; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Item Name (Non-Editable)</span>
+                    <span style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);" id="editInvItemLabel">Whopper Sesame Buns</span>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Current Stock</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" class="saas-btn saas-btn-secondary" style="padding: 8px 12px; font-weight: 800;" onclick="adjustEditStock(-1)">-</button>
+                            <input type="number" class="saas-form-input" style="text-align: center; flex: 1;" required id="editInvStock">
+                            <button type="button" class="saas-btn saas-btn-secondary" style="padding: 8px 12px; font-weight: 800;" onclick="adjustEditStock(1)">+</button>
+                        </div>
+                    </div>
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Minimum Level (Reorder)</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" class="saas-btn saas-btn-secondary" style="padding: 8px 12px; font-weight: 800;" onclick="adjustEditReorder(-1)">-</button>
+                            <input type="number" class="saas-form-input" style="text-align: center; flex: 1;" required id="editInvReorder">
+                            <button type="button" class="saas-btn saas-btn-secondary" style="padding: 8px 12px; font-weight: 800;" onclick="adjustEditReorder(1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Unit Cost (₹)</label>
+                        <input type="number" step="0.01" class="saas-form-input" placeholder="e.g. 15.50" required id="editInvUnitCost">
+                    </div>
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Expiry Date</label>
+                        <input type="date" class="saas-form-input" required id="editInvExpiryDate">
+                    </div>
+                </div>
+                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2C: Bulk Import (Excel/Image) -->
+    <div class="modal-overlay" id="modalBulkImport">
+        <style>
+        @keyframes scanline {
+            0% { top: 0%; }
+            50% { top: 100%; }
+            100% { top: 0%; }
+        }
+        .saas-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--orange-primary);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        </style>
+        <div class="modal-content" style="max-width: 600px; width: 90%;">
+            <div class="modal-header">
+                <h3>Bulk Inventory Import</h3>
+                <div class="modal-close" onclick="closeModal('modalBulkImport')">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </div>
+            </div>
+            
+            <!-- Upload Dropzone -->
+            <div id="bulkImportDropzone" style="border: 2px dashed var(--border); border-radius: 8px; padding: 32px 20px; text-align: center; background: var(--bg-sidebar); cursor: pointer; transition: all 0.2s ease; margin-bottom: 20px;">
+                <i data-lucide="upload-cloud" style="width: 48px; height: 48px; color: var(--text-tertiary); margin-bottom: 12px;"></i>
+                <h4 style="font-weight: 700; margin-bottom: 6px;">Upload Inventory File or Photo</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 16px;">Supports Excel (.xlsx, .xls), CSV (.csv), or Image (.png, .jpg, .jpeg)</p>
+                <button type="button" class="saas-btn saas-btn-secondary" onclick="document.getElementById('bulkImportFileInput').click()">Choose File</button>
+                <input type="file" id="bulkImportFileInput" accept=".xlsx, .xls, .csv, image/*" style="display: none;">
+            </div>
+
+            <!-- Animation Scanner Overlay (shown during processing) -->
+            <div id="bulkImportScannerContainer" style="display: none; position: relative; width: 100%; height: 200px; background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 20px; border: 1px solid var(--border);">
+                <img id="bulkImportImgPreview" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5;">
+                <div id="bulkImportScannerLaser" style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #22c55e; box-shadow: 0 0 12px #22c55e; animation: scanline 2s infinite linear;"></div>
+                <div style="position: absolute; bottom: 12px; left: 12px; color: #fff; font-family: monospace; font-size: 0.75rem; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">
+                    [SYSTEM] Scanning image with smart OCR algorithms...
+                </div>
+            </div>
+
+            <!-- Processing Status / Spinner -->
+            <div id="bulkImportStatus" style="display: none; text-align: center; margin-bottom: 20px;">
+                <div class="saas-spinner" style="margin: 0 auto 12px;"></div>
+                <span style="font-size: 0.85rem; font-weight: bold; color: var(--orange-primary);" id="bulkImportStatusText">Analyzing uploaded file...</span>
+            </div>
+
+            <!-- Results Preview Block -->
+            <div id="bulkImportPreviewBlock" style="display: none; margin-bottom: 20px;">
+                <h4 style="font-weight: 700; margin-bottom: 12px; font-size: 0.9rem;">Parsed Updates Preview:</h4>
+                <div style="border: 1px solid var(--border); border-radius: 6px; background: var(--bg-sidebar);">
+                    <table class="saas-table" style="font-size: 0.75rem;">
+                        <thead>
+                            <tr style="background: var(--bg-hover);">
+                                <th>Item Name</th>
+                                <th>Old Qty</th>
+                                <th>New Qty</th>
+                                <th>Old Cost</th>
+                                <th>New Cost</th>
+                                <th>Expiry</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bulkImportPreviewTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-tertiary); margin-top: 8px;">
+                    * The above items match existing records in the selected branch inventory list and will be updated.
+                </div>
+            </div>
+
+            <!-- Modal Actions -->
+            <div style="display: flex; gap: 12px;">
+                <button type="button" class="saas-btn saas-btn-secondary" style="flex: 1;" onclick="closeModal('modalBulkImport')">Cancel</button>
+                <button type="button" class="saas-btn saas-btn-primary" id="btnBulkImportApply" style="flex: 1;" disabled>Apply Updates</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: WhatsApp Share Simulation -->
+    <div class="modal-overlay" id="modalWhatsApp">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Share Report via WhatsApp</h3>
+                <div class="modal-close" onclick="closeModal('modalWhatsApp')">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </div>
+            </div>
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="width: 64px; height: 64px; background: #E8F9EE; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    <i data-lucide="check-circle" style="color: #25D366; width: 32px; height: 32px;"></i>
+                </div>
+                <h4 style="font-weight: 700; font-size: 1.1rem; margin-bottom: 8px;">WhatsApp Template Rendered</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">The EOD summary text template is ready to send to Franchise Partner (+91 98765 43210).</p>
+            </div>
+            <div style="background: var(--bg-sidebar); border: 1px solid var(--border); padding: 14px; border-radius: 6px; font-family: monospace; font-size: 0.75rem; text-align: left; max-height: 180px; overflow-y: auto; margin-bottom: 20px; line-height: 1.4;">
+                *BK OPERATIONS INDIA - EOD REPORT*<br>
+                Date: 2026-06-11<br>
+                Store: BK Mumbai Bandra West<br>
+                -----------------------------<br>
+                * Gross Sales: ₹2,84,500<br>
+                * Net Sales: ₹2,41,820<br>
+                * Food Cost Margin: 28.4%<br>
+                * Wastage Cost: ₹12,450 (2.9%)<br>
+                * Staff Present: 95.4%<br>
+                -----------------------------<br>
+                Status: Pending Area Manager Signoff
+            </div>
+            <button class="saas-btn saas-btn-primary" style="width:100%; background: #25D366; border:none;" onclick="triggerWhatsAppSend()">Send Message</button>
+        </div>
+    </div>
+
+    <!-- Modal 4: Add Employee -->
+    <div class="modal-overlay" id="modalAddEmployee">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3>Add New Employee</h3>
+                <div class="modal-close" onclick="closeModal('modalAddEmployee')">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </div>
+            </div>
+            <form id="formAddEmployee">
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Full Name</label>
+                    <input type="text" class="saas-form-input" placeholder="e.g. Ramesh Kumar" required id="empNameInput">
+                </div>
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Mobile Number</label>
+                    <input type="tel" class="saas-form-input" placeholder="e.g. 9876543210" pattern="[0-9]{10}" required id="empMobileInput">
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Designation</label>
+                        <select class="saas-form-select" id="empRoleSelect">
+                            <option value="Crew Member">Crew Member</option>
+                            <option value="Kitchen Staff">Kitchen Staff</option>
+                            <option value="Shift Manager">Shift Manager</option>
+                            <option value="Store Manager">Store Manager</option>
+                            <option value="Area Manager">Area Manager</option>
+                            <option value="Head Office Admin">Head Office Admin</option>
+                        </select>
+                    </div>
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Store Assignment</label>
+                        <select class="saas-form-select" id="empStoreSelect">
+                            <option value="Mumbai Bandra">BK Mumbai Bandra</option>
+                            <option value="Delhi Connaught Place">BK Delhi Connaught Place</option>
+                            <option value="Bangalore Indiranagar">BK Bangalore Indiranagar</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px;">Add Employee</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 5: Log Manual Attendance -->
+    <div class="modal-overlay" id="modalManualAttendance">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3>Log Manual Attendance Shift</h3>
+                <div class="modal-close" onclick="closeModal('modalManualAttendance')">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </div>
+            </div>
+            <form id="formManualAttendance">
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Employee</label>
+                    <select class="saas-form-select" id="manualAttendanceEmpSelect" required>
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Date</label>
+                    <input type="date" class="saas-form-input" id="manualAttendanceDate" required>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Punch In Time</label>
+                        <input type="time" class="saas-form-input" id="manualAttendanceInTime" required value="09:00">
+                    </div>
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Punch Out Time</label>
+                        <input type="time" class="saas-form-input" id="manualAttendanceOutTime" required value="17:00">
+                    </div>
+                </div>
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Status</label>
+                    <select class="saas-form-select" id="manualAttendanceStatus">
+                        <option value="Normal">Normal Shift</option>
+                        <option value="Late">Late Entry</option>
+                        <option value="Overtime">Overtime</option>
+                    </select>
+                </div>
+                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px;">Record Shift Log</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 6: Create Recipe -->
+    <div class="modal-overlay" id="modalCreateRecipe">
+        <div class="modal-content" style="max-width: 550px; width: 90%;">
+            <div class="modal-header">
+                <h3>Create New Recipe</h3>
+                <div class="modal-close" onclick="closeModal('modalCreateRecipe')">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </div>
+            </div>
+            <form id="formCreateRecipe">
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Recipe Name</label>
+                    <input type="text" class="saas-form-input" placeholder="e.g. Whopper Veg Burger" required id="recipeNameInput">
+                </div>
+                <div class="saas-form-group">
+                    <label class="saas-form-label">Portion Size Description</label>
+                    <input type="text" class="saas-form-input" placeholder="e.g. Standard size portion" required id="recipePortionInput" value="Standard size portion">
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Suggested Retail Price (₹)</label>
+                        <input type="number" step="0.01" class="saas-form-input" placeholder="e.g. 149.00" required id="recipeRetailPriceInput">
+                    </div>
+                    <div class="saas-form-group">
+                        <label class="saas-form-label">Raw Cost Price (₹)</label>
+                        <input type="number" step="0.01" class="saas-form-input" placeholder="e.g. 38.50" required id="recipeRawCostInput">
+                    </div>
+                </div>
+
+                <!-- Dynamic Ingredients Section -->
+                <div class="saas-form-group">
+                    <label class="saas-form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Ingredients Portioning</span>
+                        <button type="button" class="saas-btn saas-btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="addRecipeIngredientRow()">+ Add Ingredient</button>
+                    </label>
+                    <div id="recipeIngredientsContainer" style="margin-top: 8px; max-height: 180px; overflow-y: auto; padding-right: 4px;">
+                        <!-- Rows will be added dynamically -->
+                    </div>
+                </div>
+
+                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px;">Create Recipe</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 6B: Bulk Import Recipes -->
+    <div class="modal-overlay" id="modalBulkImportRecipes">
+        <div class="modal-content" style="max-width: 650px; width: 90%;">
+            <div class="modal-header">
+                <h3>Bulk Recipes Import</h3>
+                <div class="modal-close" onclick="closeModal('modalBulkImportRecipes')">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </div>
+            </div>
+            
+            <!-- Upload Dropzone -->
+            <div id="bulkImportRecipesDropzone" style="border: 2px dashed var(--border); border-radius: 8px; padding: 32px 20px; text-align: center; background: var(--bg-sidebar); cursor: pointer; transition: all 0.2s ease; margin-bottom: 20px;">
+                <i data-lucide="upload-cloud" style="width: 48px; height: 48px; color: var(--text-tertiary); margin-bottom: 12px;"></i>
+                <h4 style="font-weight: 700; margin-bottom: 6px;">Upload Recipes Excel File</h4>
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 16px;">Supports Excel (.xlsx, .xls) or CSV (.csv)</p>
+                <button type="button" class="saas-btn saas-btn-secondary" onclick="document.getElementById('bulkImportRecipesFileInput').click()">Choose File</button>
+                <input type="file" id="bulkImportRecipesFileInput" accept=".xlsx, .xls, .csv" style="display: none;">
+            </div>
+
+            <!-- Processing Status / Spinner -->
+            <div id="bulkImportRecipesStatus" style="display: none; text-align: center; margin-bottom: 20px;">
+                <div class="saas-spinner" style="margin: 0 auto 12px;"></div>
+                <span style="font-size: 0.85rem; font-weight: bold; color: var(--orange-primary);" id="bulkImportRecipesStatusText">Analyzing uploaded file...</span>
+            </div>
+
+            <!-- Results Preview Block -->
+            <div id="bulkImportRecipesPreviewBlock" style="display: none; margin-bottom: 20px;">
+                <h4 style="font-weight: 700; margin-bottom: 12px; font-size: 0.9rem;">Parsed Recipes Preview:</h4>
+                <div style="border: 1px solid var(--border); border-radius: 6px; background: var(--bg-sidebar);">
+                    <table class="saas-table" style="font-size: 0.75rem;">
+                        <thead>
+                            <tr style="background: var(--bg-hover);">
+                                <th>Recipe Name</th>
+                                <th>Portion Size</th>
+                                <th>Ingredients</th>
+                                <th>Raw Cost</th>
+                                <th>Suggested Retail</th>
+                                <th>Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bulkImportRecipesPreviewTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div style="font-size: 0.7rem; color: var(--text-tertiary); margin-top: 8px;">
+                    * Existing recipes with the same name will be overwritten. New recipes will be created.
+                </div>
+            </div>
+
+            <!-- Modal Actions -->
+            <div style="display: flex; gap: 12px;">
+                <button type="button" class="saas-btn saas-btn-secondary" style="flex: 1;" onclick="closeModal('modalBulkImportRecipes')">Cancel</button>
+                <button type="button" class="saas-btn saas-btn-primary" id="btnBulkImportRecipesApply" style="flex: 1;" disabled>Apply Updates</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
