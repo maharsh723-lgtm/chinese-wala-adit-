@@ -9390,13 +9390,19 @@ function initApp() {
             itemsHtml += `
                 <div class="receipt-item-row">
                     <div class="receipt-item-top">
-                        <span>${item.productName} (x${item.quantity})</span>
+                        <span>${item.productName} (x${item.quantity}) @ ₹${itemPrice.toFixed(2)}</span>
                         <span>₹${sub.toFixed(2)}</span>
                     </div>
                     ${modsLine}
                 </div>
             `;
         });
+
+        // 5% GST calculations (inclusive of grand total)
+        const taxable = order.grandTotal / 1.05;
+        const totalGst = order.grandTotal - taxable;
+        const cgst = totalGst / 2;
+        const sgst = totalGst / 2;
         
         const invoiceHtml = `
             <div class="receipt-container">
@@ -9446,11 +9452,23 @@ function initApp() {
                     <span>Service Charge (5%)</span>
                     <span>₹${order.serviceCharge.toFixed(2)}</span>
                 </div>
+                <div class="receipt-row" style="font-size: 11px; opacity: 0.85;">
+                    <span>Taxable Value</span>
+                    <span>₹${taxable.toFixed(2)}</span>
+                </div>
+                <div class="receipt-row" style="font-size: 11px; opacity: 0.85;">
+                    <span>CGST (2.5%)</span>
+                    <span>₹${cgst.toFixed(2)}</span>
+                </div>
+                <div class="receipt-row" style="font-size: 11px; opacity: 0.85;">
+                    <span>SGST (2.5%)</span>
+                    <span>₹${sgst.toFixed(2)}</span>
+                </div>
                 
                 <div class="receipt-divider"></div>
                 
                 <div class="receipt-row receipt-totals" style="font-size:14px;">
-                    <span>GRAND TOTAL</span>
+                    <span>GRAND TOTAL (Incl. GST)</span>
                     <span>₹${order.grandTotal.toFixed(2)}</span>
                 </div>
                 <div class="receipt-row" style="font-size:10px; margin-top:4px;">
