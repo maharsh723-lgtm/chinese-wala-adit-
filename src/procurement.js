@@ -58,7 +58,7 @@ window.initProcurementModule = function() {
         copyToClipboard("50200084325729", "Bank Account number copied!");
     });
     document.getElementById("btnCopyUPI")?.addEventListener("click", () => {
-        copyToClipboard("nitipatel0405@okhdfcbank", "UPI ID copied!");
+        copyToClipboard("9978673137@ikwik", "UPI ID copied!");
     });
     document.getElementById("btnDownloadBankDetails")?.addEventListener("click", downloadBankDetailsFile);
 
@@ -519,10 +519,10 @@ function openCheckoutModal() {
     // Dynamic UPI QR generation based on exact grand total and PO reference ID!
     const imgEl = document.getElementById("imgProcUpiQr");
     if (imgEl) {
-        const upiLink = `upi://pay?pa=nitipatel0405@okhdfcbank&pn=Niti%20Patel&am=${currentPo.grandTotal.toFixed(2)}&cu=INR&tn=${currentPo.id}`;
+        const upiLink = `upi://pay?pa=9978673137@ikwik&pn=Badi%20Katori&am=${currentPo.grandTotal.toFixed(2)}&cu=INR&tn=${currentPo.id}`;
         imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiLink)}`;
         imgEl.onerror = () => {
-            imgEl.src = "./niti_pay_qr.png"; // Fallback to user uploaded QR code if offline
+            imgEl.src = "./upi_qr.jpg"; // Fallback to user uploaded QR code if offline
         };
     }
 
