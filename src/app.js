@@ -547,33 +547,39 @@ function initApp() {
         const todayStr = getTodayDateStr();
 
         if (currentRole === "bm") {
-            const storeChecklists = checklists.filter(c => c.store === currentStore && c.date === todayStr);
-            const openCl = storeChecklists.find(c => c.type === "opening");
-            const closeCl = storeChecklists.find(c => c.type === "closing");
+            // 1. Live Sales Today (Sum of non-refunded grandTotal for today)
+            const storeOrdersToday = posOrders.filter(o => o.store === currentStore && o.date === todayStr && o.status !== 'Refunded');
+            const liveSalesToday = storeOrdersToday.reduce((sum, o) => sum + o.grandTotal, 0);
 
-            const openProgress = openCl ? openCl.progress : 0;
-            const closeProgress = closeCl ? closeCl.progress : 0;
+            // 2. Food Cost % (COGS % based on actual item recipes rawCost vs sales)
+            let cogsToday = 0;
+            storeOrdersToday.forEach(order => {
+                order.items.forEach(item => {
+                    const recipe = recipes.find(r => r.name === item.productName);
+                    const rawCost = recipe ? recipe.rawCost : (item.price * 0.32);
+                    cogsToday += item.quantity * rawCost;
+                });
+            });
+            const foodCostPct = liveSalesToday > 0 ? (cogsToday / liveSalesToday) * 100 : 0.0;
 
+            // 3. Inventory Value (Live stock valuation)
+            const storeInventory = inventory.filter(inv => inv.store === currentStore);
+            const inventoryValue = storeInventory.reduce((sum, inv) => sum + (inv.stock * (inv.unitCost || 0)), 0);
+
+            // 4. Wastage Cost (Live wastage cost logged today)
+            const storeWastage = wastage.filter(w => w.store === currentStore && w.date === todayStr);
+            const wasteCost = storeWastage.reduce((sum, w) => sum + (w.cost || 0), 0);
+
+            // 5. Staff Attendance (Live percentage based on active shift punches today)
             const storeStaff = Object.values(employees).filter(e => e.store === currentStore && e.roleKey !== "sm");
             const activeStaffCount = storeStaff.filter(e => e.activePunch).length;
+            const attendancePct = storeStaff.length > 0 ? (activeStaffCount / storeStaff.length) * 100 : 0.0;
 
-            const storeWastage = wastage.filter(w => w.store === currentStore && w.date === todayStr);
-            const wasteCost = storeWastage.reduce((sum, w) => sum + (w.qty * 300), 0);
-
-            const todayEod = eodReports.find(r => r.store === currentStore && r.date === todayStr);
-            const salesDisplay = todayEod ? `₹${todayEod.sales.toLocaleString()}` : "₹2,84,500 (Demo)";
-
-            // Calculate Delivery Stats for Current Store
-            const storeDeliveryOrders = posOrders.filter(o => o.store === currentStore && o.orderType === 'Delivery');
-            const totalDeliveryCount = storeDeliveryOrders.length;
-            const swiggyOrders = storeDeliveryOrders.filter(o => o.source === 'swiggy');
-            const zomatoOrders = storeDeliveryOrders.filter(o => o.source === 'zomato');
-            const swiggyRevenue = swiggyOrders.reduce((sum, o) => sum + o.grandTotal, 0);
-            const zomatoRevenue = zomatoOrders.reduce((sum, o) => sum + o.grandTotal, 0);
-            const totalDeliveryRevenue = swiggyRevenue + zomatoRevenue;
-            const pendingCount = storeDeliveryOrders.filter(o => o.deliveryStatus === 'New Order' || o.deliveryStatus === 'Preparing').length;
-            const readyCount = storeDeliveryOrders.filter(o => o.deliveryStatus === 'Ready for Pickup').length;
-            const cancelledCount = storeDeliveryOrders.filter(o => o.deliveryStatus === 'Cancelled').length;
+            // 6. SOP Compliance (Live completion percentage of SOP tasks)
+            const storeSops = sops.filter(s => s.store === currentStore);
+            const sopCompliance = storeSops.length > 0 
+                ? storeSops.reduce((sum, s) => sum + (s.completionPct || 0), 0) / storeSops.length
+                : 0.0;
 
             container.innerHTML = `
                 <div class="screen-header-layout">
@@ -589,40 +595,48 @@ function initApp() {
                             <span>Today's Sales</span>
                             <i data-lucide="indian-rupee"></i>
                         </div>
-                        <div class="kpi-value">${salesDisplay}</div>
-                        <div class="kpi-meta">${todayEod ? '<span class="trend-up">Submitted</span>' : '<span style="color:var(--warning);">EOD Pending</span>'}</div>
+                        <div class="kpi-value">₹${liveSalesToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div class="kpi-meta"><span class="trend-up">▲ Live</span> ${storeOrdersToday.length} orders today</div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-header">
-                            <span>Opening Checklist</span>
-                            <i data-lucide="clipboard-check"></i>
+                            <span>Food Cost %</span>
+                            <i data-lucide="percent"></i>
                         </div>
-                        <div class="kpi-value">${openProgress}%</div>
-                        <div class="kpi-meta">${openProgress === 100 ? 'Completed' : 'In Progress'}</div>
+                        <div class="kpi-value">${foodCostPct.toFixed(1)}%</div>
+                        <div class="kpi-meta">Target: 32.0%</div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-header">
-                            <span>Closing Checklist</span>
-                            <i data-lucide="clipboard-x"></i>
+                            <span>Inventory Value</span>
+                            <i data-lucide="package"></i>
                         </div>
-                        <div class="kpi-value">${closeProgress}%</div>
-                        <div class="kpi-meta">${closeProgress === 100 ? 'Completed' : 'In Progress'}</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <span>Staff Present</span>
-                            <i data-lucide="users"></i>
-                        </div>
-                        <div class="kpi-value">${activeStaffCount} / ${storeStaff.length}</div>
-                        <div class="kpi-meta">On active shift</div>
+                        <div class="kpi-value">₹${inventoryValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div class="kpi-meta">${storeInventory.length} items in stock</div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-header">
                             <span>Wastage Cost</span>
                             <i data-lucide="trash-2" style="color: var(--danger);"></i>
                         </div>
-                        <div class="kpi-value" style="color: var(--danger);">₹${wasteCost.toLocaleString()}</div>
-                        <div class="kpi-meta">${storeWastage.length} spoiled logs</div>
+                        <div class="kpi-value" style="color: var(--danger);">₹${wasteCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div class="kpi-meta">${storeWastage.length} spoiled logs today</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span>Staff Attendance</span>
+                            <i data-lucide="users"></i>
+                        </div>
+                        <div class="kpi-value">${attendancePct.toFixed(1)}%</div>
+                        <div class="kpi-meta">${activeStaffCount} / ${storeStaff.length} checked in</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span>SOP Compliance</span>
+                            <i data-lucide="shield-check"></i>
+                        </div>
+                        <div class="kpi-value">${sopCompliance.toFixed(1)}%</div>
+                        <div class="kpi-meta">Task completion average</div>
                     </div>
                 </div>
 
@@ -660,8 +674,8 @@ function initApp() {
             renderDashboardInventoryAlerts();
             renderDashboardBestSelling();
         } else {
-            // Owner Dashboard
-            const totalWastageCost = wastage.reduce((sum, w) => {
+            // Owner Dashboard (Consolidated Real-time stats across all branches for TODAY)
+            const totalWastageCostToday = wastage.filter(w => w.date === todayStr).reduce((sum, w) => {
                 const findInv = inventory.find(inv => inv.label === w.name && inv.store === w.store);
                 const uCost = findInv ? findInv.unitCost : 100;
                 return sum + (w.cost || (w.qty * uCost));
@@ -669,22 +683,8 @@ function initApp() {
             const totalEmployees = Object.values(employees).filter(e => e.roleKey !== "owner" && e.roleKey !== "sm").length;
             const totalActiveStaff = Object.values(employees).filter(e => e.activePunch).length;
 
-            const yesterdayStr = "2026-06-14";
-            const yesterdayEods = eodReports.filter(r => r.date === yesterdayStr);
-            const totalYesterdaySales = yesterdayEods.reduce((sum, r) => sum + r.sales, 0);
-            const totalYesterdayExpenses = yesterdayEods.reduce((sum, r) => sum + r.expenses, 0);
-
-            // Calculate Consolidated Delivery Stats for Owner
-            const allDeliveryOrders = posOrders.filter(o => o.orderType === 'Delivery');
-            const totalDeliveryCount = allDeliveryOrders.length;
-            const swiggyOrders = allDeliveryOrders.filter(o => o.source === 'swiggy');
-            const zomatoOrders = allDeliveryOrders.filter(o => o.source === 'zomato');
-            const swiggyRevenue = swiggyOrders.reduce((sum, o) => sum + o.grandTotal, 0);
-            const zomatoRevenue = zomatoOrders.reduce((sum, o) => sum + o.grandTotal, 0);
-            const totalDeliveryRevenue = swiggyRevenue + zomatoRevenue;
-            const pendingCount = allDeliveryOrders.filter(o => o.deliveryStatus === 'New Order' || o.deliveryStatus === 'Preparing').length;
-            const readyCount = allDeliveryOrders.filter(o => o.deliveryStatus === 'Ready for Pickup').length;
-            const cancelledCount = allDeliveryOrders.filter(o => o.deliveryStatus === 'Cancelled').length;
+            const consolidatedSalesToday = posOrders.filter(o => o.date === todayStr && o.status !== 'Refunded').reduce((sum, o) => sum + o.grandTotal, 0);
+            const consolidatedExpensesToday = expenses.filter(e => e.date === todayStr).reduce((sum, e) => sum + e.amount, 0);
 
             container.innerHTML = `
                 <div class="screen-header-layout">
@@ -696,19 +696,19 @@ function initApp() {
 
                 <div class="kpi-grid">
                     <div class="kpi-card">
-                        <div class="kpi-header">Consolidated Sales (Yesterday)</div>
-                        <div class="kpi-value">₹${totalYesterdaySales.toLocaleString()}</div>
-                        <div class="kpi-meta">3 Branches EOD submitted</div>
+                        <div class="kpi-header">Consolidated Sales (Today)</div>
+                        <div class="kpi-value">₹${consolidatedSalesToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div class="kpi-meta">Live across all branches</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-header">Consolidated Expenses (Yesterday)</div>
-                        <div class="kpi-value">₹${totalYesterdayExpenses.toLocaleString()}</div>
-                        <div class="kpi-meta">Net Operating Cost</div>
+                        <div class="kpi-header">Consolidated Expenses (Today)</div>
+                        <div class="kpi-value">₹${consolidatedExpensesToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div class="kpi-meta">Net Operating Cost today</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-header">Consolidated Wastage (Month)</div>
-                        <div class="kpi-value" style="color:var(--danger);">₹${totalWastageCost.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
-                        <div class="kpi-meta">Total financial loss tracked</div>
+                        <div class="kpi-header">Consolidated Wastage (Today)</div>
+                        <div class="kpi-value" style="color:var(--danger);">₹${totalWastageCostToday.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div class="kpi-meta">Total financial loss today</div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-header">Staff Attendance Overview</div>
@@ -726,7 +726,7 @@ function initApp() {
                     </div>
 
                     <div class="widget-card">
-                        <div class="widget-title">Branch-wise Sales Performance (Yesterday)</div>
+                        <div class="widget-title">Branch-wise Sales Performance (Today)</div>
                         <div class="widget-body" style="height: 220px; position: relative;">
                             <canvas id="ownerSalesComparisonChart"></canvas>
                         </div>
@@ -743,7 +743,7 @@ function initApp() {
                     </div>
                 </div>
             `;
-            initOwnerDashboardCharts(yesterdayEods);
+            initOwnerDashboardCharts();
             renderOwnerDashboardChecklists();
             renderOwnerDashboardBestSelling();
         }
@@ -760,6 +760,21 @@ function initApp() {
         const ctx = document.getElementById("dashSalesChart");
         if (!ctx) return;
 
+        const todayStr = getTodayDateStr();
+        const storeOrdersToday = posOrders.filter(o => o.store === currentStore && o.date === todayStr && o.status !== 'Refunded');
+
+        const hourlySales = [0, 0, 0, 0, 0, 0];
+        storeOrdersToday.forEach(order => {
+            const timeStr = order.time || "12:00:00";
+            const hour = parseInt(timeStr.split(":")[0]) || 12;
+            if (hour >= 8 && hour < 11) hourlySales[0] += order.grandTotal;
+            else if (hour >= 11 && hour < 14) hourlySales[1] += order.grandTotal;
+            else if (hour >= 14 && hour < 17) hourlySales[2] += order.grandTotal;
+            else if (hour >= 17 && hour < 20) hourlySales[3] += order.grandTotal;
+            else if (hour >= 20 && hour < 23) hourlySales[4] += order.grandTotal;
+            else if (hour >= 23 || hour < 8) hourlySales[5] += order.grandTotal;
+        });
+
         if (chartSales) chartSales.destroy();
         chartSales = new Chart(ctx, {
             type: "line",
@@ -767,9 +782,9 @@ function initApp() {
                 labels: ["08:00", "11:00", "14:00", "17:00", "20:00", "23:00"],
                 datasets: [{
                     label: "Hourly Revenue (₹)",
-                    data: [35000, 92000, 184000, 142000, 320000, 110000],
+                    data: hourlySales,
                     borderColor: "#FF6B00",
-                    borderWidth: 2,
+                    borderWidth: 3,
                     tension: 0.3,
                     fill: false
                 }]
@@ -783,7 +798,7 @@ function initApp() {
     }
 
     // Helper: Owner Dashboard Comparison Chart
-    function initOwnerDashboardCharts(eods) {
+    function initOwnerDashboardCharts() {
         if (typeof Chart === 'undefined') {
             console.warn('Chart.js is not loaded. Skipping chart initialization.');
             return;
@@ -792,9 +807,10 @@ function initApp() {
         if (!ctx) return;
 
         const labels = ["VESU", "ADAJAN", "CT LIGHT"];
+        const todayStr = getTodayDateStr();
         const salesData = labels.map(lbl => {
-            const match = eods.find(e => e.store === lbl);
-            return match ? match.sales : 0;
+            const storeOrders = posOrders.filter(o => o.store === lbl && o.date === todayStr && o.status !== 'Refunded');
+            return storeOrders.reduce((sum, o) => sum + o.grandTotal, 0);
         });
 
         if (chartOwnerSales) chartOwnerSales.destroy();
@@ -803,9 +819,9 @@ function initApp() {
             data: {
                 labels: labels.map(l => l.split(' ')[0]),
                 datasets: [{
-                    label: "Yesterday Sales (₹)",
+                    label: "Today's Sales (₹)",
                     data: salesData,
-                    backgroundColor: "#FF6B00",
+                    backgroundColor: ["#10b981", "#f97316", "#3b82f6"],
                     borderRadius: 4
                 }]
             },
