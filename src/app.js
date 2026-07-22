@@ -9452,15 +9452,15 @@ function initApp() {
                     <span>Service Charge (5%)</span>
                     <span>₹${order.serviceCharge.toFixed(2)}</span>
                 </div>
-                <div class="receipt-row" style="font-size: 11px; opacity: 0.85;">
+                <div class="receipt-row" style="font-size: 11px;">
                     <span>Taxable Value</span>
                     <span>₹${taxable.toFixed(2)}</span>
                 </div>
-                <div class="receipt-row" style="font-size: 11px; opacity: 0.85;">
+                <div class="receipt-row" style="font-size: 11px;">
                     <span>CGST (2.5%)</span>
                     <span>₹${cgst.toFixed(2)}</span>
                 </div>
-                <div class="receipt-row" style="font-size: 11px; opacity: 0.85;">
+                <div class="receipt-row" style="font-size: 11px;">
                     <span>SGST (2.5%)</span>
                     <span>₹${sgst.toFixed(2)}</span>
                 </div>
