@@ -1,0 +1,15 @@
+{
+  "id": "order-999",
+  "customerId": "walk-in",
+  "customerName": "Walk-in",
+  "orderType": "Dine In",
+  "tableName": "Table 1",
+  "subtotal": 10,
+  "tax": 0,
+  "discount": 0,
+  "serviceCharge": 0,
+  "grandTotal": 10,
+  "paymentMethod": "UPI",
+  "items": [],
+  "tokenNumber": 1
+}

@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let checklists = [];
     let eodReports = [];
     let recipes = [];
+    let productSales = [];
     let currentParsedBulkRecipes = [];
     let currentUser = null;
 
@@ -16,14 +17,14 @@ document.addEventListener("DOMContentLoaded", () => {
     let chartWastage = null;
     let isDarkMode = false;
     let currentRole = "bm"; // "bm" or "owner"
-    let currentStore = "Mumbai Bandra"; // Active store for Branch Manager
+    let currentStore = "VESU"; // Active store for Branch Manager
     let lastStateJson = ""; // For comparing state changes in polling
     
     // Owner specific views state
-    let ownerAttendanceStore = "Mumbai Bandra";
-    let ownerChecklistStoreDetail = "Mumbai Bandra";
-    let ownerEodStore = "Mumbai Bandra";
-    let ownerInventoryStore = "Mumbai Bandra";
+    let ownerAttendanceStore = "VESU";
+    let ownerChecklistStoreDetail = "VESU";
+    let ownerEodStore = "VESU";
+    let ownerInventoryStore = "VESU";
     let ownerEodDate = "2026-06-15";
     let ownerAttendanceTab = "daily"; // "daily" or "monthly"
     let ownerAttendanceSelectedEmployee = ""; // Selected employee for monthly history
@@ -33,11 +34,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const API_BASE = window.location.protocol.startsWith('file') ? 'http://localhost:3000' : '';
 
     const defaultEmployees = {
-        "1": { id: "1", name: "John Doe", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "Mumbai Bandra", activePunch: null, history: [] },
-        "EMP102": { id: "EMP102", name: "Alice Smith", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "password123", status: "Active", store: "Mumbai Bandra", activePunch: null, history: [] },
-        "EMP103": { id: "EMP103", name: "Bob Miller", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "password123", status: "Active", store: "Bangalore Indiranagar", activePunch: null, history: [] },
-        "EMP104": { id: "EMP104", name: "Rahul Sharma", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "password123", status: "Active", store: "Mumbai Bandra", activePunch: null, history: [] },
-        "EMP105": { id: "EMP105", name: "Priya Patel", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "password123", status: "Active", store: "Delhi Connaught Place", activePunch: null, history: [] },
+        "1": { id: "1", name: "John Doe", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "EMP102": { id: "EMP102", name: "Alice Smith", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "password123", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "EMP103": { id: "EMP103", name: "Bob Miller", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "password123", status: "Active", store: "CT LIGHT", activePunch: null, history: [] },
+        "EMP104": { id: "EMP104", name: "Rahul Sharma", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "password123", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "EMP105": { id: "EMP105", name: "Priya Patel", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "password123", status: "Active", store: "ADAJAN", activePunch: null, history: [] },
         "OWNER101": { id: "OWNER101", name: "Franchise Partner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "ownerpassword", status: "Active", store: "All", activePunch: null, history: [] }
     };
 
@@ -87,6 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 checklists = data.checklists || [];
                 eodReports = data.eodReports || [];
                 recipes = data.recipes || [];
+                productSales = data.productSales || [];
 
                 // Sync logged-in user with latest db record
                 const cachedUser = getSafeLocalStorage("bk_logged_in_user", null);
@@ -126,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderPurchaseRequestsScreen();
         renderDayEndReportScreen();
         renderRecipeScreen();
+        renderMaterialReconciliationScreen();
     }
 
     // Periodic Polling loop (every 5 seconds)
@@ -204,13 +207,13 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             currentRole = "bm";
             if (roleKey === "bm-mumbai") {
-                currentStore = "Mumbai Bandra";
+                currentStore = "VESU";
                 currentUser = empList["EMP104"] || defaultEmployees["EMP104"];
             } else if (roleKey === "bm-delhi") {
-                currentStore = "Delhi Connaught Place";
+                currentStore = "ADAJAN";
                 currentUser = empList["EMP105"] || defaultEmployees["EMP105"];
             } else if (roleKey === "bm-bangalore") {
-                currentStore = "Bangalore Indiranagar";
+                currentStore = "CT LIGHT";
                 currentUser = empList["EMP103"] || defaultEmployees["EMP103"];
             }
             if (currentRoleText) currentRoleText.textContent = `BM - ${currentStore.split(' ')[0]}`;
@@ -449,7 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const ctx = document.getElementById("ownerSalesComparisonChart");
         if (!ctx) return;
 
-        const labels = ["Mumbai Bandra", "Delhi Connaught Place", "Bangalore Indiranagar"];
+        const labels = ["VESU", "ADAJAN", "CT LIGHT"];
         const salesData = labels.map(lbl => {
             const match = eods.find(e => e.store === lbl);
             return match ? match.sales : 0;
@@ -517,7 +520,7 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML = "";
 
         const todayStr = getTodayDateStr();
-        const branches = ["Mumbai Bandra", "Delhi Connaught Place", "Bangalore Indiranagar"];
+        const branches = ["VESU", "ADAJAN", "CT LIGHT"];
 
         branches.forEach(branch => {
             const branchCls = checklists.filter(c => c.store === branch && c.date === todayStr);
@@ -573,104 +576,283 @@ document.addEventListener("DOMContentLoaded", () => {
         if (currentRole === "bm") {
             const branchCl = checklists.find(c => c.store === currentStore && c.type === type && c.date === todayStr);
             const checkedIndices = branchCl ? branchCl.items : [];
-            const progress = branchCl ? branchCl.progress : 0;
+            const progress      = branchCl ? branchCl.progress : 0;
+            const isCompleted   = branchCl && branchCl.completed === 1;
+            const existingPhoto = branchCl ? branchCl.photo : null;
 
             const tasks = type === "opening" ? [
-                { title: "Kitchen Cleaning Done", desc: "All food surfaces wiped and floor scrubbed." },
-                { title: "Gas & Equipment Checked", desc: "Verify broiler valves and fryer elements are active." },
-                { title: "Refrigeration Temperature Logged", desc: "Chiller temperature must read between 1°C and 4°C." },
-                { title: "Raw Material Verified", desc: "Check starting levels of vegetables, buns, and chicken items." },
-                { title: "Staff Attendance Completed", desc: "Verify all AM shift personnel are clocked in on time." }
+                { title: "Kitchen Cleaning Done",            desc: "All food surfaces wiped and floor scrubbed." },
+                { title: "Gas & Equipment Checked",          desc: "Verify broiler valves and fryer elements are active." },
+                { title: "Refrigeration Temperature Logged", desc: "Chiller temperature must read between 1\u00b0C and 4\u00b0C." },
+                { title: "Raw Material Verified",            desc: "Check starting levels of vegetables, buns, and chicken items." },
+                { title: "Staff Attendance Completed",       desc: "Verify all AM shift personnel are clocked in on time." }
             ] : [
-                { title: "Cash Reconciliation Done", desc: "Verify counted register vault amounts match expected POS values." },
-                { title: "Inventory Count Completed", desc: "Enter closing stock volumes of critical ingredients." },
-                { title: "Fryers Off & Gas Safe", desc: "Shut down broiler conveyors, fryer power switches, and main gas lines." },
-                { title: "Kitchen Deep Clean", desc: "Scrub grills, clean fryer filtration vats, and sanitise surface tops." },
-                { title: "Doors and Vault Locked", desc: "Ensure safety locker is locked and double lock entrance gates." }
+                { title: "Cash Reconciliation Done",   desc: "Verify counted register vault amounts match expected POS values." },
+                { title: "Inventory Count Completed",  desc: "Enter closing stock volumes of critical ingredients." },
+                { title: "Fryers Off & Gas Safe",      desc: "Shut down broiler conveyors, fryer power switches, and main gas lines." },
+                { title: "Kitchen Deep Clean",         desc: "Scrub grills, clean fryer filtration vats, and sanitise surface tops." },
+                { title: "Doors and Vault Locked",     desc: "Ensure safety locker is locked and double lock entrance gates." }
             ];
 
+            // Build task list HTML
             let tasksHTML = "";
             tasks.forEach((task, idx) => {
                 const isChecked = checkedIndices.includes(idx);
+                const itemStyle = isCompleted ? "opacity:0.85; cursor:not-allowed;" : "cursor:pointer;";
                 tasksHTML += `
-                    <div class="checklist-item ${isChecked ? 'checked' : ''}" data-index="${idx}">
-                        <div class="checklist-checkbox-box">${isChecked ? '✓' : ''}</div>
-                        <div>
+                    <div class="checklist-item ${isChecked ? 'checked' : ''}" data-index="${idx}" style="${itemStyle}">
+                        <div class="checklist-checkbox-box">${isChecked ? '\u2713' : ''}</div>
+                        <div style="flex:1;">
                             <div class="checklist-item-title">${task.title}</div>
                             <div class="checklist-item-meta">${task.desc}</div>
                         </div>
+                        ${isChecked ? `<span style="font-size:0.7rem; color:var(--success); font-weight:700; margin-left:8px;">&#128247; Verified</span>` : ''}
                     </div>
                 `;
             });
+
+            // Photo preview section
+            const photoSectionHTML = existingPhoto ? `
+                <div id="clPhotoPreviewBox" style="margin-top:16px; border:2px solid var(--success); border-radius:var(--radius-md); overflow:hidden; position:relative;">
+                    <img src="${existingPhoto}" style="width:100%; max-height:220px; object-fit:cover; display:block;" alt="Verification Photo"/>
+                    <div style="display:flex; gap:8px; padding:10px; background:rgba(0,0,0,0.5); position:absolute; bottom:0; left:0; right:0;">
+                        ${!isCompleted ? `
+                        <button class="saas-btn saas-btn-secondary" id="btnRetakePhoto" style="flex:1; font-size:0.75rem; padding:6px 10px;">
+                            <i data-lucide="camera" style="width:13px;height:13px;"></i> Retake
+                        </button>
+                        <button class="saas-btn saas-btn-secondary" id="btnDeletePhoto" style="flex:1; font-size:0.75rem; padding:6px 10px; color:var(--danger);">
+                            <i data-lucide="trash-2" style="width:13px;height:13px;"></i> Delete
+                        </button>` : ''}
+                        <span style="color:#fff; font-size:0.7rem; align-self:center; margin-left:4px;">&#10003; Camera photo on file</span>
+                    </div>
+                </div>
+            ` : `
+                <div id="clPhotoPreviewBox" style="display:none;"></div>
+            `;
+
+            const cameraPromptHTML = !existingPhoto && !isCompleted ? `
+                <div id="clCameraPrompt" style="margin-top:16px; padding:16px; background:var(--bg-sidebar); border:2px dashed var(--warning); border-radius:var(--radius-md); text-align:center;">
+                    <i data-lucide="camera" style="width:28px; height:28px; color:var(--warning); margin-bottom:8px;"></i>
+                    <div style="font-size:0.85rem; font-weight:700; color:var(--warning); margin-bottom:4px;">Camera Verification Required</div>
+                    <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:12px;">You must snap a camera photo before marking any task complete.</div>
+                    <button class="saas-btn saas-btn-primary" id="btnTakePhoto" style="width:100%;">
+                        <i data-lucide="camera"></i>&nbsp; Open Camera
+                    </button>
+                </div>
+            ` : `<div id="clCameraPrompt" style="display:none;"></div>`;
+
+            // Hidden camera file input (camera only, no gallery)
+            const cameraInputHTML = `<input type="file" id="clCameraInput_${type}" accept="image/*" capture="environment" style="display:none;">`;
 
             container.innerHTML = `
                 <div class="screen-header-layout">
                     <div class="screen-title-desc">
                         <h1>Daily ${type.charAt(0).toUpperCase() + type.slice(1)} Checklist (${currentStore.split(' ')[0]})</h1>
-                        <p>Complete standard audits for this branch to verify chain standards.</p>
+                        <p>Complete standard audits for this branch. A camera photo is compulsory before marking tasks.</p>
                     </div>
                     <div class="screen-actions">
-                        <button class="saas-btn saas-btn-primary" style="background:var(--success); border:none;" onclick="alert('${type.charAt(0).toUpperCase() + type.slice(1)} checklist completed!')">Mark Completed</button>
+                        ${isCompleted
+                            ? `<button class="saas-btn saas-btn-secondary" style="background:var(--success); border:none; color:#fff; cursor:default;" disabled>&#10003; Checklist Completed</button>`
+                            : `<button class="saas-btn saas-btn-primary" id="btnSubmitChecklist" style="background:var(--success); border:none;" ${checkedIndices.length < tasks.length ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>Submit Checklist</button>`
+                        }
                     </div>
                 </div>
 
                 <div class="checklist-grid">
                     <div class="checklist-tasks-panel" id="checklistTasksPanel">
-                        <h3 style="font-weight: 800; margin-bottom: 20px;">Audits Checklist</h3>
+                        <h3 style="font-weight:800; margin-bottom:20px;">Audits Checklist</h3>
                         ${tasksHTML}
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <div style="display:flex; flex-direction:column; gap:24px;">
                         <div class="widget-card">
                             <div class="widget-title">Checklist Progress</div>
-                            <div style="text-align: center; padding: 20px 0;">
-                                <div style="font-size: 3.5rem; font-weight: 800; color: var(--orange-primary);">${progress}%</div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">
+                            <div style="text-align:center; padding:20px 0;">
+                                <div style="font-size:3.5rem; font-weight:800; color:var(--orange-primary);">${progress}%</div>
+                                <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:8px;">
                                     ${checkedIndices.length} out of ${tasks.length} Tasks Completed
                                 </div>
+                                ${isCompleted ? `<div style="margin-top:12px; color:var(--success); font-weight:700; font-size:0.85rem;">&#10003; Finalized & Locked</div>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="widget-card">
+                            <div class="widget-title">Camera Verification</div>
+                            <div style="padding:4px 0;">
+                                ${cameraPromptHTML}
+                                ${photoSectionHTML}
                             </div>
                         </div>
                     </div>
                 </div>
+                ${cameraInputHTML}
             `;
 
-            container.querySelectorAll(".checklist-item").forEach(item => {
-                item.addEventListener("click", async () => {
-                    const idx = parseInt(item.getAttribute("data-index"));
-                    let newItems = [...checkedIndices];
-                    if (newItems.includes(idx)) {
-                        newItems = newItems.filter(i => i !== idx);
-                    } else {
-                        newItems.push(idx);
-                    }
+            if (window.lucide) window.lucide.createIcons();
 
-                    const newProgress = Math.round((newItems.length / tasks.length) * 100);
-                    const completed = newProgress === 100 ? 1 : 0;
+            // ── Camera helpers ────────────────────────────────────────────────
+            const cameraInput = document.getElementById(`clCameraInput_${type}`);
 
-                    try {
-                        await fetch(`${API_BASE}/api/checklists`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                id: `${type}-${currentStore}-${todayStr}`,
-                                type,
-                                store: currentStore,
-                                date: todayStr,
-                                progress: newProgress,
-                                completed,
-                                items: newItems
-                            })
-                        });
-                        syncStateFromServer();
-                    } catch (err) {
-                        console.error('Failed to update checklist item:', err);
+            function openCamera() {
+                if (cameraInput) cameraInput.click();
+            }
+
+            async function saveChecklistPhoto(photoDataUrl) {
+                try {
+                    await fetch(`${API_BASE}/api/checklists`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: `${type}-${currentStore}-${todayStr}`,
+                            type,
+                            store: currentStore,
+                            date: todayStr,
+                            progress: branchCl ? branchCl.progress : 0,
+                            completed: branchCl ? branchCl.completed : 0,
+                            items: checkedIndices,
+                            photo: photoDataUrl
+                        })
+                    });
+                    await syncStateFromServer();
+                } catch (err) {
+                    console.error('Failed to save photo:', err);
+                    alert('Failed to save photo. Please try again.');
+                }
+            }
+
+            async function deleteChecklistPhoto() {
+                // Remove photo AND clear all checked tasks (revert to incomplete)
+                try {
+                    await fetch(`${API_BASE}/api/checklists`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: `${type}-${currentStore}-${todayStr}`,
+                            type,
+                            store: currentStore,
+                            date: todayStr,
+                            progress: 0,
+                            completed: 0,
+                            items: [],
+                            photo: null
+                        })
+                    });
+                    await syncStateFromServer();
+                } catch (err) {
+                    console.error('Failed to delete photo:', err);
+                }
+            }
+
+            async function toggleTaskCheck(idx) {
+                // Must have a photo first
+                if (!existingPhoto) {
+                    alert('A camera verification photo is compulsory. Please snap a photo using the camera button before checking any task.');
+                    return;
+                }
+                if (isCompleted) return;
+
+                let newItems = [...checkedIndices];
+                if (newItems.includes(idx)) {
+                    newItems = newItems.filter(i => i !== idx);
+                } else {
+                    newItems.push(idx);
+                }
+                const newProgress = Math.round((newItems.length / tasks.length) * 100);
+                const completed   = newProgress === 100 ? 1 : 0;
+
+                try {
+                    await fetch(`${API_BASE}/api/checklists`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: `${type}-${currentStore}-${todayStr}`,
+                            type,
+                            store: currentStore,
+                            date: todayStr,
+                            progress: newProgress,
+                            completed,
+                            items: newItems,
+                            photo: existingPhoto
+                        })
+                    });
+                    syncStateFromServer();
+                } catch (err) {
+                    console.error('Failed to update checklist:', err);
+                }
+            }
+
+            // ── Event bindings ────────────────────────────────────────────────
+            if (!isCompleted) {
+                // Open camera buttons
+                const btnTake   = document.getElementById('btnTakePhoto');
+                const btnRetake = document.getElementById('btnRetakePhoto');
+                if (btnTake)   btnTake.addEventListener('click', openCamera);
+                if (btnRetake) btnRetake.addEventListener('click', openCamera);
+
+                // Delete photo → revert all tasks
+                const btnDelete = document.getElementById('btnDeletePhoto');
+                if (btnDelete) btnDelete.addEventListener('click', async () => {
+                    if (confirm('Delete the verification photo? All task checks will also be cleared.')) {
+                        await deleteChecklistPhoto();
                     }
                 });
-            });
+
+                // Camera file picked → read as base64 → save
+                if (cameraInput) {
+                    cameraInput.addEventListener('change', async (e) => {
+                        const file = e.target.files && e.target.files[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = async (ev) => {
+                            await saveChecklistPhoto(ev.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                        cameraInput.value = "";
+                    });
+                }
+
+                // Task click → camera-gated toggle
+                container.querySelectorAll(".checklist-item").forEach(itemEl => {
+                    itemEl.addEventListener("click", () => {
+                        const idx = parseInt(itemEl.getAttribute("data-index"));
+                        toggleTaskCheck(idx);
+                    });
+                });
+
+                // Submit checklist (all tasks done)
+                const btnSubmit = document.getElementById('btnSubmitChecklist');
+                if (btnSubmit && !btnSubmit.disabled) {
+                    btnSubmit.addEventListener('click', async () => {
+                        if (checkedIndices.length < tasks.length) {
+                            alert('Please complete all tasks before submitting.');
+                            return;
+                        }
+                        try {
+                            await fetch(`${API_BASE}/api/checklists`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    id: `${type}-${currentStore}-${todayStr}`,
+                                    type,
+                                    store: currentStore,
+                                    date: todayStr,
+                                    progress: 100,
+                                    completed: 1,
+                                    items: checkedIndices,
+                                    photo: existingPhoto
+                                })
+                            });
+                            syncStateFromServer();
+                        } catch (err) {
+                            console.error('Failed to submit checklist:', err);
+                        }
+                    });
+                }
+            }
 
         } else {
             // Owner View
-            const branches = ["Mumbai Bandra", "Delhi Connaught Place", "Bangalore Indiranagar"];
+            const branches = ["VESU", "ADAJAN", "CT LIGHT"];
             let branchRowsHTML = "";
 
             branches.forEach(branch => {
@@ -922,7 +1104,7 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
 
             if (ownerAttendanceTab === "daily") {
-                const branches = ["Mumbai Bandra", "Delhi Connaught Place", "Bangalore Indiranagar"];
+                const branches = ["VESU", "ADAJAN", "CT LIGHT"];
                 let storeOptionsHTML = "";
                 branches.forEach(branch => {
                     storeOptionsHTML += `<option value="${branch}" ${ownerAttendanceStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -1257,7 +1439,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Branch Switcher dropdown for owner
         let selectHeaderHTML = "";
         if (currentRole === "owner") {
-            const branches = ["Mumbai Bandra", "Delhi Connaught Place", "Bangalore Indiranagar"];
+            const branches = ["VESU", "ADAJAN", "CT LIGHT"];
             let storeOptionsHTML = "";
             branches.forEach(branch => {
                 storeOptionsHTML += `<option value="${branch}" ${ownerInventoryStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -1934,7 +2116,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } else {
             // Owner view
-            const branches = ["Mumbai Bandra", "Delhi Connaught Place", "Bangalore Indiranagar"];
+            const branches = ["VESU", "ADAJAN", "CT LIGHT"];
             let storeOptionsHTML = "";
             branches.forEach(branch => {
                 storeOptionsHTML += `<option value="${branch}" ${ownerEodStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -2141,6 +2323,497 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (window.lucide) window.lucide.createIcons();
     }
+
+    // === AUTOMATED MATERIAL FLOW RECONCILIATION REPORT ===
+    const INGREDIENT_TO_INVENTORY_MAP = {
+        "sesame bun": "Whopper Sesame Buns",
+        "veg whopper patty": "Veg Whopper Patty",
+        "mayonnaise sauce": "Mayonnaise Sauce",
+        "iceberg lettuce": "Iceberg Lettuce",
+        "long glazed bun": "Long Glazed Bun",
+        "royale paneer patty": "Royale Paneer Patty",
+        "shredded iceberg lettuce": "Shredded Iceberg Lettuce",
+        "royale mint sauce": "Royale Mint Sauce",
+        "plain bun": "Plain Bun",
+        "cheeseburger patty (2oz)": "Cheeseburger Patty (2oz)",
+        "cheeseburger patty": "Cheeseburger Patty (2oz)",
+        "cheeseburger patties": "Cheeseburger Patty (2oz)",
+        "cheddar cheese slices": "Cheddar Cheese Slices",
+        "cheese slices": "Cheddar Cheese Slices",
+        "cheese slice": "Cheddar Cheese Slices",
+        "tandoori mayo sauce": "Tandoori Mayo Sauce",
+        "paneer": "Paneer cubes",
+        "paneer cubes": "Paneer cubes",
+        "chicken chunks": "Chicken chunks",
+        "chicken": "Chicken chunks",
+        "spices": "Marination spices",
+        "marination spices": "Marination spices",
+        "basmati rice": "Basmati Rice",
+        "rice": "Basmati Rice",
+        "dosa batter": "Dosa Batter",
+        "potato masala": "Potato Masala",
+        "butter gravy": "Butter Gravy",
+        "chicken patties": "Raw Chicken Patties (Whopper)",
+        "raw chicken patties (whopper)": "Raw Chicken Patties (Whopper)"
+    };
+
+    function getBranchCode(storeName) {
+        if (storeName === "VESU" || storeName === "VESU") return "VESU";
+        if (storeName === "ADAJAN" || storeName === "CT LIGHT") return "CT LIGHT";
+        if (storeName === "CT LIGHT" || storeName === "ADAJAN") return "ADAJAN";
+        return storeName;
+    }
+
+    function matchIngredientToInventory(ingredientName, inventoryList) {
+        const cleanIng = ingredientName.toLowerCase().trim();
+        if (INGREDIENT_TO_INVENTORY_MAP[cleanIng]) {
+            return INGREDIENT_TO_INVENTORY_MAP[cleanIng];
+        }
+        for (const inv of inventoryList) {
+            const labelLower = inv.label.toLowerCase();
+            if (labelLower === cleanIng || labelLower.includes(cleanIng) || cleanIng.includes(labelLower)) {
+                return inv.label;
+            }
+        }
+        const firstWord = cleanIng.split(" ")[0];
+        if (firstWord && firstWord.length > 2) {
+            for (const inv of inventoryList) {
+                const labelLower = inv.label.toLowerCase();
+                if (labelLower.includes(firstWord)) {
+                    return inv.label;
+                }
+            }
+        }
+        return null;
+    }
+
+    function getMaxSalesDate() {
+        if (!productSales || productSales.length === 0) return "2026-06-15";
+        let maxDate = "2026-06-15";
+        productSales.forEach(s => {
+            if (s.date && s.date > maxDate) {
+                maxDate = s.date;
+            }
+        });
+        return maxDate;
+    }
+
+    function isDateInPreset(dateStr, preset) {
+        if (preset === "all") return true;
+        if (!dateStr) return false;
+
+        const parseDateToUTC = (dStr) => {
+            const parts = dStr.split('-');
+            if (parts.length !== 3) return 0;
+            return Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        };
+
+        const targetTime = parseDateToUTC(dateStr);
+        const maxDateStr = getMaxSalesDate();
+        const maxDateTime = parseDateToUTC(maxDateStr);
+
+        if (preset === "today") {
+            return dateStr === maxDateStr;
+        }
+        if (preset === "yesterday") {
+            const oneDayMs = 24 * 60 * 60 * 1000;
+            const yesterdayTime = maxDateTime - oneDayMs;
+            const yDate = new Date(yesterdayTime);
+            const yDateStr = `${yDate.getUTCFullYear()}-${String(yDate.getUTCMonth() + 1).padStart(2, '0')}-${String(yDate.getUTCDate()).padStart(2, '0')}`;
+            return dateStr === yDateStr;
+        }
+        if (preset === "last7") {
+            const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+            const startTime = maxDateTime - sevenDaysMs;
+            return targetTime >= startTime && targetTime <= maxDateTime;
+        }
+        return false;
+    }
+
+    function renderMaterialReconciliationScreen() {
+        const container = document.getElementById("screen-material-reconciliation");
+        if (!container) return;
+
+        const outletWrapper = document.getElementById("reconOutletSelectWrapper");
+        const outletSelect = document.getElementById("reconOutletSelect");
+        let selectedOutlet = "ALL";
+        
+        if (currentRole === "bm") {
+            if (outletWrapper) outletWrapper.style.display = "none";
+            selectedOutlet = getBranchCode(currentStore);
+        } else {
+            if (outletWrapper) outletWrapper.style.display = "block";
+            selectedOutlet = outletSelect ? outletSelect.value : "ALL";
+        }
+
+        const dateSelect = document.getElementById("reconDateSelect");
+        const selectedPreset = dateSelect ? dateSelect.value : "today";
+
+        const searchInput = document.getElementById("reconSearchInput");
+        const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+        const itemsMap = {};
+        inventory.forEach(i => {
+            if (selectedOutlet !== "ALL" && i.store !== selectedOutlet) {
+                return;
+            }
+            
+            const labelLower = i.label.toLowerCase();
+            const catLower = (i.category || "").toLowerCase();
+            if (searchQuery && !labelLower.includes(searchQuery) && !catLower.includes(searchQuery)) {
+                return;
+            }
+            
+            const key = i.label;
+            if (!itemsMap[key]) {
+                itemsMap[key] = {
+                    label: i.label,
+                    category: i.category,
+                    unit: i.unit,
+                    unitCost: i.unitCost || 0,
+                    left: 0,
+                    used: 0,
+                    wasted: 0,
+                    inflow: 0,
+                    breakdown: []
+                };
+            }
+            itemsMap[key].left += i.stock || 0;
+            itemsMap[key].unitCost = i.unitCost || itemsMap[key].unitCost;
+        });
+
+        wastage.forEach(w => {
+            if (selectedOutlet !== "ALL" && w.store !== selectedOutlet) {
+                return;
+            }
+            if (!isDateInPreset(w.date, selectedPreset)) {
+                return;
+            }
+            const matchKey = Object.keys(itemsMap).find(k => k.toLowerCase() === w.name.toLowerCase());
+            if (matchKey) {
+                itemsMap[matchKey].wasted += w.qty || 0;
+            }
+        });
+
+        const allUniqueInventoryItems = [];
+        const seenLabels = new Set();
+        inventory.forEach(i => {
+            if (!seenLabels.has(i.label)) {
+                seenLabels.add(i.label);
+                allUniqueInventoryItems.push(i);
+            }
+        });
+
+        productSales.forEach(sale => {
+            if (selectedOutlet !== "ALL" && sale.store !== selectedOutlet) {
+                return;
+            }
+            if (!isDateInPreset(sale.date, selectedPreset)) {
+                return;
+            }
+            
+            const recipe = recipes.find(r => r.id === sale.recipeId);
+            if (!recipe) return;
+            
+            const recipeIngredients = recipe.ingredients || [];
+            recipeIngredients.forEach(ing => {
+                const matchedLabel = matchIngredientToInventory(ing.name, allUniqueInventoryItems);
+                if (matchedLabel && itemsMap[matchedLabel]) {
+                    const qtyUsed = (sale.qty || 0) * (ing.qty || 0);
+                    itemsMap[matchedLabel].used += qtyUsed;
+                    
+                    const branchCode = sale.store;
+                    const existingBreakdown = itemsMap[matchedLabel].breakdown.find(
+                        b => b.recipeName === recipe.name && b.branch === branchCode
+                    );
+                    if (existingBreakdown) {
+                        existingBreakdown.qty += qtyUsed;
+                    } else {
+                        itemsMap[matchedLabel].breakdown.push({
+                            recipeName: recipe.name,
+                            branch: branchCode,
+                            qty: qtyUsed
+                        });
+                    }
+                }
+            });
+        });
+
+        Object.keys(itemsMap).forEach(key => {
+            itemsMap[key].inflow = itemsMap[key].left + itemsMap[key].used + itemsMap[key].wasted;
+        });
+
+        // Compute KPIs
+        const totalValueWasted = Object.values(itemsMap).reduce((sum, item) => sum + (item.wasted * item.unitCost), 0);
+        const totalValueInflow = Object.values(itemsMap).reduce((sum, item) => sum + (item.inflow * item.unitCost), 0);
+        const accuracy = totalValueInflow > 0 ? ((totalValueInflow - totalValueWasted) / totalValueInflow * 100) : 100;
+
+        const reconKpiTracked = document.getElementById("reconKpiTracked");
+        const reconKpiUsed = document.getElementById("reconKpiUsed");
+        const reconKpiWasted = document.getElementById("reconKpiWasted");
+        const reconKpiWastedPercent = document.getElementById("reconKpiWastedPercent");
+        const reconKpiAccuracy = document.getElementById("reconKpiAccuracy");
+
+        if (reconKpiTracked) reconKpiTracked.textContent = Object.keys(itemsMap).length;
+        if (reconKpiUsed) {
+            const totalQtyUsed = Object.values(itemsMap).reduce((sum, item) => sum + item.used, 0);
+            reconKpiUsed.textContent = `${Math.round(totalQtyUsed).toLocaleString()}`;
+        }
+        if (reconKpiWasted) {
+            const totalQtyWasted = Object.values(itemsMap).reduce((sum, item) => sum + item.wasted, 0);
+            reconKpiWasted.textContent = `${Math.round(totalQtyWasted).toLocaleString()}`;
+        }
+        if (reconKpiWastedPercent) {
+            const totalQtyUsed = Object.values(itemsMap).reduce((sum, item) => sum + item.used, 0);
+            const totalQtyWasted = Object.values(itemsMap).reduce((sum, item) => sum + item.wasted, 0);
+            const totalQtyLeft = Object.values(itemsMap).reduce((sum, item) => sum + item.left, 0);
+            const totalQtyInflow = totalQtyUsed + totalQtyWasted + totalQtyLeft;
+            const pct = totalQtyInflow > 0 ? ((totalQtyWasted / totalQtyInflow) * 100) : 0;
+            reconKpiWastedPercent.textContent = `${pct.toFixed(1)}% of total inflow`;
+        }
+        if (reconKpiAccuracy) {
+            reconKpiAccuracy.textContent = `${accuracy.toFixed(1)}%`;
+        }
+
+        const tableBody = document.querySelector("#reconTable tbody");
+        if (!tableBody) return;
+        tableBody.innerHTML = "";
+
+        const sortedItems = Object.values(itemsMap).sort((a, b) => b.used - a.used);
+
+        if (sortedItems.length === 0) {
+            const emptyRow = `<tr><td colspan="8" style="text-align: center; padding: 20px; color: var(--text-tertiary);">No ingredients match your criteria.</td></tr>`;
+            tableBody.innerHTML = emptyRow;
+            const cardsContainer = document.getElementById("reconCardsContainer");
+            if (cardsContainer) cardsContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--text-tertiary);">No ingredients match your criteria.</div>`;
+            return;
+        }
+
+        let tableRowsHTML = "";
+        let cardsHTML = "";
+
+        sortedItems.forEach(item => {
+            const hasBreakdown = item.breakdown && item.breakdown.length > 0;
+
+            const isIntegerUnit = ["Piece", "Box", "Slice", "Packet"].includes(item.unit);
+            const formatQty = (val) => {
+                if (val === 0) return "0";
+                return isIntegerUnit ? Math.round(val).toLocaleString() : val.toFixed(1).toLocaleString();
+            };
+
+            const inflowStr = `${formatQty(item.inflow)} ${item.unit}`;
+            const usedStr   = `${formatQty(item.used)}   ${item.unit}`;
+            const wastedStr = `${formatQty(item.wasted)} ${item.unit}`;
+            const leftStr   = `${formatQty(item.left)}   ${item.unit}`;
+
+            // ── "Used In Dishes" column ──────────────────────────────────────
+            let dishCellHTML  = `<span style="color:var(--text-tertiary); font-size:0.75rem;">&mdash;</span>`;
+            let mobileDishHTML = "";
+
+            if (hasBreakdown) {
+                const sortedBreakdown = [...item.breakdown].sort((a, b) => b.qty - a.qty);
+                let dishRows = "";
+
+                sortedBreakdown.forEach(b => {
+                    const pct      = item.used > 0 ? ((b.qty / item.used) * 100).toFixed(0) : 0;
+                    const barWidth = Math.min(100, parseInt(pct));
+
+                    dishRows += `
+                        <div style="margin-bottom:7px; padding-bottom:7px; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                                <span style="font-size:0.75rem; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:145px;" title="${escapeHTML(b.recipeName)}">${escapeHTML(b.recipeName)}</span>
+                                <span style="font-size:0.72rem; font-weight:700; color:var(--info); white-space:nowrap; margin-left:8px;">${formatQty(b.qty)} ${item.unit}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <div style="flex:1; height:4px; background:var(--border); border-radius:2px; overflow:hidden; min-width:40px;">
+                                    <div style="height:100%; width:${barWidth}%; background:linear-gradient(90deg,var(--info),var(--orange-primary)); border-radius:2px;"></div>
+                                </div>
+                                <span style="font-size:0.65rem; color:var(--text-tertiary); min-width:26px;">${pct}%</span>
+                                <span style="font-size:0.62rem; color:var(--text-tertiary); background:var(--border); padding:1px 4px; border-radius:3px;">${escapeHTML(b.branch)}</span>
+                            </div>
+                        </div>`;
+
+                    mobileDishHTML += `
+                        <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed var(--border);">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.8rem; font-weight:600; color:var(--text-primary);">${escapeHTML(b.recipeName)}</span>
+                                <span style="font-size:0.8rem; font-weight:700; color:var(--info);">${formatQty(b.qty)} ${item.unit}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px; margin-top:5px;">
+                                <div style="flex:1; height:5px; background:var(--border); border-radius:3px; overflow:hidden;">
+                                    <div style="height:100%; width:${barWidth}%; background:linear-gradient(90deg,var(--info),var(--orange-primary)); border-radius:3px;"></div>
+                                </div>
+                                <span style="font-size:0.7rem; color:var(--text-tertiary);">${pct}% &middot; ${escapeHTML(b.branch)}</span>
+                            </div>
+                        </div>`;
+                });
+
+                dishCellHTML = `<div style="min-width:210px;">${dishRows}</div>`;
+
+                mobileDishHTML = `
+                    <div style="margin-top:14px; padding-top:14px; border-top:2px solid var(--border);">
+                        <div style="font-size:0.7rem; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:10px;">Used In Dishes:</div>
+                        ${mobileDishHTML}
+                    </div>`;
+            }
+            // ────────────────────────────────────────────────────────────────
+
+            tableRowsHTML += `
+                <tr class="recon-parent-row">
+                    <td><strong>${escapeHTML(item.label)}</strong></td>
+                    <td>${escapeHTML(item.category || 'N/A')}</td>
+                    <td>${escapeHTML(item.unit)}</td>
+                    <td>${inflowStr}</td>
+                    <td style="color:var(--info); font-weight:700;">${usedStr}</td>
+                    <td style="padding:10px 14px; vertical-align:top;">${dishCellHTML}</td>
+                    <td style="color:${item.wasted > 0 ? 'var(--danger)' : 'var(--text-secondary)'}; font-weight:${item.wasted > 0 ? '700' : '400'};">${wastedStr}</td>
+                    <td>${leftStr}</td>
+                </tr>
+            `;
+
+            cardsHTML += `
+                <div class="widget-card" style="padding:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                        <div>
+                            <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">${escapeHTML(item.label)}</div>
+                            <div style="font-size:0.75rem; color:var(--text-tertiary); margin-top:2px;">${escapeHTML(item.category)} &bull; ${escapeHTML(item.unit)}</div>
+                        </div>
+                        <div style="font-size:0.75rem; background:var(--bg-sidebar); border:1px solid var(--border); padding:4px 8px; border-radius:4px; font-weight:700; color:var(--text-secondary);">
+                            Left: ${leftStr}
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:12px; background:var(--bg-sidebar); padding:8px; border-radius:4px;">
+                        <div style="text-align:center;">
+                            <div style="font-size:0.65rem; color:var(--text-tertiary); text-transform:uppercase;">Inflow</div>
+                            <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary); margin-top:2px;">${formatQty(item.inflow)}</div>
+                        </div>
+                        <div style="text-align:center; border-left:1px solid var(--border); border-right:1px solid var(--border);">
+                            <div style="font-size:0.65rem; color:var(--text-tertiary); text-transform:uppercase;">Used</div>
+                            <div style="font-weight:700; font-size:0.85rem; color:var(--info); margin-top:2px;">${formatQty(item.used)}</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:0.65rem; color:var(--text-tertiary); text-transform:uppercase;">Wasted</div>
+                            <div style="font-weight:700; font-size:0.85rem; color:var(--danger); margin-top:2px;">${formatQty(item.wasted)}</div>
+                        </div>
+                    </div>
+                    ${mobileDishHTML}
+                </div>
+            `;
+        });
+
+        const isMobile = window.innerWidth < 768;
+        const tableContainer = container.querySelector(".saas-table-container");
+        const cardsContainer = document.getElementById("reconCardsContainer");
+
+        if (isMobile) {
+            if (tableContainer) tableContainer.style.display = "none";
+            if (cardsContainer) {
+                cardsContainer.style.display = "flex";
+                cardsContainer.innerHTML = cardsHTML;
+            }
+        } else {
+            if (tableContainer) tableContainer.style.display = "block";
+            if (cardsContainer) cardsContainer.style.display = "none";
+            tableBody.innerHTML = tableRowsHTML;
+        }
+
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    window.downloadReconciliationCSV = function() {
+        const outletWrapper = document.getElementById("reconOutletSelectWrapper");
+        const outletSelect = document.getElementById("reconOutletSelect");
+        let selectedOutlet = "ALL";
+        if (currentRole === "bm") {
+            selectedOutlet = getBranchCode(currentStore);
+        } else {
+            selectedOutlet = outletSelect ? outletSelect.value : "ALL";
+        }
+        
+        const dateSelect = document.getElementById("reconDateSelect");
+        const selectedPreset = dateSelect ? dateSelect.value : "today";
+        
+        const searchInput = document.getElementById("reconSearchInput");
+        const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
+        
+        const itemsMap = {};
+        inventory.forEach(i => {
+            if (selectedOutlet !== "ALL" && i.store !== selectedOutlet) return;
+            const labelLower = i.label.toLowerCase();
+            const catLower = (i.category || "").toLowerCase();
+            if (searchQuery && !labelLower.includes(searchQuery) && !catLower.includes(searchQuery)) return;
+            
+            const key = i.label;
+            if (!itemsMap[key]) {
+                itemsMap[key] = {
+                    label: i.label,
+                    category: i.category,
+                    unit: i.unit,
+                    left: 0,
+                    used: 0,
+                    wasted: 0,
+                    inflow: 0
+                };
+            }
+            itemsMap[key].left += i.stock || 0;
+        });
+        
+        wastage.forEach(w => {
+            if (selectedOutlet !== "ALL" && w.store !== selectedOutlet) return;
+            if (!isDateInPreset(w.date, selectedPreset)) return;
+            const matchKey = Object.keys(itemsMap).find(k => k.toLowerCase() === w.name.toLowerCase());
+            if (matchKey) {
+                itemsMap[matchKey].wasted += w.qty || 0;
+            }
+        });
+        
+        const allUniqueInventoryItems = [];
+        const seenLabels = new Set();
+        inventory.forEach(i => {
+            if (!seenLabels.has(i.label)) {
+                seenLabels.add(i.label);
+                allUniqueInventoryItems.push(i);
+            }
+        });
+        
+        productSales.forEach(sale => {
+            if (selectedOutlet !== "ALL" && sale.store !== selectedOutlet) return;
+            if (!isDateInPreset(sale.date, selectedPreset)) return;
+            const recipe = recipes.find(r => r.id === sale.recipeId);
+            if (!recipe) return;
+            
+            const recipeIngredients = recipe.ingredients || [];
+            recipeIngredients.forEach(ing => {
+                const matchedLabel = matchIngredientToInventory(ing.name, allUniqueInventoryItems);
+                if (matchedLabel && itemsMap[matchedLabel]) {
+                    itemsMap[matchedLabel].used += (sale.qty || 0) * (ing.qty || 0);
+                }
+            });
+        });
+        
+        Object.keys(itemsMap).forEach(key => {
+            itemsMap[key].inflow = itemsMap[key].left + itemsMap[key].used + itemsMap[key].wasted;
+        });
+        
+        let csvContent = "Ingredient Name,Category,Unit,Inflow (Purchased),Consumed (Used),Wastage (Wasted),Current Stock (Left)\r\n";
+        
+        Object.values(itemsMap).sort((a,b) => b.used - a.used).forEach(item => {
+            const label = `"${item.label.replace(/"/g, '""')}"`;
+            const category = `"${(item.category || '').replace(/"/g, '""')}"`;
+            const unit = `"${item.unit}"`;
+            csvContent += `${label},${category},${unit},${item.inflow},${item.used},${item.wasted},${item.left}\r\n`;
+        });
+        
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `material_reconciliation_report_${selectedOutlet.toLowerCase()}_${selectedPreset}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     function escapeHTML(str) {
         if (!str) return "";
@@ -3308,6 +3981,37 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // === MATERIAL RECONCILIATION EVENT LISTENERS ===
+    const reconOutletSelect = document.getElementById("reconOutletSelect");
+    const reconDateSelect = document.getElementById("reconDateSelect");
+    const reconSearchInput = document.getElementById("reconSearchInput");
+
+    if (reconOutletSelect) {
+        reconOutletSelect.addEventListener("change", () => {
+            renderMaterialReconciliationScreen();
+        });
+    }
+    if (reconDateSelect) {
+        reconDateSelect.addEventListener("change", () => {
+            renderMaterialReconciliationScreen();
+        });
+    }
+    if (reconSearchInput) {
+        reconSearchInput.addEventListener("input", () => {
+            renderMaterialReconciliationScreen();
+        });
+    }
+
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            const activeScreen = document.querySelector(".app-screen.active");
+            if (activeScreen && activeScreen.id === "screen-material-reconciliation") {
+                renderMaterialReconciliationScreen();
+            }
+        }, 150);
+    });
 
     // === INITIAL STARTUP SYNC ===
     syncStateFromServer(true).then(() => {

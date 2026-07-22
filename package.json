@@ -1,0 +1,29 @@
+{
+  "name": "badi-katori-luxury-3d",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.cjs",
+    "serve": "npm run build && node server.cjs",
+    "tunnel": "ssh -o StrictHostKeyChecking=no -R 80:localhost:3000 serveo.net"
+  },
+  "devDependencies": {
+    "localtunnel": "^2.0.2",
+    "vite": "^5.0.0",
+    "xlsx": "^0.18.5"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
+    "pdf-parse": "^2.4.5",
+    "pdfkit": "^0.19.1",
+    "socket.io": "^4.8.3"
+  }
+}

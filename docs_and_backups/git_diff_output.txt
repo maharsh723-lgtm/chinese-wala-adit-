@@ -1,0 +1,8 @@
+{
+  "step_index": 280,
+  "source": "MODEL",
+  "type": "RUN_COMMAND",
+  "status": "DONE",
+  "created_at": "2026-07-15T07:16:33Z",
+  "content": "Created At: 2026-07-15T07:16:33Z\nCompleted At: 2026-07-15T07:16:37Z\n\n\t\t\t\tThe command failed with exit code: 1\n\t\t\t\tOutput:\n\t\t\t\twarning: in the working copy of 'app.js', LF will be replaced by CRLF the next time Git touches it\ndiff --git a/app.js b/app.js\r\nindex e3e9251..ecaab55 100644\r\n--- a/app.js\r\n+++ b/app.js\r\n@@ -1,280 +1,8 @@\r\n-document.addEventListener(\"DOMContentLoaded\", () => {\r\n-    // === 1. LIVE STATE VARIABLES ===\r\n-    let employees = {};\r\n-    let leaveRequests = [];\r\n-    let purchaseRequests = [];\r\n-    let sops = [];\r\n-    let inventory = [];\r\n-    let wastage = [];\r\n-    let checklists = [];\r\n-    let eodReports = [];\r\n-    let recipes = [];\r\n-    let currentParsedBulkRecipes = [];\r\n-    let currentUser = null;\r\n-\r\n-    let chartSales = null;\r\n-    let chartWastage = null;\r\n-    let isDarkMode = false;\r\n-    let currentRole = \"bm\"; // \"bm\" or \"owner\"\r\n-    let currentStore = \"Mumbai Bandra\"; // Active store for Branch Manager\r\n-    let lastStateJson = \"\"; // For comparing state changes in polling\r\n-    \r\n-    // Owner specific views state\r\n-    let ownerAttendanceStore = \"Mumbai Bandra\";\r\n-    let ownerChecklistStoreDetail = \"Mumbai Bandra\";\r\n-    let ownerEodStore = \"Mumbai Bandra\";\r\n\n"
+}

@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Badi Katori | Authentic Indian SRT-EATERY</title>
+  <meta name="description" content="Badi Katori - Progressive Indian street artistry meets retro-modern luxury. Experience heritage culinary craftsmanship across our multiple locations.">
+  <meta property="og:title" content="Badi Katori | Heritage Indian SRT-EATERY">
+  <meta property="og:description" content="Progressive Indian street artistry meets retro-modern luxury. Visit us at multiple locations.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+
+<style>
+/* ─── DESIGN TOKENS ─────────────────────────────── */
+:root {
+  --cream:        #FAF6F0;
+  --dark:         #151312;
+  --chocolate:    #2E231F;
+  --brown-light:  #5C4033;
+  --terracotta:   #A64B2A;
+  --terra-glow:   rgba(166,75,42,0.12);
+  --brass:        #C29F68;
+  --text-body:    #584F4B;
+  --text-muted:   #8E8480;
+  --border:       rgba(46,35,31,0.12);
+  --font-display: 'Playfair Display', serif;
+  --font-serif:   'Cormorant Garamond', serif;
+  --font-sans:    'Outfit', sans-serif;
+  --ease:         cubic-bezier(0.16,1,0.3,1);
+}
+
+/* ─── RESET ──────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:var(--cream);color:var(--chocolate);font-family:var(--font-sans);overflow-x:hidden}
+body{overflow-x:hidden;-webkit-font-smoothing:antialiased;background:var(--cream)}
+#about,#menu,#locations{background-image:linear-gradient(rgba(250, 246, 240, 0.45), rgba(250, 246, 240, 0.45)), url("./satin-texture.jpg");background-size:cover;background-position:center;background-attachment:fixed}
+img{max-width:100%;display:block}
+a{text-decoration:none;color:inherit}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--cream)}
+::-webkit-scrollbar-thumb{background:var(--chocolate);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--terracotta)}
+
+/* ─── CURSOR ──────────────────────────────────────── */
+.cursor-dot{
+  width:8px;height:8px;background:var(--terracotta);border-radius:50%;
+  position:fixed;transform:translate(-50%,-50%);pointer-events:none;z-index:9999;
+  transition:width .2s,height .2s,background .2s;
+}
+.cursor-ring{
+  width:30px;height:30px;border:1.5px solid var(--chocolate);border-radius:50%;
+  position:fixed;transform:translate(-50%,-50%);pointer-events:none;z-index:9998;
+}
+body.c-hover .cursor-dot{width:12px;height:12px;background:var(--chocolate)}
+body.c-hover .cursor-ring{width:44px;height:44px;border-color:var(--terracotta);background:var(--terra-glow)}
+@media(hover:none) and (pointer:coarse){.cursor-dot,.cursor-ring{display:none}}
+
+/* ─── TYPOGRAPHY ──────────────────────────────────── */
+.section-tag{
+  display:inline-block;font-family:var(--font-serif);font-style:italic;
+  font-size:1.1rem;color:var(--terracotta);margin-bottom:.75rem;letter-spacing:.5px;
+}
+.section-title{
+  font-family:var(--font-display);font-size:clamp(2rem,4.5vw,3.4rem);
+  line-height:1.05;font-weight:900;text-transform:uppercase;margin-bottom:1.5rem;
+}
+.section-subtitle{
+  font-family:var(--font-serif);font-size:clamp(1.05rem,2vw,1.35rem);
+  color:var(--text-body);max-width:600px;line-height:1.6;font-style:italic;
+}
+
+/* ─── DOUBLE-BORDER FRAME ─────────────────────────── */
+.frame{border:1px solid var(--brass);padding:6px;background:var(--cream);
+  box-shadow:0 12px 32px rgba(46,35,31,0.07);transition:transform .6s var(--ease),box-shadow .6s var(--ease)}
+.frame:hover{transform:translateY(-4px);box-shadow:0 20px 44px rgba(46,35,31,0.11)}
+.frame-inner{border:2.5px double var(--chocolate);height:100%}
+
+/* ─── BUTTONS ─────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:.9rem 2rem;font-family:var(--font-sans);font-weight:600;font-size:.82rem;
+  text-transform:uppercase;letter-spacing:1.5px;border:1px solid transparent;
+  cursor:pointer;transition:all .3s var(--ease);position:relative;
+}
+.btn-dark{background:var(--chocolate);color:var(--cream);border-color:var(--chocolate)}
+.btn-dark:hover{background:var(--terracotta);border-color:var(--terracotta);box-shadow:0 8px 20px rgba(166,75,42,.22)}
+.btn-outline{background:transparent;color:var(--chocolate);border-color:rgba(46,35,31,.25)}
+.btn-outline:hover{border-color:var(--terracotta);color:var(--terracotta)}
+.btn-block{width:100%;justify-content:center}
+.arrow{transition:transform .3s}
+.btn:hover .arrow{transform:translate(3px,-3px)}
+
+/* ─── LAYOUT ──────────────────────────────────────── */
+.section{padding:6rem 0;position:relative;overflow:hidden}
+.section.dark{background:var(--dark);color:#fff}
+.section.dark .section-title{color:#fff}
+.section.dark .section-tag{color:var(--brass)}
+.section.dark .section-subtitle{color:rgba(255,255,255,.65)}
+.container{width:90%;max-width:1360px;margin:0 auto}
+
+/* ─── REVEAL ANIMATIONS ───────────────────────────── */
+.reveal,.reveal-l,.reveal-r{opacity:0;transition:opacity 1.1s var(--ease),transform 1.1s var(--ease)}
+.reveal{transform:translateY(28px)}
+.reveal-l{transform:translateX(-44px)}
+.reveal-r{transform:translateX(44px)}
+.in{opacity:1;transform:none}
+
+/* ─── HEADER / NAV ────────────────────────────────── */
+.header{
+  position:fixed;top:0;left:0;width:100%;z-index:100;
+  padding:1.6rem 0;transition:padding .5s var(--ease);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:rgba(250,246,240,.88);border-bottom:1px solid var(--border);
+}
+.header.scrolled{padding:1rem 0}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:2rem}
+.nav-logo{font-family:var(--font-display);font-size:1.25rem;font-weight:900;
+  display:flex;align-items:center;gap:8px;letter-spacing:.5px;color:var(--chocolate)}
+.nav-logo span{font-size:1.35rem}
+.nav-links{display:flex;gap:2.2rem;list-style:none}
+.nav-links a{
+  font-family:var(--font-sans);font-weight:600;font-size:.82rem;text-transform:uppercase;
+  letter-spacing:1.5px;color:var(--text-body);position:relative;padding:.4rem 0;
+  transition:color .3s;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:0;left:0;width:0;height:2px;
+  background:var(--terracotta);transition:width .3s;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--terracotta)}
+.nav-links a:hover::after,.nav-links a.active::after{width:100%}
+
+/* hamburger */
+.ham{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;z-index:102}
+.ham span{display:block;width:24px;height:2px;background:var(--chocolate);transition:all .35s var(--ease)}
+.ham.open span:nth-child(1){transform:rotate(45deg) translate(4px,5px)}
+.ham.open span:nth-child(2){opacity:0;transform:translateX(-8px)}
+.ham.open span:nth-child(3){transform:rotate(-45deg) translate(4px,-5px)}
+
+/* mobile drawer */
+.nav-drawer{
+  display:none;position:fixed;inset:0;background:var(--cream);z-index:101;
+  flex-direction:column;align-items:center;justify-content:center;gap:2.5rem;
+}
+.nav-drawer.open{display:flex}
+.nav-drawer a{font-family:var(--font-display);font-size:2rem;font-weight:700;
+  text-transform:uppercase;color:var(--chocolate);transition:color .3s}
+.nav-drawer a:hover{color:var(--terracotta)}
+
+/* ─── HERO ────────────────────────────────────────── */
+#hero{min-height:100vh;display:flex;align-items:center;padding-top:0;position:relative;background-color:var(--dark)}
+.hero-video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 3;
+  pointer-events: none;
+}
+.hero-video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(21, 19, 18, 0.75) 0%,
+    rgba(21, 19, 18, 0.45) 50%,
+    rgba(21, 19, 18, 0.85) 100%
+  );
+  z-index: 4;
+  pointer-events: none;
+}
+.hero-grid{
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:5rem;
+  min-height:100vh;padding-top:100px;
+}
+.hero-grid .reveal {
+  position: relative;
+  z-index: 5;
+}
+.hero-tag{
+  font-family:var(--font-sans);font-weight:800;font-size:.78rem;
+  color:var(--brass);letter-spacing:4px;text-transform:uppercase;
+  display:block;margin-bottom:1.4rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.hero-title{
+  font-family:var(--font-display);font-size:clamp(2.8rem,6.5vw,5.5rem);
+  line-height:.98;font-weight:900;letter-spacing:-2px;text-transform:uppercase;
+  margin-bottom:1.8rem;
+  color:#fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+.hero-title .accent{
+  color:#E26D43; /* bright terracotta */
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.hero-subtitle{
+  font-family:var(--font-serif);font-size:clamp(1.1rem,2vw,1.4rem);
+  color:#D4CDCA;line-height:1.65;margin-bottom:2.8rem;max-width:540px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.hero-cta{display:flex;gap:1.2rem;flex-wrap:wrap}
+
+/* Button overrides inside hero section */
+#hero .btn-dark {
+  background-color: var(--chocolate);
+  color: var(--cream);
+  border: 1px solid var(--brass);
+}
+#hero .btn-dark:hover {
+  background-color: var(--terracotta);
+  border-color: var(--terracotta);
+}
+#hero .btn-outline {
+  color: var(--cream);
+  border-color: rgba(250, 246, 240, 0.3);
+}
+#hero .btn-outline:hover {
+  border-color: var(--brass);
+  color: var(--brass);
+  background: rgba(194, 159, 104, 0.05);
+}
+
+/* Scroll hint overrides */
+#hero .scroll-hint {
+  z-index: 10;
+}
+#hero .scroll-hint span {
+  color: #D4CDCA;
+}
+
+
+/* Logo badge SVG wrapper */
+.badge-wrap{
+  display:flex;align-items:center;justify-content:center;
+  filter:drop-shadow(0 18px 38px rgba(46,35,31,.16));
+  transition:transform .9s var(--ease);
+}
+.badge-wrap:hover{transform:scale(1.03) rotate(.8deg)}
+.badge-wrap svg{width:100%;max-width:540px;height:auto}
+
+/* scroll hint */
+.scroll-hint{
+  position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  opacity:.5;transition:opacity .3s;
+}
+.scroll-hint.hidden{opacity:0;pointer-events:none}
+.scroll-hint span{font-size:.7rem;letter-spacing:3px;text-transform:uppercase;font-weight:700;color:var(--text-muted)}
+.scroll-line-wrap{width:80px;height:1px;background:rgba(46,35,31,.15);overflow:hidden;position:relative}
+.scroll-line{position:absolute;top:0;left:-40px;width:40px;height:100%;background:var(--terracotta);animation:sl 2s infinite var(--ease)}
+@keyframes sl{0%{left:-40px}100%{left:80px}}
+
+/* ─── ABOUT ───────────────────────────────────────── */
+#about .about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:5.5rem;align-items:center}
+.about-body p{font-size:1.05rem;color:var(--text-body);line-height:1.75;margin-bottom:1.5rem}
+.about-body p em{font-family:var(--font-serif);color:var(--terracotta);font-size:1.2rem}
+.about-img{height:420px;background-size:cover;background-position:center;
+  filter:sepia(12%) brightness(.88)}
+
+/* stats */
+.stats-row{
+  display:grid;grid-template-columns:repeat(4,1fr);text-align:center;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  margin-top:5rem;padding:2.8rem 0;
+  background:linear-gradient(90deg,transparent,rgba(194,159,104,.05) 50%,transparent);
+}
+.stat-item{border-right:1px solid var(--border)}
+.stat-item:last-child{border:none}
+.stat-num{display:block;font-family:var(--font-sans);font-weight:800;
+  font-size:clamp(2.2rem,4.5vw,4rem);color:var(--chocolate);line-height:1;margin-bottom:.4rem}
+.stat-label{font-family:var(--font-serif);font-size:1.05rem;color:var(--text-body)}
+
+/* ─── MENU ────────────────────────────────────────── */
+#menu .menu-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:5rem;margin-top:3.5rem;align-items:start}
+.dishes{display:flex;flex-direction:column;gap:.5rem}
+.dish-item{
+  display:flex;align-items:flex-start;gap:1.3rem;padding:1.8rem 1.8rem 1.8rem 1.5rem;
+  border-bottom:1px solid var(--border);border-left:3px solid transparent;
+  cursor:pointer;transition:all .5s var(--ease);background:transparent;
+}
+.dish-item:hover{background:rgba(46,35,31,.025);border-left-color:rgba(166,75,42,.3);padding-left:1.9rem}
+.dish-item.active{background:#fff;border-left-color:var(--terracotta);padding-left:1.9rem;
+  box-shadow:0 8px 24px rgba(46,35,31,.06)}
+.dish-bullet{width:9px;height:9px;border:1.5px solid var(--terracotta);border-radius:50%;
+  margin-top:5px;flex-shrink:0;transition:all .3s}
+.dish-item.active .dish-bullet{background:var(--terracotta);box-shadow:0 0 8px var(--terracotta)}
+.dish-cat{display:block;font-size:.72rem;font-weight:800;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem}
+.dish-item.active .dish-cat{color:var(--terracotta)}
+.dish-name{font-family:var(--font-display);font-size:1.25rem;font-weight:700;
+  text-transform:uppercase;margin-bottom:.5rem;transition:color .3s}
+.dish-item.active .dish-name{color:var(--chocolate)}
+.dish-desc{font-size:.92rem;color:var(--text-body);line-height:1.55;max-width:560px}
+
+/* dish card */
+.dish-card{position:sticky;top:140px}
+.dish-card .frame-inner{padding:2rem}
+.pairing-label{font-family:var(--font-serif);font-style:italic;font-size:1rem;
+  color:var(--terracotta);display:block;margin-bottom:.4rem}
+#dish-pairing{font-size:1.05rem;font-weight:700;color:var(--chocolate);line-height:1.4;
+  padding-bottom:1.2rem;border-bottom:1px solid var(--border);margin-bottom:1.2rem}
+.nutri-lbl{font-size:.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+  color:var(--text-muted);display:block;margin-bottom:.7rem}
+.tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.4rem}
+.tags span{font-size:.82rem;padding:.35rem .85rem;border:1px solid var(--border);
+  color:var(--text-body);background:rgba(46,35,31,.03)}
+.dish-preview{height:175px;background-size:cover;background-position:center;
+  border:1px solid var(--border);filter:sepia(8%);transition:background-image .4s;margin-bottom:1.4rem}
+
+/* ─── ATMOSPHERE ──────────────────────────────────── */
+#atmosphere .atmo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.8rem;margin-top:3.5rem}
+.atmo-card .frame-inner{padding:0;overflow:hidden}
+.atmo-img{height:220px;background-size:cover;background-position:center;
+  filter:grayscale(10%) brightness(.82);transition:filter .6s var(--ease)}
+.atmo-card:hover .atmo-img{filter:grayscale(0%) brightness(.88)}
+.atmo-body{padding:2rem}
+.atmo-body h3{font-family:var(--font-display);font-size:1.2rem;text-transform:uppercase;
+  margin-bottom:.7rem;color:#fff}
+.atmo-body p{font-size:.93rem;color:rgba(255,255,255,.62);line-height:1.6}
+
+/* ─── LOCATIONS ───────────────────────────────────── */
+#locations .loc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5rem;margin-top:3.5rem}
+.loc-card{background:#fff;border:1px solid var(--border);padding:2.2rem;
+  transition:all .55s var(--ease);position:relative;overflow:hidden}
+.loc-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:0;
+  background:var(--terracotta);transition:height .5s var(--ease)}
+.loc-card:hover{transform:translateY(-5px);box-shadow:0 18px 40px rgba(46,35,31,.09)}
+.loc-card:hover::before{height:100%}
+.loc-num{font-family:var(--font-sans);font-size:.72rem;font-weight:800;letter-spacing:3px;
+  text-transform:uppercase;color:var(--brass);display:block;margin-bottom:.8rem}
+.loc-name{font-family:var(--font-display);font-size:1.35rem;font-weight:700;
+  margin-bottom:.5rem;text-transform:uppercase}
+.loc-area{font-size:.85rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  color:var(--terracotta);margin-bottom:1.2rem;display:block}
+.loc-detail{display:flex;flex-direction:column;gap:.7rem;margin-bottom:1.5rem}
+.loc-row{display:flex;gap:.8rem;align-items:flex-start}
+.loc-row span:first-child{font-size:.72rem;font-weight:800;letter-spacing:1px;
+  text-transform:uppercase;color:var(--text-muted);flex-shrink:0;padding-top:2px;min-width:50px}
+.loc-row span:last-child{font-size:.92rem;color:var(--chocolate);line-height:1.45}
+.loc-badge{display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:1.5px;
+  text-transform:uppercase;padding:.35rem .9rem;border:1px solid var(--brass);color:var(--brown-light)}
+
+/* ─── CONTACT ─────────────────────────────────────── */
+#contact{background:var(--dark)}
+#contact .section-title{color:#fff}
+#contact .section-tag{color:var(--brass)}
+#contact .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:5rem;margin-top:3rem;align-items:start}
+.contact-intro{font-family:var(--font-serif);font-size:1.25rem;color:rgba(255,255,255,.7);
+  line-height:1.7;margin-bottom:2.5rem;font-style:italic}
+.contact-list{display:flex;flex-direction:column;gap:2rem}
+.contact-item span{font-size:.72rem;font-weight:800;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--brass);display:block;margin-bottom:.45rem}
+.contact-item p{font-size:1rem;color:rgba(255,255,255,.85);line-height:1.5}
+.contact-item a{color:rgba(255,255,255,.85);transition:color .3s}
+.contact-item a:hover{color:var(--brass)}
+
+/* social strip */
+.social-strip{margin-top:3rem;display:flex;flex-direction:column;gap:1rem}
+.social-strip-lbl{font-size:.72rem;font-weight:800;letter-spacing:2px;
+  text-transform:uppercase;color:var(--brass);display:block}
+.social-links{display:flex;gap:1rem}
+.social-btn{
+  font-family:var(--font-sans);font-size:.78rem;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;padding:.65rem 1.5rem;border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.75);transition:all .3s;
+}
+.social-btn:hover{border-color:var(--brass);color:var(--brass)}
+
+/* map-like visual */
+.contact-visual{
+  display:flex;flex-direction:column;gap:2rem;
+}
+.contact-badge{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+  padding:2.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1rem;
+}
+.contact-badge .big-emoji{font-size:3.5rem;filter:grayscale(20%)}
+.contact-badge h3{font-family:var(--font-display);font-size:1.6rem;color:#fff;text-transform:uppercase}
+.contact-badge p{font-family:var(--font-serif);font-size:1.15rem;color:rgba(255,255,255,.55);
+  font-style:italic}
+.hours-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.hour-row{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);padding:1.2rem}
+.hour-day{font-size:.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--brass);display:block;margin-bottom:.3rem}
+.hour-time{font-size:.9rem;color:rgba(255,255,255,.75)}
+
+/* ─── FOOTER ──────────────────────────────────────── */
+.footer{background:var(--chocolate);padding:4rem 0 2.5rem}
+.footer-top{display:flex;justify-content:space-between;align-items:flex-start;
+  padding-bottom:2.5rem;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:2rem;
+  gap:3rem;flex-wrap:wrap;
+}
+.footer-brand h2{font-family:var(--font-display);font-size:1.6rem;color:#fff;
+  font-weight:900;letter-spacing:1px;display:flex;align-items:center;gap:.5rem}
+.footer-brand p{font-size:.72rem;font-weight:800;letter-spacing:2.5px;color:var(--brass);
+  text-transform:uppercase;margin-top:.5rem}
+.footer-links{display:flex;gap:4rem;flex-wrap:wrap}
+.footer-col h4{font-size:.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--brass);margin-bottom:1.2rem}
+.footer-col a{display:block;font-size:.9rem;color:rgba(255,255,255,.55);
+  margin-bottom:.65rem;transition:all .3s}
+.footer-col a:hover{color:#fff;padding-left:4px}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-bottom p{font-size:.8rem;color:rgba(255,255,255,.3)}
+.footer-bottom-icons{font-size:1.2rem;opacity:.3;display:flex;gap:.6rem}
+
+/* ─── RESPONSIVE ──────────────────────────────────── */
+@media(max-width:1100px){
+  .hero-grid{grid-template-columns:1fr;gap:3rem;padding-top:110px;min-height:auto;padding-bottom:4rem}
+  .hero-subtitle{max-width:100%}
+  .hero-cta{justify-content:flex-start}
+  .badge-wrap svg{max-width:460px}
+  #about .about-grid{grid-template-columns:1fr;gap:3rem}
+  #menu .menu-grid{grid-template-columns:1fr;gap:3rem}
+  .dish-card{position:static}
+  #atmosphere .atmo-grid{grid-template-columns:1fr 1fr}
+  #locations .loc-grid{grid-template-columns:1fr 1fr}
+  #contact .contact-grid{grid-template-columns:1fr;gap:3rem}
+}
+@media(max-width:768px){
+  .nav-links,.nav-cta-desktop{display:none}
+  .ham{display:flex}
+  .hero-grid{text-align:center}
+  .hero-cta{justify-content:center}
+  .stats-row{grid-template-columns:1fr 1fr;gap:1.5rem 0}
+  .stat-item{border-right:none;border-bottom:1px solid var(--border)}
+  .stat-item:nth-child(odd){border-right:1px solid var(--border)}
+  .stat-item:last-child,.stat-item:nth-last-child(2){border-bottom:none}
+  #atmosphere .atmo-grid{grid-template-columns:1fr}
+  #locations .loc-grid{grid-template-columns:1fr}
+  .footer-top{flex-direction:column;gap:2rem}
+  .footer-links{gap:2rem}
+  .footer-bottom{flex-direction:column;text-align:center}
+  .hours-grid{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .btn{padding:.8rem 1.5rem;font-size:.78rem}
+  .hero-title{letter-spacing:-1px}
+  .badge-wrap svg{max-width:340px}
+  #menu .menu-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div class="cursor-dot" id="cDot"></div>
+<div class="cursor-ring" id="cRing"></div>
+
+<!-- Mobile Nav Drawer -->
+<nav class="nav-drawer" id="navDrawer">
+  <a href="#hero" onclick="closeDrawer()">Home</a>
+  <a href="#about" onclick="closeDrawer()">Our Story</a>
+  <a href="#menu" onclick="closeDrawer()">Menu</a>
+  <a href="#atmosphere" onclick="closeDrawer()">Atmosphere</a>
+  <a href="#locations" onclick="closeDrawer()">Locations</a>
+  <a href="#contact" onclick="closeDrawer()">Contact</a>
+</nav>
+
+<!-- Header -->
+<header class="header" id="header">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo"><span>🐘</span> BADI KATORI</a>
+      <ul class="nav-links">
+        <li><a href="#hero" class="active">Home</a></li>
+        <li><a href="#about">Our Story</a></li>
+        <li><a href="#menu">Menu</a></li>
+        <li><a href="#atmosphere">Atmosphere</a></li>
+        <li><a href="#locations">Locations</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button class="ham" id="ham" aria-label="Open Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ─── HERO ────────────────────────────────────────── -->
+<section id="hero" class="section">
+  <!-- Background Video -->
+  <video autoplay muted loop playsinline class="hero-video-bg">
+    <source src="./hero-page.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <div class="hero-video-overlay"></div>
+
+  <div class="container">
+    <div class="hero-grid">
+      <div class="reveal">
+        <span class="hero-tag">Since 2026 · Progressive Indian Artistry</span>
+        <h1 class="hero-title">
+          REMIXING<br>
+          <span class="accent">HERITAGE.</span>
+        </h1>
+        <p class="hero-subtitle">Badi Katori redefines the Indian culinary scene — authentic street roots elevated under warm vintage lights. Comfort meets progressive luxury.</p>
+        <div class="hero-cta">
+          <a href="#menu" class="btn btn-dark">Explore Menu <span class="arrow">↗</span></a>
+          <a href="#locations" class="btn btn-outline">Find Us</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- scroll hint -->
+  <div class="scroll-hint" id="scrollHint">
+    <span>Scroll to Discover</span>
+    <div class="scroll-line-wrap"><div class="scroll-line"></div></div>
+  </div>
+</section>
+
+<!-- ─── ABOUT ───────────────────────────────────────── -->
+<section id="about" class="section">
+  <div class="container">
+    <div class="about-grid">
+      <div class="reveal-l">
+        <span class="section-tag">Dedicated To Delight You</span>
+        <h2 class="section-title">The Story of the Big Bowl</h2>
+        <div class="about-body">
+          <p>In Hindi, <em>Badi Katori</em> translates literally to the <em>"Big Bowl"</em> — a vessel representing culinary abundance, familial warmth, and the unspoken joy of sharing. We honour this timeless legacy while translating it for a new generation.</p>
+          <p>Our kitchen bridges traditional street-level mastery (SRT) with progressive gourmet curation. Spices are hand-ground in-house daily; classic dishes remixed with local seasonal produce to create a texture-rich narrative in every bite.</p>
+          <a href="#menu" class="btn btn-outline">Explore Our Menu <span class="arrow">↗</span></a>
+        </div>
+      </div>
+      <div class="reveal-r">
+        <div class="frame">
+          <div class="frame-inner">
+            <div class="about-img" style="background-image:url('https://images.unsplash.com/photo-1585238342024-78d387f4a707?q=80&w=700&auto=format&fit=crop')"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row reveal">
+      <div class="stat-item">
+        <span class="stat-num" data-target="18" data-suffix="+">18+</span>
+        <span class="stat-label">Heritage Spices</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" data-target="390" data-suffix="k">390k</span>
+        <span class="stat-label">Diners Welcomed</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" data-target="950" data-suffix="k">950k</span>
+        <span class="stat-label">Plates Hand-Crafted</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" data-target="3" data-suffix=" Locations">3 Locations</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── MENU ────────────────────────────────────────── -->
+<section id="menu" class="section">
+  <div class="container">
+    <div class="reveal">
+      <span class="section-tag">Taste the Metamorphosis</span>
+      <h2 class="section-title">Our Menu</h2>
+      <p class="section-subtitle">Progressive Indian street artistry — click a dish to explore the full sensory profile.</p>
+    </div>
+
+    <div class="menu-grid">
+      <div class="dishes reveal-l">
+        <div class="dish-item active" data-dish="0">
+          <div class="dish-bullet"></div>
+          <div>
+            <span class="dish-cat">Saffron &amp; Gold</span>
+            <h3 class="dish-name">Gold-Leaf Paneer Mille-Feuille</h3>
+            <p class="dish-desc">Delicate layered tower of spice-marinated artisanal cottage cheese, toasted puff pastry, saffron velouté, and 24-karat gold leaf gilding.</p>
+          </div>
+        </div>
+        <div class="dish-item" data-dish="1">
+          <div class="dish-bullet"></div>
+          <div>
+            <span class="dish-cat">Infused Smoke</span>
+            <h3 class="dish-name">Smoked Truffle Galouti</h3>
+            <p class="dish-desc">Ultra-tender plant-based or lamb kebab medallion, infused with Himalayan black truffle oil, served over saffron sheermal under an applewood smoke cloche.</p>
+          </div>
+        </div>
+        <div class="dish-item" data-dish="2">
+          <div class="dish-bullet"></div>
+          <div>
+            <span class="dish-cat">Deconstructed Art</span>
+            <h3 class="dish-name">Deconstructed Samosa Tart</h3>
+            <p class="dish-desc">Crisp charcoal-pastry tart shell filled with spiced potato espuma, nitrogen-frozen pea crumbs, mint caviar spheres, and sweet tamarind droplets.</p>
+          </div>
+        </div>
+        <div class="dish-item" data-dish="3">
+          <div class="dish-bullet"></div>
+          <div>
+            <span class="dish-cat">Molecular Sweet</span>
+            <h3 class="dish-name">Rose-Cardamom Caviar Rabri</h3>
+            <p class="dish-desc">Slow-reduced double cream pudding, green cardamom infused, topped with rosewater caviar beads, micro-basil, and pistachio dust.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dish-card reveal-r">
+        <div class="frame">
+          <div class="frame-inner">
+            <div class="dish-preview" id="dishImg" style="background-image:url('https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=500&auto=format&fit=crop')"></div>
+            <span class="pairing-label">Recommended Pairing</span>
+            <p id="dish-pairing">Saffron-infused Gin &amp; Tonic with Cardamom Bitters</p>
+            <span class="nutri-lbl">Sensory Profile</span>
+            <div class="tags" id="dishTags">
+              <span>Creamy</span><span>Crispy</span><span>Royal</span><span>Saffron Glow</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ATMOSPHERE ──────────────────────────────────── -->
+<section id="atmosphere" class="section dark">
+  <div class="container">
+    <div class="reveal">
+      <span class="section-tag">Beyond Dining</span>
+      <h2 class="section-title">The Atmosphere</h2>
+      <p class="section-subtitle" style="color:rgba(255,255,255,.55)">A warm, welcoming space where heritage meets the progressive.</p>
+    </div>
+    <div class="atmo-grid">
+      <div class="atmo-card frame reveal-l" style="border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.03)">
+        <div class="frame-inner" style="border-color:var(--brass)">
+          <div class="atmo-img" style="background-image:url('https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=600&auto=format&fit=crop')"></div>
+          <div class="atmo-body">
+            <h3>Spice Alchemy Bar</h3>
+            <p>Custom cocktails featuring hand-crafted spice distillates, dry ice vapors, and liquors served inside hand-hammered brass chalices.</p>
+          </div>
+        </div>
+      </div>
+      <div class="atmo-card frame reveal" style="border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.03)">
+        <div class="frame-inner" style="border-color:var(--brass)">
+          <div class="atmo-img" style="background-image:url('https://images.unsplash.com/photo-1579684947550-22e945a6f817?q=80&w=600&auto=format&fit=crop')"></div>
+          <div class="atmo-body">
+            <h3>Heritage Lounge</h3>
+            <p>Terracotta clay walls, custom-carved Indian archways, and soft warm acoustic instrumentation for the ultimate cozy dining experience.</p>
+          </div>
+        </div>
+      </div>
+      <div class="atmo-card frame reveal-r" style="border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.03)">
+        <div class="frame-inner" style="border-color:var(--brass)">
+          <div class="atmo-img" style="background-image:url('https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?q=80&w=600&auto=format&fit=crop')"></div>
+          <div class="atmo-body">
+            <h3>The Crucible Table</h3>
+            <p>An exclusive 8-seat interactive chef's counter where custom courses are prepared live using molecular and open-fire techniques.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── LOCATIONS ───────────────────────────────────── -->
+<section id="locations" class="section">
+  <div class="container">
+    <div class="reveal">
+      <span class="section-tag">Find Us</span>
+      <h2 class="section-title">Our Locations</h2>
+      <p class="section-subtitle">Three homes for the Big Bowl — each with its own personality, all with the same soul.</p>
+    </div>
+    <div class="loc-grid">
+
+      <!-- Location 1 -->
+      <div class="loc-card reveal-l">
+        <span class="loc-num">01 / Flagship</span>
+        <h3 class="loc-name">Badi Katori Gurugram</h3>
+        <span class="loc-area">DLF Phase 5, Gurugram</span>
+        <div class="loc-detail">
+          <div class="loc-row">
+            <span>Addr</span>
+            <span>Skyline Pavilion, Block 5, DLF Phase 5, Gurugram, Haryana 122002</span>
+          </div>
+          <div class="loc-row">
+            <span>Hours</span>
+            <span>Tue – Sun: 6:00 PM – 1:00 AM<br>Closed Mondays</span>
+          </div>
+          <div class="loc-row">
+            <span>Phone</span>
+            <span><a href="tel:+919876543210">+91 98765 43210</a></span>
+          </div>
+        </div>
+        <span class="loc-badge">🐘 Flagship</span>
+      </div>
+
+      <!-- Location 2 -->
+      <div class="loc-card reveal" style="transition-delay:.1s">
+        <span class="loc-num">02</span>
+        <h3 class="loc-name">Badi Katori Delhi</h3>
+        <span class="loc-area">Hauz Khas Village, New Delhi</span>
+        <div class="loc-detail">
+          <div class="loc-row">
+            <span>Addr</span>
+            <span>A-12, First Floor, Hauz Khas Village, New Delhi 110016</span>
+          </div>
+          <div class="loc-row">
+            <span>Hours</span>
+            <span>Tue – Sun: 12:00 PM – 11:30 PM<br>Closed Mondays</span>
+          </div>
+          <div class="loc-row">
+            <span>Phone</span>
+            <span><a href="tel:+919876543211">+91 98765 43211</a></span>
+          </div>
+        </div>
+        <span class="loc-badge">All-Day Café</span>
+      </div>
+
+      <!-- Location 3 -->
+      <div class="loc-card reveal-r" style="transition-delay:.2s">
+        <span class="loc-num">03</span>
+        <h3 class="loc-name">Badi Katori Mumbai</h3>
+        <span class="loc-area">Bandra West, Mumbai</span>
+        <div class="loc-detail">
+          <div class="loc-row">
+            <span>Addr</span>
+            <span>Shop 4, Linking Road, Bandra West, Mumbai, Maharashtra 400050</span>
+          </div>
+          <div class="loc-row">
+            <span>Hours</span>
+            <span>Mon – Sun: 7:00 PM – 2:00 AM<br>Open Daily</span>
+          </div>
+          <div class="loc-row">
+            <span>Phone</span>
+            <span><a href="tel:+912233445566">+91 22 3344 5566</a></span>
+          </div>
+        </div>
+        <span class="loc-badge">Late Night</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── CONTACT ─────────────────────────────────────── -->
+<section id="contact" class="section dark">
+  <div class="container">
+    <div class="reveal">
+      <span class="section-tag">Get In Touch</span>
+      <h2 class="section-title">Contact Us</h2>
+    </div>
+    <div class="contact-grid">
+      <div class="reveal-l">
+        <p class="contact-intro">Whether you have a question about our menu, want to host a private event, or simply want to say hello — we'd love to hear from you.</p>
+        <div class="contact-list">
+          <div class="contact-item">
+            <span>General Enquiries</span>
+            <p><a href="mailto:hello@badikatori.com">hello@badikatori.com</a></p>
+          </div>
+          <div class="contact-item">
+            <span>Events & Private Dining</span>
+            <p><a href="mailto:events@badikatori.com">events@badikatori.com</a></p>
+          </div>
+          <div class="contact-item">
+            <span>Press & Collaborations</span>
+            <p><a href="mailto:press@badikatori.com">press@badikatori.com</a></p>
+          </div>
+        </div>
+        <div class="social-strip">
+          <span class="social-strip-lbl">Follow Our Journey</span>
+          <div class="social-links">
+            <a href="#" class="social-btn">Instagram</a>
+            <a href="#" class="social-btn">Facebook</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-visual reveal-r">
+        <div class="contact-badge">
+          <span class="big-emoji">🐘</span>
+          <h3>Badi Katori</h3>
+          <p>Progressive Indian street artistry across three cities</p>
+        </div>
+        <div class="hours-grid">
+          <div class="hour-row">
+            <span class="hour-day">Gurugram</span>
+            <span class="hour-time">Tue–Sun · 6 PM–1 AM</span>
+          </div>
+          <div class="hour-row">
+            <span class="hour-day">Delhi</span>
+            <span class="hour-time">Tue–Sun · 12 PM–11:30 PM</span>
+          </div>
+          <div class="hour-row">
+            <span class="hour-day">Mumbai</span>
+            <span class="hour-time">Mon–Sun · 7 PM–2 AM</span>
+          </div>
+          <div class="hour-row">
+            <span class="hour-day">Holiday Hours</span>
+            <span class="hour-time">Check Instagram for updates</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ──────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <h2><span>🐘</span> BADI KATORI</h2>
+        <p>Indian SRT-Eatery &amp; Progressive Lounge</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Navigate</h4>
+          <a href="#hero">Home</a>
+          <a href="#about">Our Story</a>
+          <a href="#menu">Menu</a>
+          <a href="#atmosphere">Atmosphere</a>
+          <a href="#locations">Locations</a>
+          <a href="#contact">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h4>Connect</h4>
+          <a href="#">Instagram</a>
+          <a href="#">Facebook</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Badi Katori. Crafted with heritage precision.</p>
+      <div class="footer-bottom-icons"><span>🐘</span><span>🥣</span></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ─── CURSOR ──────────────────────────────────────────── */
+const cDot=document.getElementById('cDot'),cRing=document.getElementById('cRing');
+let cx=0,cy=0,fx=0,fy=0,tx=0,ty=0,rx=0,ry=0;
+window.addEventListener('mousemove',e=>{tx=e.clientX;ty=e.clientY});
+(function loop(){
+  cx+=(tx-cx)*.3;cy+=(ty-cy)*.3;
+  fx+=(tx-fx)*.12;fy+=(ty-fy)*.12;
+  cDot.style.left=cx+'px';cDot.style.top=cy+'px';
+  cRing.style.left=fx+'px';cRing.style.top=fy+'px';
+  requestAnimationFrame(loop);
+})();
+document.querySelectorAll('a,button,.dish-item,input,select').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('c-hover'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('c-hover'));
+});
+
+/* ─── HEADER SHRINK ───────────────────────────────────── */
+const header=document.getElementById('header');
+window.addEventListener('scroll',()=>{
+  header.classList.toggle('scrolled',window.scrollY>60);
+  document.getElementById('scrollHint').classList.toggle('hidden',window.scrollY>120);
+  highlightNav();
+});
+
+/* ─── ACTIVE NAV ──────────────────────────────────────── */
+const secs=[...document.querySelectorAll('section')];
+const navAs=[...document.querySelectorAll('.nav-links a')];
+function highlightNav(){
+  let cur='';
+  secs.forEach(s=>{if(window.scrollY>=s.offsetTop-200)cur=s.id});
+  navAs.forEach(a=>{a.classList.toggle('active',a.getAttribute('href')==='#'+cur)});
+}
+
+/* ─── HAMBURGER ───────────────────────────────────────── */
+const ham=document.getElementById('ham'),drawer=document.getElementById('navDrawer');
+ham.addEventListener('click',()=>{
+  ham.classList.toggle('open');drawer.classList.toggle('open');
+});
+function closeDrawer(){ham.classList.remove('open');drawer.classList.remove('open')}
+
+/* ─── SCROLL REVEAL ───────────────────────────────────── */
+const revEls=document.querySelectorAll('.reveal,.reveal-l,.reveal-r');
+new IntersectionObserver((entries,obs)=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target)}});
+},{threshold:.12,rootMargin:'0px 0px -40px 0px'}).observe(...([...revEls].map(el=>{
+  new IntersectionObserver((ens,ob)=>{
+    ens.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');ob.unobserve(en.target)}});
+  },{threshold:.12,rootMargin:'0px 0px -40px 0px'}).observe(el);
+  return el;
+})));
+
+/* ─── STATS COUNTER ───────────────────────────────────── */
+let statsDone=false;
+const statsRow=document.querySelector('.stats-row');
+new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting && !statsDone){
+    statsDone=true;
+    document.querySelectorAll('.stat-num').forEach(el=>{
+      const target=+el.dataset.target,suffix=el.dataset.suffix||'';
+      let n=0;const step=target/50;
+      const iv=setInterval(()=>{n+=step;if(n>=target){el.textContent=target+suffix;clearInterval(iv)}
+        else el.textContent=Math.floor(n)+suffix;},28);
+    });
+  }
+},{threshold:.5}).observe(statsRow);
+
+/* ─── DISH SELECTOR ───────────────────────────────────── */
+const dishData=[
+  {pairing:'Saffron-infused Gin & Tonic with Cardamom Bitters',tags:['Creamy','Crispy','Royal','Saffron Glow'],img:'https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=500&auto=format&fit=crop'},
+  {pairing:'Single-Malt Islay Whiskey Smoked with Applewood',tags:['Melt-in-mouth','Earthy','Pungent','Truffle'],img:'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=500&auto=format&fit=crop'},
+  {pairing:'Mint & Tamarind Infused Sparkler (Non-Alcoholic)',tags:['Tangy','Geometric','Herbaceous','Cold'],img:'https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=500&auto=format&fit=crop'},
+  {pairing:'Sparkling Rosé or Saffron Kesar Lassi',tags:['Double Cream','Floral','Caviar','Silky'],img:'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?q=80&w=500&auto=format&fit=crop'}
+];
+const allDishes=document.querySelectorAll('.dish-item');
+const dishCard=document.querySelector('.dish-card');
+allDishes.forEach(item=>{
+  item.addEventListener('click',()=>{
+    allDishes.forEach(d=>d.classList.remove('active'));
+    item.classList.add('active');
+    const idx=+item.dataset.dish,d=dishData[idx];
+    dishCard.style.opacity='.35';dishCard.style.transform='translateY(8px)';
+    setTimeout(()=>{
+      document.getElementById('dish-pairing').textContent=d.pairing;
+      document.getElementById('dishImg').style.backgroundImage=`url('${d.img}')`;
+      const tags=document.getElementById('dishTags');
+      tags.innerHTML='';d.tags.forEach(t=>{const s=document.createElement('span');s.textContent=t;tags.appendChild(s)});
+      dishCard.style.opacity='1';dishCard.style.transform='translateY(0)';
+    },240);
+  });
+});
+
+/* ─── MAGNETIC BUTTONS ────────────────────────────────── */
+document.querySelectorAll('.btn').forEach(btn=>{
+  btn.addEventListener('mousemove',e=>{
+    const r=btn.getBoundingClientRect();
+    const x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;
+    btn.style.transform=`translate(${x*.25}px,${y*.25}px)`;
+    const a=btn.querySelector('.arrow');if(a)a.style.transform=`translate(${x*.1}px,${y*.1}px)`;
+  });
+  btn.addEventListener('mouseleave',()=>{btn.style.transform='';const a=btn.querySelector('.arrow');if(a)a.style.transform='';});
+});
+</script>
+</body>
+</html>
