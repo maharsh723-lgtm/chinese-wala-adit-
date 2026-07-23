@@ -939,7 +939,17 @@ const seededPosProducts = [
   { id: "pos-p-120", name: "Saffron Lassi", category: "Lassi", price: 100.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
   { id: "pos-p-121", name: "Rajbhog Lassi", category: "Lassi", price: 100.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
   { id: "pos-p-122", name: "Rajwadi Lassi", category: "Lassi", price: 100.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-123", name: "Rose Lassi", category: "Lassi", price: 100.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) }
+  { id: "pos-p-123", name: "Rose Lassi", category: "Lassi", price: 100.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
+  { id: "pos-p-124", name: "Chowpatty bhel", category: "Chaat", price: 60.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
+  { id: "pos-p-125", name: "Jhal muri", category: "Chaat", price: 70.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
+  { id: "pos-p-126", name: "Dahi Chowpati bhel", category: "Chaat", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
+  { id: "pos-p-127", name: "Kulche 1 pcs", category: "Kulcha", price: 25.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
+  { id: "pos-p-128", name: "bhature 1 pcs", category: "Chaat", price: 20.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
+  { id: "pos-p-129", name: "Pav 1 pcs", category: "Pav", price: 10.00, image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
+  { id: "pos-p-130", name: "Water", category: "Indian Coolers", price: 10.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
+  { id: "pos-p-131", name: "Samosa", category: "Samosa", price: 25.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
+  { id: "pos-p-132", name: "Kachori", category: "Kachori", price: 25.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
+  { id: "pos-p-133", name: "Dahi", category: "Chaat", price: 20.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) }
 ];
 
 for (const p of seededPosProducts) {
@@ -1676,6 +1686,46 @@ if (videoCount === 0) {
       }
     ])
   );
+}
+
+// Migration: Ensure the 10 new products requested by the user exist in the pos_products database table
+const newMenuProducts = [
+  { id: "pos-p-124", name: "Chowpatty bhel", category: "Chaat", price: 60.00 },
+  { id: "pos-p-125", name: "Jhal muri", category: "Chaat", price: 70.00 },
+  { id: "pos-p-126", name: "Dahi Chowpati bhel", category: "Chaat", price: 80.00 },
+  { id: "pos-p-127", name: "Kulche 1 pcs", category: "Kulcha", price: 25.00 },
+  { id: "pos-p-128", name: "bhature 1 pcs", category: "Chaat", price: 20.00 },
+  { id: "pos-p-129", name: "Pav 1 pcs", category: "Pav", price: 10.00 },
+  { id: "pos-p-130", name: "Water", category: "Indian Coolers", price: 10.00 },
+  { id: "pos-p-131", name: "Samosa", category: "Samosa", price: 25.00 },
+  { id: "pos-p-132", name: "Kachori", category: "Kachori", price: 25.00 },
+  { id: "pos-p-133", name: "Dahi", category: "Chaat", price: 20.00 }
+];
+
+try {
+  const checkProduct = db.prepare("SELECT COUNT(*) as count FROM pos_products WHERE name = ?");
+  const insertProduct = db.prepare(`
+    INSERT INTO pos_products (id, name, category, price, image, isVeg, isPopular, isFavorite, stock, ingredients)
+    VALUES (?, ?, ?, ?, ?, 1, 0, 0, 100, ?)
+  `);
+
+  for (const p of newMenuProducts) {
+    const exists = checkProduct.get(p.name).count > 0;
+    if (!exists) {
+      const mockIngredients = JSON.stringify([{ name: 'Chat Masala', qty: 2, unit: 'gm', cost: 0.36 }]);
+      const fallbackImg = p.category === "Pav" 
+        ? "https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop"
+        : p.category === "Kulcha"
+        ? "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop"
+        : p.category === "Indian Coolers"
+        ? "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop"
+        : "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop";
+      insertProduct.run(p.id, p.name, p.category, p.price, fallbackImg, mockIngredients);
+      console.log(`Migration: Added new menu product: ${p.name} (₹${p.price})`);
+    }
+  }
+} catch (err) {
+  console.error("Migration Error adding new menu products:", err);
 }
 
 module.exports = { db, dbReady };
