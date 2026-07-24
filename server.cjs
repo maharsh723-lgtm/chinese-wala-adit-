@@ -57,7 +57,7 @@ app.get('/api/config', (req, res) => {
 });
 
 // API: Get Consolidated State
-app.get('/api/state', (req, res) => {
+app.get('/api/state', authenticateToken, (req, res) => {
   try {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     // 1. Employees

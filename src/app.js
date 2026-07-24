@@ -1,5 +1,123 @@
 import { trainingData } from "./trainingData.js";
 function initApp() {
+    // Override window.fetch to automatically include JWT token
+    const originalFetch = window.fetch;
+    window.fetch = function (url, options = {}) {
+        const token = localStorage.getItem("bk_jwt_token");
+        if (token) {
+            options.headers = options.headers || {};
+            options.headers["Authorization"] = `Bearer ${token}`;
+        }
+        return originalFetch(url, options);
+    };
+
+    // Listen for User ID inputs to show/hide branch selector
+    const usernameInput = document.getElementById('login-username');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim().toLowerCase();
+            const branchGroup = document.getElementById('login-branch-group');
+            if (val.startsWith('manager') || val.includes('123') || val.startsWith('emp')) {
+                branchGroup.style.display = 'block';
+            } else {
+                branchGroup.style.display = 'none';
+            }
+        });
+    }
+
+    // Submit credentials on login button click
+    const loginSubmitBtn = document.getElementById("login-submit-btn");
+    if (loginSubmitBtn) {
+        loginSubmitBtn.addEventListener("click", async () => {
+            const passwordInput = document.getElementById("login-password");
+            const errorMsg = document.getElementById("login-error-msg");
+            
+            const username = usernameInput ? usernameInput.value.trim() : "";
+            const password = passwordInput ? passwordInput.value.trim() : "";
+            
+            if (!username || !password) {
+                if (errorMsg) errorMsg.textContent = "Please enter both User ID and Password.";
+                return;
+            }
+            
+            if (errorMsg) errorMsg.textContent = "";
+            loginSubmitBtn.textContent = "Logging in...";
+            loginSubmitBtn.disabled = true;
+            
+            try {
+                const response = await originalFetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: username, password: password })
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || "Invalid User ID or Password.");
+                }
+                
+                const data = await response.json();
+                
+                // Store JWT and user
+                localStorage.setItem("bk_jwt_token", data.token);
+                localStorage.setItem("bk_logged_in_user", JSON.stringify(data.user));
+                
+                // Set role and store
+                let roleKey = "owner";
+                if (data.user.roleKey === "sm") {
+                    // Read selected branch from dropdown
+                    const branchSelect = document.getElementById("login-branch");
+                    roleKey = branchSelect ? branchSelect.value : "bm-vesu";
+                }
+                
+                localStorage.setItem("bk_current_role_key", roleKey);
+                
+                // Hide login overlay
+                const overlay = document.getElementById("login-overlay");
+                if (overlay) overlay.style.display = "none";
+                
+                // Initialize/sync app state
+                await syncStateFromServer(true);
+                setRole(roleKey);
+                
+            } catch (err) {
+                if (errorMsg) errorMsg.textContent = err.message;
+            } finally {
+                loginSubmitBtn.textContent = "Log In";
+                loginSubmitBtn.disabled = false;
+            }
+        });
+    }
+
+    const passwordInput = document.getElementById("login-password");
+    if (passwordInput && loginSubmitBtn) {
+        passwordInput.addEventListener("keyup", (e) => {
+            if (e.key === "Enter") {
+                loginSubmitBtn.click();
+            }
+        });
+    }
+
+    // Handle logout click
+    document.addEventListener("click", (e) => {
+        const logoutBtn = e.target.closest("#btn-logout");
+        if (logoutBtn) {
+            e.stopPropagation();
+            localStorage.removeItem("bk_jwt_token");
+            localStorage.removeItem("bk_logged_in_user");
+            localStorage.removeItem("bk_current_role_key");
+            
+            const overlay = document.getElementById("login-overlay");
+            if (overlay) {
+                overlay.style.display = "flex";
+                if (usernameInput) usernameInput.value = "";
+                if (passwordInput) passwordInput.value = "";
+                const errorMsg = document.getElementById("login-error-msg");
+                if (errorMsg) errorMsg.textContent = "";
+            }
+        }
+    });
+
     // Fetch configuration dynamically from backend environment config
     fetch('/api/config')
         .then(res => res.json())
@@ -197,10 +315,12 @@ function initApp() {
     const defaultEmployees = {
         "1": { id: "1", name: "John Doe", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
         "EMP102": { id: "EMP102", name: "Alice Smith", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "password123", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP103": { id: "EMP103", name: "Bob Miller", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "password123", status: "Active", store: "CT LIGHT", activePunch: null, history: [] },
-        "EMP104": { id: "EMP104", name: "Rahul Sharma", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "password123", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP105": { id: "EMP105", name: "Priya Patel", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "password123", status: "Active", store: "ADAJAN", activePunch: null, history: [] },
-        "OWNER101": { id: "OWNER101", name: "Franchise Partner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "ownerpassword", status: "Active", store: "All", activePunch: null, history: [] }
+        "EMP103": { id: "EMP103", name: "Bob Miller", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "CT LIGHT", activePunch: null, history: [] },
+        "EMP104": { id: "EMP104", name: "Rahul Sharma", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "EMP105": { id: "EMP105", name: "Priya Patel", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "ADAJAN", activePunch: null, history: [] },
+        "OWNER101": { id: "OWNER101", name: "Franchise Partner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "bkoperation/89*", status: "Active", store: "All", activePunch: null, history: [] },
+        "bk2022": { id: "bk2022", name: "Franchise Partner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "bkoperation/89*", status: "Active", store: "All", activePunch: null, history: [] },
+        "manager/123": { id: "manager/123", name: "Store Manager", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "VESU", activePunch: null, history: [] }
     };
 
     // Helper: Compress image file using canvas resize & quality adjustment
@@ -1303,98 +1423,126 @@ function initApp() {
                 }
             }
 
-            if (!isCompleted) {
-                function openLiveCameraForTask(taskIdx) {
-                    const modal = document.getElementById('modalLiveCamera');
-                    const video = document.getElementById('liveCameraVideo');
-                    const canvas = document.getElementById('liveCameraCanvas');
-                    const btnSnap = document.getElementById('btnSnapLivePhoto');
-                    const btnClose = document.getElementById('btnCloseLiveCamera');
-                    const fileInput = document.getElementById('inputCameraFallbackFile');
+            function openLiveCameraForTask(taskIdx) {
+                if (isCompleted) return;
+                const modal = document.getElementById('modalLiveCamera');
+                const video = document.getElementById('liveCameraVideo');
+                const canvas = document.getElementById('liveCameraCanvas');
+                const btnSnap = document.getElementById('btnSnapLivePhoto');
+                const btnClose = document.getElementById('btnCloseLiveCamera');
+                const fileInput = document.getElementById('inputCameraFallbackFile');
+                
+                if (!modal || !video || !canvas || !btnSnap) return;
+                
+                modal.style.display = "flex";
+                
+                let activeStream = null;
+                
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    console.warn("Camera mediaDevices not supported. File upload fallback active.");
+                } else {
+                    const constraints = {
+                        video: {
+                            facingMode: { ideal: "environment" }
+                        }
+                    };
                     
-                    if (!modal || !video || !canvas || !btnSnap) return;
-                    
-                    modal.style.display = "flex";
-                    
-                    let activeStream = null;
-                    
-                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                        console.warn("Camera mediaDevices not supported. File upload fallback active.");
-                    } else {
-                        // Use ideal facingMode to prevent OverconstrainedError on laptop webcams
-                        const constraints = {
-                            video: {
-                                facingMode: { ideal: "environment" }
-                            }
-                        };
-                        
+                    try {
                         navigator.mediaDevices.getUserMedia(constraints)
                             .then(stream => {
                                 activeStream = stream;
                                 video.srcObject = stream;
+                                video.play().catch(e => console.warn("Video play failed:", e));
                             })
                             .catch(err => {
                                 console.warn("Environment camera failed. Trying generic webcam fallback:", err);
-                                // Fallback 1: Generic camera access
-                                navigator.mediaDevices.getUserMedia({ video: true })
-                                    .then(stream => {
-                                        activeStream = stream;
-                                        video.srcObject = stream;
-                                    })
-                                    .catch(err2 => {
-                                        console.error("All webcam attempts failed:", err2);
-                                    });
+                                try {
+                                    navigator.mediaDevices.getUserMedia({ video: true })
+                                        .then(stream => {
+                                            activeStream = stream;
+                                            video.srcObject = stream;
+                                            video.play().catch(e => console.warn("Video play failed:", e));
+                                        })
+                                        .catch(err2 => {
+                                            console.error("All webcam attempts failed:", err2);
+                                        });
+                                } catch (errSyncInner) {
+                                    console.error("Sync error in generic fallback:", errSyncInner);
+                                }
                             });
-                    }
-                        
-                    const closeCamera = () => {
-                        if (activeStream) {
-                            activeStream.getTracks().forEach(track => track.stop());
+                    } catch (errSyncOuter) {
+                        console.warn("Sync error in ideal constraints:", errSyncOuter);
+                        try {
+                            navigator.mediaDevices.getUserMedia({ video: true })
+                                .then(stream => {
+                                    activeStream = stream;
+                                    video.srcObject = stream;
+                                    video.play().catch(e => console.warn("Video play failed:", e));
+                                })
+                                .catch(err2 => {
+                                    console.error("Sync webcam fallback failed:", err2);
+                                });
+                        } catch (errSyncFinal) {
+                            console.error("Webcam media access completely failed:", errSyncFinal);
                         }
-                        modal.style.display = "none";
-                        // Remove listeners to prevent duplicates
-                        btnSnap.replaceWith(btnSnap.cloneNode(true));
-                        btnClose.replaceWith(btnClose.cloneNode(true));
-                        if (fileInput) {
-                            fileInput.replaceWith(fileInput.cloneNode(true));
-                        }
-                    };
-                    
-                    btnClose.onclick = closeCamera;
-                    
-                    btnSnap.onclick = async () => {
-                        if (!video.videoWidth) {
-                            alert("Webcam is loading or unavailable. Please use the Choose / Upload Image option below.");
-                            return;
-                        }
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        
-                        const photoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                        closeCamera();
-                        
-                        await saveChecklistTaskPhoto(taskIdx, photoDataUrl);
-                    };
-
-                    const handleFileChange = (e) => {
-                        const file = e.target.files[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = async (evt) => {
-                            const photoDataUrl = evt.target.result;
-                            closeCamera();
-                            await saveChecklistTaskPhoto(taskIdx, photoDataUrl);
-                        };
-                        reader.readAsDataURL(file);
-                    };
-
-                    if (fileInput) {
-                        fileInput.value = "";
-                        fileInput.onchange = handleFileChange;
                     }
                 }
+                    
+                const closeCamera = () => {
+                    if (activeStream) {
+                        try {
+                            activeStream.getTracks().forEach(track => track.stop());
+                        } catch (e) {
+                            console.warn("Error stopping tracks:", e);
+                        }
+                    }
+                    modal.style.display = "none";
+                    btnSnap.onclick = null;
+                    btnClose.onclick = null;
+                    if (fileInput) {
+                        fileInput.onchange = null;
+                        fileInput.value = "";
+                    }
+                    try {
+                        video.srcObject = null;
+                    } catch (e) {}
+                };
+                
+                btnClose.onclick = closeCamera;
+                
+                btnSnap.onclick = async () => {
+                    if (!video.videoWidth || !video.srcObject) {
+                        alert("Webcam stream is loading or unavailable. Please use the Choose / Upload Image option below.");
+                        return;
+                    }
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const photoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    closeCamera();
+                    
+                    await saveChecklistTaskPhoto(taskIdx, photoDataUrl);
+                };
+
+                const handleFileChange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = async (evt) => {
+                        const photoDataUrl = evt.target.result;
+                        closeCamera();
+                        await saveChecklistTaskPhoto(taskIdx, photoDataUrl);
+                    };
+                    reader.readAsDataURL(file);
+                };
+
+                if (fileInput) {
+                    fileInput.value = "";
+                    fileInput.onchange = handleFileChange;
+                }
+            }
 
                 // Click checkbox or title -> open camera if unchecked
                 container.querySelectorAll(".btn-toggle-checkbox").forEach(el => {
@@ -1459,7 +1607,6 @@ function initApp() {
                         }
                     });
                 }
-            }
         } else {
             // Owner View
             const branches = ["VESU", "ADAJAN", "CT LIGHT"];
@@ -11968,11 +12115,13 @@ function initApp() {
     initDeliveryAndKDSModule();
 
     // === INITIAL STARTUP SYNC ===
-    syncStateFromServer(true).then(() => {
-        const cachedRoleKey = localStorage.getItem("bk_current_role_key");
-        const defaultRole = cachedRoleKey ? cachedRoleKey : "bm-vesu";
-        setRole(defaultRole);
-    });
+    // Always clear tokens on startup to force login screen
+    localStorage.removeItem("bk_jwt_token");
+    localStorage.removeItem("bk_logged_in_user");
+    localStorage.removeItem("bk_current_role_key");
+    
+    const overlay = document.getElementById("login-overlay");
+    if (overlay) overlay.style.display = "flex";
 
         // =========================================================================
     // PREMIUM SMART AI-POWERED PROCUREMENT SYSTEM UPGRADE

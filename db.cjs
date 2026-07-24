@@ -1728,4 +1728,59 @@ try {
   console.error("Migration Error adding new menu products:", err);
 }
 
+// Migration: Ensure the owner (bk2022) and store manager (manager/123) exist in the employees table
+try {
+  const checkEmp = db.prepare("SELECT COUNT(*) as count FROM employees WHERE id = ?");
+  const insertEmp = db.prepare(`
+    INSERT INTO employees (id, name, role, mobile, shiftStart, roleKey, password, status, store, activePunch, history)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  // Owner
+  if (checkEmp.get("bk2022").count === 0) {
+    insertEmp.run(
+      "bk2022",
+      "Franchise Partner",
+      "Owner",
+      "9999999999",
+      "09:00",
+      "owner",
+      "bkoperation/89*",
+      "Active",
+      "All",
+      null,
+      JSON.stringify([])
+    );
+    console.log("Migration: Added owner user (bk2022)");
+  } else {
+    db.prepare("UPDATE employees SET password = 'bkoperation/89*' WHERE id = 'bk2022'").run();
+  }
+
+  // Manager
+  if (checkEmp.get("manager/123").count === 0) {
+    insertEmp.run(
+      "manager/123",
+      "Store Manager",
+      "Branch Manager",
+      "9876543213",
+      "09:00",
+      "sm",
+      "managerbk/09#",
+      "Active",
+      "VESU",
+      null,
+      JSON.stringify([])
+    );
+    console.log("Migration: Added manager user (manager/123)");
+  } else {
+    db.prepare("UPDATE employees SET password = 'managerbk/09#' WHERE id = 'manager/123'").run();
+  }
+
+  // Update existing individual branch manager passwords as well to simplify
+  db.prepare("UPDATE employees SET password = 'managerbk/09#' WHERE roleKey = 'sm'").run();
+  
+} catch (err) {
+  console.error("Migration Error adding login employees:", err);
+}
+
 module.exports = { db, dbReady };
