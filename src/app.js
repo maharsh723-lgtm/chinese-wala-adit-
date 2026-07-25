@@ -9570,8 +9570,9 @@ function initApp() {
         const invoiceHtml = `
             <div class="receipt-container">
                 <div class="receipt-header">
-                    <h2>BADI KATORI</h2>
-                    <div style="font-size:10px;">Indian Street-Eatery</div>
+                    <div class="receipt-brand-logo-container" style="width: 160px; height: auto; display: block; margin: 0 auto 8px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));">
+                        <img src="brand_logo.jpg" alt="Badi Katori Logo" style="width: 100%; height: auto; display: block; border-radius: 4px; filter: grayscale(1);"/>
+                    </div>
                     <div style="font-size:10px;">Store: ${order.store || currentStore}</div>
                     <div style="font-size:10px; margin-top:4px;">GSTIN: 27AABCB1234F1Z0</div>
                     ${order.tokenNumber ? `
