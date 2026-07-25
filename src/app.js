@@ -9635,12 +9635,6 @@ function initApp() {
             `;
         });
 
-        // 5% GST calculations (inclusive of grand total)
-        const taxable = order.grandTotal / 1.05;
-        const totalGst = order.grandTotal - taxable;
-        const cgst = totalGst / 2;
-        const sgst = totalGst / 2;
-        
         const invoiceHtml = `
             <div class="receipt-container">
                 <div class="receipt-header">
@@ -9690,23 +9684,11 @@ function initApp() {
                     <span>Service Charge (5%)</span>
                     <span>₹${order.serviceCharge.toFixed(2)}</span>
                 </div>
-                <div class="receipt-row" style="font-size: 11px;">
-                    <span>Taxable Value</span>
-                    <span>₹${taxable.toFixed(2)}</span>
-                </div>
-                <div class="receipt-row" style="font-size: 11px;">
-                    <span>CGST (2.5%)</span>
-                    <span>₹${cgst.toFixed(2)}</span>
-                </div>
-                <div class="receipt-row" style="font-size: 11px;">
-                    <span>SGST (2.5%)</span>
-                    <span>₹${sgst.toFixed(2)}</span>
-                </div>
                 
                 <div class="receipt-divider"></div>
                 
                 <div class="receipt-row receipt-totals" style="font-size:14px;">
-                    <span>GRAND TOTAL (Incl. GST)</span>
+                    <span>GRAND TOTAL</span>
                     <span>₹${order.grandTotal.toFixed(2)}</span>
                 </div>
                 <div class="receipt-row" style="font-size:10px; margin-top:4px;">
