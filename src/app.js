@@ -8856,6 +8856,45 @@ function initApp() {
             });
         }
 
+        const customItemAddBtn = document.getElementById("btnPosAddCustomItem");
+        if (customItemAddBtn && !customItemAddBtn.dataset.listenerBound) {
+            customItemAddBtn.dataset.listenerBound = "true";
+            customItemAddBtn.addEventListener("click", () => {
+                const nameInput = document.getElementById("posCustomItemName");
+                const priceInput = document.getElementById("posCustomItemPrice");
+                if (!nameInput || !priceInput) return;
+
+                const name = nameInput.value.trim();
+                const priceVal = priceInput.value.trim();
+
+                if (!name) {
+                    showToast("Please enter an item name!");
+                    return;
+                }
+                const price = parseFloat(priceVal);
+                if (isNaN(price) || price < 0) {
+                    showToast("Please enter a valid price!");
+                    return;
+                }
+
+                const customId = `custom-${Date.now()}`;
+                posCart.push({
+                    productId: customId,
+                    productName: name,
+                    price: price,
+                    quantity: 1,
+                    modifiers: [],
+                    instructions: ''
+                });
+
+                syncCartStateAndUI();
+                showToast(`Added custom item: ${name}`);
+
+                nameInput.value = "";
+                priceInput.value = "";
+            });
+        }
+
         const cartClearAllBtn = document.getElementById("btnCartClearAll");
         if (cartClearAllBtn && !cartClearAllBtn.dataset.listenerBound) {
             cartClearAllBtn.dataset.listenerBound = "true";

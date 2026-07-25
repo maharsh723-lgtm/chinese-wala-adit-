@@ -5579,6 +5579,16 @@
                                 <textarea id="posDeliveryAddress" placeholder="Customer phone, gate code, street address details..." class="pos-textarea-new" style="height: 50px; font-size: 0.72rem; padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(46, 35, 31, 0.12); resize: none; font-family: inherit;"></textarea>
                             </div>
 
+                            <!-- Quick Add Custom Item Section -->
+                            <div class="checkout-card-new custom-item-card-new" style="margin-bottom: 12px; padding: 12px 14px; background: var(--pos-card-bg, #ffffff); border: 1px solid rgba(46, 35, 31, 0.08); border-radius: 12px;">
+                                <span class="section-title-new" style="margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 800; color: var(--pos-espresso);"><i data-lucide="plus-circle" style="width: 14px; height: 14px; color: var(--pos-beige);"></i> Quick Add Custom Item</span>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input type="text" id="posCustomItemName" placeholder="Item Name (e.g. Extra Butter)" class="pos-input" style="flex: 2; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(46, 35, 31, 0.08); font-size: 0.78rem; background: var(--pos-cream-bg); color: var(--pos-espresso); outline: none; font-weight: 700;">
+                                    <input type="number" id="posCustomItemPrice" placeholder="Price (₹)" class="pos-input" style="flex: 1; width: 70px; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(46, 35, 31, 0.08); font-size: 0.78rem; background: var(--pos-cream-bg); color: var(--pos-espresso); outline: none; font-weight: 700;" min="0" step="0.01">
+                                    <button type="button" id="btnPosAddCustomItem" class="saas-btn saas-btn-primary" style="padding: 6px 14px; font-size: 0.75rem; border-radius: 8px; font-weight: 800; cursor: pointer; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--pos-espresso); color: #fff; border: none; transition: all 0.2s;">Add</button>
+                                </div>
+                            </div>
+
                             <!-- Premium Enterprise POS Cart Panel -->
                             <div class="pos-cart-panel">
                                 <!-- Cart Header -->
