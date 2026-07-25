@@ -5246,6 +5246,41 @@ function initApp() {
         });
     }
 
+    // === CLEAR INVENTORY SUBMISSION ===
+    const btnClearInventoryTop = document.getElementById("btnClearInventoryTop");
+    if (btnClearInventoryTop) {
+        btnClearInventoryTop.addEventListener("click", async () => {
+            const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
+            const confirmMsg = currentRole === "owner"
+                ? `Are you sure you want to clear all inventory for store "${targetStore}"? This will reset all stock levels to 0.`
+                : `Are you sure you want to clear all inventory for this outlet (${targetStore})? This will reset all stock levels to 0.`;
+            
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/inventory/clear`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`
+                    },
+                    body: JSON.stringify({ store: targetStore })
+                });
+
+                if (res.ok) {
+                    alert("Inventory cleared successfully.");
+                    await syncStateFromServer();
+                } else {
+                    const errData = await res.json();
+                    alert("Error: " + errData.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to clear inventory.");
+            }
+        });
+    }
+
     // === INVENTORY EDIT FORM SUBMISSION ===
     const editInventoryForm = document.getElementById("formEditInventory");
     if (editInventoryForm) {

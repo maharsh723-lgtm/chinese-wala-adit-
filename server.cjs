@@ -410,6 +410,30 @@ app.put('/api/inventory/:id/edit', (req, res) => {
   }
 });
 
+app.post('/api/inventory/clear', authenticateToken, (req, res) => {
+  try {
+    let targetStore = req.user.store;
+    if (req.user.role === 'owner') {
+      targetStore = req.query.store || req.body.store;
+    }
+    
+    if (!targetStore) {
+      return res.status(400).json({ error: 'Store parameter is required' });
+    }
+    
+    if (targetStore === 'All') {
+      db.prepare("UPDATE inventory SET stock = 0, status = 'OUT OF STOCK'").run();
+    } else {
+      db.prepare("UPDATE inventory SET stock = 0, status = 'OUT OF STOCK' WHERE store = ?").run(targetStore);
+    }
+    
+    res.json({ success: true, message: `Inventory cleared for store: ${targetStore}` });
+  } catch (err) {
+    console.error('Error clearing inventory:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // API: Purchases
 app.post('/api/purchases', (req, res) => {
   try {
