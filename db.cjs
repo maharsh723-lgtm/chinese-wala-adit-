@@ -2,6 +2,7 @@ const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, 'env', '.env') });
 const XLSX = require('xlsx');
+const { hashPassword } = require('./src/cryptoHelper.cjs');
 
 const dbFilename = process.env.DB_FILE || 'database.db';
 const dbPath = path.isAbsolute(dbFilename) ? dbFilename : path.join(__dirname, dbFilename);
@@ -202,6 +203,15 @@ db.exec(`
     loyaltyPoints INTEGER DEFAULT 0
   )
 `);
+
+// Add Guest Intelligence columns dynamically
+try { db.exec("ALTER TABLE pos_customers ADD COLUMN email TEXT;"); } catch(e) {}
+try { db.exec("ALTER TABLE pos_customers ADD COLUMN dob TEXT;"); } catch(e) {}
+try { db.exec("ALTER TABLE pos_customers ADD COLUMN anniversary TEXT;"); } catch(e) {}
+try { db.exec("ALTER TABLE pos_customers ADD COLUMN customerSince TEXT;"); } catch(e) {}
+try { db.exec("ALTER TABLE pos_customers ADD COLUMN preferences TEXT;"); } catch(e) {}
+try { db.exec("ALTER TABLE pos_customers ADD COLUMN specialRequirements TEXT;"); } catch(e) {}
+try { db.exec("ALTER TABLE pos_customers ADD COLUMN notes TEXT;"); } catch(e) {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS pos_orders (
@@ -1745,7 +1755,7 @@ try {
       "9999999999",
       "09:00",
       "owner",
-      "bkoperation/89*",
+      hashPassword("bkoperation/89*"),
       "Active",
       "All",
       null,
@@ -1753,7 +1763,7 @@ try {
     );
     console.log("Migration: Added owner user (bk2022)");
   } else {
-    db.prepare("UPDATE employees SET password = 'bkoperation/89*' WHERE id = 'bk2022'").run();
+    db.prepare("UPDATE employees SET password = ? WHERE id = 'bk2022'").run(hashPassword("bkoperation/89*"));
   }
 
   // Manager
@@ -1765,7 +1775,7 @@ try {
       "9876543213",
       "09:00",
       "sm",
-      "managerbk/09#",
+      hashPassword("managerbk/09#"),
       "Active",
       "VESU",
       null,
@@ -1773,11 +1783,11 @@ try {
     );
     console.log("Migration: Added manager user (manager/123)");
   } else {
-    db.prepare("UPDATE employees SET password = 'managerbk/09#' WHERE id = 'manager/123'").run();
+    db.prepare("UPDATE employees SET password = ? WHERE id = 'manager/123'").run(hashPassword("managerbk/09#"));
   }
 
   // Update existing individual branch manager passwords as well to simplify
-  db.prepare("UPDATE employees SET password = 'managerbk/09#' WHERE roleKey = 'sm'").run();
+  db.prepare("UPDATE employees SET password = ? WHERE roleKey = 'sm'").run(hashPassword("managerbk/09#"));
   
 } catch (err) {
   console.error("Migration Error adding login employees:", err);

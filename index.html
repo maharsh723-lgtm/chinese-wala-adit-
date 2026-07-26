@@ -220,6 +220,10 @@
                         <i data-lucide="trending-up"></i>
                         <span>📈 Item Sales Analytics</span>
                     </div>
+                    <div class="nav-item" data-target="guest-intelligence">
+                        <i data-lucide="brain"></i>
+                        <span>🧠 Guest Intelligence</span>
+                    </div>
                 </div>
 
                 <!-- Group 7.5: Training -->
@@ -2485,6 +2489,36 @@
                         <div style="max-width:1100px; margin:0 auto; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:30px; position:relative;">
                             <button class="saas-btn saas-btn-secondary" id="btnCloseItemAnalyticsOverlay" style="position:absolute; top:20px; right:20px; font-weight:800;">&times; Close Page</button>
                             <div id="singleItemAnalyticsDetailContent"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCREEN 11.8: GUEST INTELLIGENCE -->
+                <div class="app-screen" id="screen-guest-intelligence">
+                    <div class="screen-header-layout" style="margin-bottom:20px;">
+                        <div class="screen-title-desc">
+                            <h1>🧠 Guest Intelligence Hub</h1>
+                            <p>Real-time guest profiling, automatic preference mapping, and AI-driven behavior insights.</p>
+                        </div>
+                    </div>
+
+                    <!-- Layout: Tabs -->
+                    <div style="display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; overflow-x: auto;">
+                        <button class="saas-btn saas-btn-secondary active" id="btnGuestDashboardTab" style="font-weight:800; white-space:nowrap;">Dashboard</button>
+                        <button class="saas-btn saas-btn-secondary" id="btnGuestProfilesTab" style="font-weight:800; white-space:nowrap;">Guest Profiles</button>
+                        <button class="saas-btn saas-btn-secondary" id="btnGuestPreferencesTab" style="font-weight:800; white-space:nowrap;">Preferences & Allergies</button>
+                        <button class="saas-btn saas-btn-secondary" id="btnGuestAIRecommendationsTab" style="font-weight:800; white-space:nowrap;">AI Recommendations</button>
+                        <button class="saas-btn saas-btn-secondary" id="btnGuestReportsTab" style="font-weight:800; white-space:nowrap;">Reports</button>
+                    </div>
+
+                    <!-- Viewport for active Guest Intelligence tab -->
+                    <div id="guestIntelligenceTabViewport"></div>
+
+                    <!-- Single Guest Profile Overlay -->
+                    <div id="singleGuestProfileOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:9999; padding:40px; overflow-y:auto;">
+                        <div style="max-width:1100px; margin:0 auto; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:30px; position:relative; color:#fff;">
+                            <button class="saas-btn saas-btn-secondary" id="btnCloseGuestProfileOverlay" style="position:absolute; top:20px; right:20px; font-weight:800;">&times; Close Profile</button>
+                            <div id="singleGuestProfileDetailContent"></div>
                         </div>
                     </div>
                 </div>
@@ -6831,6 +6865,22 @@
         </div>
     </div>
 
+    <!-- Guest Intelligence Popup Modal -->
+    <div class="modal-overlay" id="modalPOSGuestIntelligence" style="z-index: 10005; display:none;">
+        <div class="modal-content" style="max-width: 600px; width: 95%; background: rgba(21, 19, 18, 0.95); border: 1px solid #c29f68; box-shadow: 0 8px 32px rgba(194, 159, 104, 0.2); backdrop-filter: blur(10px); color: #fff;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border);">
+                <h3 style="color: #c29f68; display: flex; align-items: center; gap: 8px;"><i data-lucide="brain"></i> Guest Intelligence Insights</h3>
+                <div class="modal-close" onclick="document.getElementById('modalPOSGuestIntelligence').style.display='none'"><i data-lucide="x"></i></div>
+            </div>
+            <div class="modal-body" id="posGuestIntelligenceModalBody" style="padding: 20px 16px; display:flex; flex-direction:column; gap:16px; font-size: 0.85rem; max-height:480px; overflow-y:auto;">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border);">
+                <button type="button" class="saas-btn saas-btn-primary" onclick="document.getElementById('modalPOSGuestIntelligence').style.display='none'" style="font-weight:800; width:100%;">Acknowledge & Proceed</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 3. GST Invoice / Receipt Modal -->
     <div class="modal-overlay" id="modalPOSInvoice" style="z-index: 10000;">
         <div class="modal-content" style="max-width: 480px; width: 95%; background:#fff; color:#000; font-family:'Courier New', monospace; box-shadow: var(--shadow-lg); padding: 0; border-radius: var(--radius-md); overflow: hidden;">
@@ -6951,6 +7001,7 @@
     <script type="module" src="./src/gst.js"></script>
     <script type="module" src="./src/reportsPortal.js"></script>
     <script type="module" src="./src/itemSalesAnalytics.js"></script>
+    <script type="module" src="./src/guestIntelligence.js"></script>
     <script type="module" src="./src/system.js"></script>
     <script type="module" src="./src/plDashboard.js"></script>
     <script type="module" src="./src/procurement.js"></script>

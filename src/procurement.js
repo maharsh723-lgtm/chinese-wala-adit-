@@ -631,6 +631,18 @@ function acceptSmsOrderPlacement() {
 
     showToast("📱 SMS Order Placed", `Sent to ${getSupplierPhone()}: "Order ${poId} ACCEPTED & Placed successfully."`, "whatsapp");
 
+    // Real-world Integration: Dispatch SMS and WhatsApp to the Master Supplier
+    const cleanPhone = getSupplierPhone().replace(/[^0-9]/g, '');
+    const message = `Order ${poId} ACCEPTED & Placed successfully. Total Amount: ₹${amount}`;
+    
+    // 1. WhatsApp API trigger
+    window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`, '_blank');
+
+    // 2. Native SMS scheme trigger
+    setTimeout(() => {
+        window.location.href = `sms:${getSupplierPhone().replace(/\s/g, '')}?body=${encodeURIComponent(message)}`;
+    }, 1200);
+
     // Dispatch notification to Owner Dashboard
     if (typeof window.addOwnerDashboardNotification === "function") {
         window.addOwnerDashboardNotification(

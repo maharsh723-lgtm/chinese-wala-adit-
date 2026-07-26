@@ -3,6 +3,7 @@ require('dotenv').config({ path: path.join(__dirname, 'env', '.env') });
 const express = require('express');
 const { db, dbReady } = require('./db.cjs');
 const jwt = require('jsonwebtoken');
+const { hashPassword, verifyPassword } = require('./src/cryptoHelper.cjs');
 const XLSX = require('xlsx');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
@@ -289,7 +290,7 @@ app.post('/api/employees', (req, res) => {
       mobile,
       shiftStart,
       roleKey,
-      password || '',
+      hashPassword(password || ''),
       status || 'Active',
       store || 'VESU',
       activePunch ? JSON.stringify(activePunch) : null,
@@ -2876,6 +2877,21 @@ try {
   console.error('Failed to auto-patch database dates on startup:', err);
 }
 
+// Auto-migrate legacy plaintext passwords to secure PBKDF2 hashes on startup
+try {
+  const employees = db.prepare('SELECT id, password FROM employees').all();
+  const updatePassword = db.prepare('UPDATE employees SET password = ? WHERE id = ?');
+  employees.forEach(emp => {
+    if (emp.password && !emp.password.includes(':')) {
+      const hashed = hashPassword(emp.password);
+      updatePassword.run(hashed, emp.id);
+      console.log(`Auto-migrated plain-text password for employee: ${emp.id}`);
+    }
+  });
+} catch (err) {
+  console.error('Failed to auto-migrate database passwords on startup:', err);
+}
+
 // === JWT Authentication Middleware ===
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -2902,7 +2918,7 @@ app.post('/api/auth/login', bruteForceCheck, (req, res) => {
       registerFailedLogin(ip);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    if (user.password && user.password !== password) {
+    if (user.password && !verifyPassword(password, user.password)) {
       registerFailedLogin(ip);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -2958,6 +2974,30 @@ app.post('/api/pos/customers', authenticateToken, (req, res) => {
 
     res.json({ id, name, phone, loyaltyPoints: 0 });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/pos/customers/:id/guest-profile', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { email, dob, anniversary, preferences, specialRequirements, notes } = req.body;
+  try {
+    db.prepare(`
+      UPDATE pos_customers 
+      SET email = ?, dob = ?, anniversary = ?, preferences = ?, specialRequirements = ?, notes = ?
+      WHERE id = ?
+    `).run(
+      email || null,
+      dob || null,
+      anniversary || null,
+      preferences ? (typeof preferences === 'string' ? preferences : JSON.stringify(preferences)) : null,
+      specialRequirements ? (typeof specialRequirements === 'string' ? specialRequirements : JSON.stringify(specialRequirements)) : null,
+      notes || null,
+      id
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error updating guest profile:', err);
     res.status(500).json({ error: err.message });
   }
 });
