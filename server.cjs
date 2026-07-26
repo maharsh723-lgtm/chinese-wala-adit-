@@ -14,15 +14,81 @@ const JWT_SECRET = process.env.JWT_SECRET || 'badi_katori_secret_key_12345';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Security: In-Memory Request Rate Limiter (Firewall)
+const ipRequestCounts = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS = 300; // Limit each IP to 300 requests per minute
+
+// Security: Failed Login Trackers
+const failedLogins = new Map();
+
+function bruteForceCheck(req, res, next) {
+  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const now = Date.now();
+  if (failedLogins.has(ip)) {
+    const record = failedLogins.get(ip);
+    if (record.lockUntil && now < record.lockUntil) {
+      const waitMins = Math.ceil((record.lockUntil - now) / 60000);
+      return res.status(429).json({
+        error: `Too many failed login attempts. Locked out. Please wait ${waitMins} minutes.`
+      });
+    }
+  }
+  next();
+}
+
+function registerFailedLogin(ip) {
+  const now = Date.now();
+  let record = failedLogins.get(ip) || { count: 0, lockUntil: null };
+  record.count += 1;
+  if (record.count >= 5) {
+    record.lockUntil = now + 15 * 60 * 1000; // 15 minutes lockout
+    record.count = 0;
+  }
+  failedLogins.set(ip, record);
+}
+
+function clearFailedLogin(ip) {
+  failedLogins.delete(ip);
+}
+
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// CORS Headers Middleware
+// Rate-limiting Firewall Middleware
+app.use((req, res, next) => {
+  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const now = Date.now();
+  if (!ipRequestCounts.has(ip)) {
+    ipRequestCounts.set(ip, []);
+  }
+  const timestamps = ipRequestCounts.get(ip);
+  const activeTimestamps = timestamps.filter(t => now - t < RATE_LIMIT_WINDOW);
+  if (activeTimestamps.length >= MAX_REQUESTS) {
+    return res.status(429).json({
+      error: "Too many requests. Please try again later.",
+      message: "Rate limit exceeded. Firewall protection block active."
+    });
+  }
+  activeTimestamps.push(now);
+  ipRequestCounts.set(ip, activeTimestamps);
+  next();
+});
+
+// CORS and Security Headers Middleware
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-user-role, authorization, x-store-name');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  
+  // High Security Headers
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -1432,9 +1498,9 @@ function syncInventoryCostsFromRecipes() {
 }
 
 // API: Recipes
-app.post('/api/recipes', (req, res) => {
+app.post('/api/recipes', authenticateToken, (req, res) => {
   try {
-    const role = req.headers['x-user-role'];
+    const role = req.user.role;
     if (role !== 'owner') {
       return res.status(403).json({ error: 'Permission denied. Only Franchise Owner can perform this action.' });
     }
@@ -1453,9 +1519,9 @@ app.post('/api/recipes', (req, res) => {
   }
 });
 
-app.delete('/api/recipes/:id', (req, res) => {
+app.delete('/api/recipes/:id', authenticateToken, (req, res) => {
   try {
-    const role = req.headers['x-user-role'];
+    const role = req.user.role;
     if (role !== 'owner') {
       return res.status(403).json({ error: 'Permission denied. Only Franchise Owner can perform this action.' });
     }
@@ -2816,12 +2882,6 @@ function authenticateToken(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1];
   
   if (!token) {
-    if (req.headers['x-user-role']) {
-      // Find employee by role key or name
-      const roleKey = req.headers['x-user-role'] === 'owner' ? 'owner' : 'sm';
-      req.user = { id: 'EMP104', name: 'Ops Administrator', role: roleKey, store: 'VESU' };
-      return next();
-    }
     return res.status(401).json({ error: 'Access token required' });
   }
   
@@ -2833,16 +2893,20 @@ function authenticateToken(req, res, next) {
 }
 
 // === Authentication Routes ===
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', bruteForceCheck, (req, res) => {
   const { id, password } = req.body;
+  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
   try {
     const user = db.prepare('SELECT * FROM employees WHERE id = ?').get(id);
     if (!user) {
-      return res.status(401).json({ error: 'User not found' });
+      registerFailedLogin(ip);
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
     if (user.password && user.password !== password) {
-      return res.status(401).json({ error: 'Invalid password' });
+      registerFailedLogin(ip);
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
+    clearFailedLogin(ip);
     const token = jwt.sign({ id: user.id, name: user.name, role: user.roleKey, store: user.store }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ token, user: { id: user.id, name: user.name, role: user.role, roleKey: user.roleKey, store: user.store } });
   } catch (err) {

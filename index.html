@@ -209,20 +209,16 @@
                     </div>
                 </div>
 
-                <!-- Group 7: Reports -->
-                <div class="nav-group">
+                <!-- Group 7: Reports & Analytics -->
+                <div class="nav-group" id="reportsAnalyticsNavGroup">
                     <div class="nav-group-title">Reporting</div>
-                    <div class="nav-item" data-target="day-end-report">
-                        <i data-lucide="file-text"></i>
-                        <span>Day End Report</span>
-                    </div>
-                    <div class="nav-item" data-target="product-sales">
+                    <div class="nav-item" data-target="reports-portal">
                         <i data-lucide="bar-chart-3"></i>
-                        <span>Product Sales</span>
+                        <span>Reports & Analytics</span>
                     </div>
-                    <div class="nav-item" data-target="cash-reconciliation">
-                        <i data-lucide="banknote"></i>
-                        <span>Cash Reconciliation</span>
+                    <div class="nav-item" data-target="item-sales-analytics">
+                        <i data-lucide="trending-up"></i>
+                        <span>📈 Item Sales Analytics</span>
                     </div>
                 </div>
 
@@ -2327,6 +2323,168 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCREEN 11.5: REPORTS & ANALYTICS PORTAL -->
+                <div class="app-screen" id="screen-reports-portal">
+                    <div class="screen-header-layout" style="margin-bottom: 20px;">
+                        <div class="screen-title-desc">
+                            <h1>📊 Reports & Analytics</h1>
+                            <p>Real-time enterprise business intelligence and AI-powered performance forecasting.</p>
+                        </div>
+                    </div>
+
+                    <!-- Main Portal container -->
+                    <div class="reports-portal-container" style="display: flex; gap: 24px; min-height: calc(100vh - 180px); align-items: stretch; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); backdrop-filter: blur(10px);">
+                        <!-- Left Navigation Bar -->
+                        <div class="reports-portal-sidebar" style="width: 260px; border-right: 1px solid var(--border); padding-right: 20px; display: flex; flex-direction: column; gap: 16px; flex-shrink: 0;">
+                            <div style="position: relative;">
+                                <input type="text" id="reportPortalSearch" placeholder="Search reports..." style="width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: var(--radius-md); color: #fff; font-size: 0.85rem; outline: none; transition: border-color 0.2s;">
+                            </div>
+                            <div class="reports-portal-menu" style="display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 600px; padding-right: 5px;">
+                                <button class="reports-menu-btn active" data-report="executive" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="pie-chart" style="width:16px; height:16px;"></i> Executive Dashboard
+                                </button>
+                                <button class="reports-menu-btn" data-report="sales" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="trending-up" style="width:16px; height:16px;"></i> Sales Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="menu" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="chef-hat" style="width:16px; height:16px;"></i> Menu Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="item-consumption" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="package-check" style="width:16px; height:16px;"></i> Item Consumption
+                                </button>
+                                <button class="reports-menu-btn" data-report="inventory" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="boxes" style="width:16px; height:16px;"></i> Inventory Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="procurement" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="shopping-cart" style="width:16px; height:16px;"></i> Procurement Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="food-cost" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="dollar-sign" style="width:16px; height:16px;"></i> Food Cost Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="wastage" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="trash-2" style="width:16px; height:16px;"></i> Wastage Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="financial" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="landmark" style="width:16px; height:16px;"></i> Financial Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="customer" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="users-2" style="width:16px; height:16px;"></i> Customer Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="staff" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="user-cog" style="width:16px; height:16px;"></i> Staff Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="forecast" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="bar-chart-4" style="width:16px; height:16px;"></i> Forecast Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="ai-insights" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="sparkles" style="width:16px; height:16px;"></i> AI Insights
+                                </button>
+                                <button class="reports-menu-btn" data-report="scheduled" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="calendar-clock" style="width:16px; height:16px;"></i> Scheduled Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="saved" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="bookmark" style="width:16px; height:16px;"></i> Saved Reports
+                                </button>
+                                <button class="reports-menu-btn" data-report="archive" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="archive-restore" style="width:16px; height:16px;"></i> Report Archive
+                                </button>
+                                <button class="reports-menu-btn" data-report="custom-builder" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: none; border: none; border-radius: var(--radius-md); color: var(--text-secondary); text-align: left; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;">
+                                    <i data-lucide="settings-2" style="width:16px; height:16px;"></i> Custom Builder
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Right Main Content Area -->
+                        <div class="reports-portal-content" style="flex: 1; display: flex; flex-direction: column; gap: 20px; overflow-x: hidden;">
+                            <!-- Sticky Filters Bar -->
+                            <div class="reports-filter-bar" style="position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; background: rgba(21, 19, 18, 0.95); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 16px; backdrop-filter: blur(8px); width: 100%;">
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-tertiary);">DATE RANGE</span>
+                                    <select id="reportsFilterPeriod" style="padding: 6px 12px; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.8rem; outline: none;">
+                                        <option value="today">Today</option>
+                                        <option value="yesterday">Yesterday</option>
+                                        <option value="this-week">This Week</option>
+                                        <option value="last-week">Last Week</option>
+                                        <option value="this-month" selected>This Month</option>
+                                        <option value="last-month">Last Month</option>
+                                        <option value="quarter">This Quarter</option>
+                                        <option value="year">This Year</option>
+                                        <option value="custom">Custom Date</option>
+                                    </select>
+                                </div>
+                                <div id="reportsCustomDateInputs" style="display: none; align-items: center; gap: 8px;">
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-tertiary);">START</span>
+                                        <input type="date" id="reportsFilterStart" style="padding: 5px 10px; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.8rem; outline: none;">
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-tertiary);">END</span>
+                                        <input type="date" id="reportsFilterEnd" style="padding: 5px 10px; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.8rem; outline: none;">
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-tertiary);">OUTLET</span>
+                                    <select id="reportsFilterOutlet" style="padding: 6px 12px; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.8rem; outline: none;">
+                                        <option value="All">All Outlets</option>
+                                        <option value="VESU">VESU</option>
+                                        <option value="ADAJAN">ADAJAN</option>
+                                        <option value="CT LIGHT">CT LIGHT</option>
+                                    </select>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-tertiary);">PAY METHOD</span>
+                                    <select id="reportsFilterPay" style="padding: 6px 12px; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.8rem; outline: none;">
+                                        <option value="All">All Methods</option>
+                                        <option value="Cash">Cash</option>
+                                        <option value="UPI">UPI</option>
+                                        <option value="Card">Card</option>
+                                    </select>
+                                </div>
+                                <button class="saas-btn saas-btn-primary" id="btnReportsApplyFilters" style="padding: 8px 16px; font-size: 0.8rem; margin-top: 14px; margin-left: auto;">Apply</button>
+                                <div style="display: flex; gap: 4px; margin-top: 14px;">
+                                    <button class="saas-btn saas-btn-secondary" id="btnExportPDF" title="Export as PDF" style="padding: 8px;"><i data-lucide="file-text" style="width:16px; height:16px;"></i></button>
+                                    <button class="saas-btn saas-btn-secondary" id="btnExportExcel" title="Export as Excel" style="padding: 8px;"><i data-lucide="sheet" style="width:16px; height:16px;"></i></button>
+                                    <button class="saas-btn saas-btn-secondary" id="btnExportCSV" title="Export as CSV" style="padding: 8px;"><i data-lucide="file-spreadsheet" style="width:16px; height:16px;"></i></button>
+                                    <button class="saas-btn saas-btn-secondary" id="btnPrintReport" title="Print Report" style="padding: 8px;"><i data-lucide="printer" style="width:16px; height:16px;"></i></button>
+                                </div>
+                            </div>
+
+                            <!-- Live viewport content -->
+                            <div id="reportsPortalViewport" style="min-height: 400px; display: flex; flex-direction: column; gap: 24px;">
+                                <!-- Skeletons or Report Views dynamically loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCREEN 11.5: ITEM SALES ANALYTICS -->
+                <div class="app-screen" id="screen-item-sales-analytics">
+                    <div class="screen-header-layout" style="margin-bottom:20px;">
+                        <div class="screen-title-desc">
+                            <h1>📈 Item Sales Analytics</h1>
+                            <p>Real-time item-level business intelligence, sales distribution, and matrix trends.</p>
+                        </div>
+                    </div>
+
+                    <!-- Layout: Tabs -->
+                    <div style="display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                        <button class="saas-btn saas-btn-secondary active" id="btnItemAnalyticsOverviewTab" style="font-weight:800;">Items Overview</button>
+                        <button class="saas-btn saas-btn-secondary" id="btnItemAnalyticsTopBottomTab" style="font-weight:800;">Top/Bottom Performers</button>
+                        <button class="saas-btn saas-btn-secondary" id="btnItemAnalyticsReportsTab" style="font-weight:800;">Reports & Exports</button>
+                    </div>
+
+                    <!-- Viewport for active analytics tab -->
+                    <div id="itemAnalyticsTabViewport"></div>
+
+                    <!-- Single Item Analytics Detail Modal/Screen overlay -->
+                    <div id="singleItemAnalyticsOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:9999; padding:40px; overflow-y:auto;">
+                        <div style="max-width:1100px; margin:0 auto; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:30px; position:relative;">
+                            <button class="saas-btn saas-btn-secondary" id="btnCloseItemAnalyticsOverlay" style="position:absolute; top:20px; right:20px; font-weight:800;">&times; Close Page</button>
+                            <div id="singleItemAnalyticsDetailContent"></div>
                         </div>
                     </div>
                 </div>
@@ -6791,7 +6949,8 @@
     <script type="module" src="./src/accounting.js?t=999"></script>
     <script type="module" src="./src/sales.js?t=999"></script>
     <script type="module" src="./src/gst.js"></script>
-    <script type="module" src="./src/reports.js"></script>
+    <script type="module" src="./src/reportsPortal.js"></script>
+    <script type="module" src="./src/itemSalesAnalytics.js"></script>
     <script type="module" src="./src/system.js"></script>
     <script type="module" src="./src/plDashboard.js"></script>
     <script type="module" src="./src/procurement.js"></script>
