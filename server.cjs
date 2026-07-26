@@ -1911,6 +1911,29 @@ app.get('/api/pos/requisitions', authenticateToken, (req, res) => {
   }
 });
 
+app.post('/api/pos/requisitions/send-confirmation-sms', authenticateToken, async (req, res) => {
+  const { poId, amount } = req.body;
+  const targetPhone = "9978673137";
+  const apiKey = process.env.FAST2SMS_API_KEY;
+  const message = `BADI KATORI Smart Procurement: Requisition ${poId} for Rs ${parseFloat(amount).toFixed(2)} is paid. Please confirm order.`;
+
+  if (!apiKey) {
+    console.log(`[Background SMS Simulation] Target: ${targetPhone} | Msg: ${message}`);
+    return res.json({ success: true, simulated: true });
+  }
+
+  try {
+    const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(apiKey)}&route=q&message=${encodeURIComponent(message)}&flash=0&numbers=${targetPhone}`;
+    const response = await fetch(url);
+    const result = await response.json();
+    console.log(`[Requisition SMS Response] PO: ${poId}`, result);
+    res.json({ success: true, result });
+  } catch (err) {
+    console.error('Error sending requisition SMS:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/pos/requisitions', authenticateToken, (req, res) => {
   const { id, branchName, managerName, subtotal, gst, grandTotal, paymentMethod, expectedDeliveryDate, notes, items } = req.body;
   try {

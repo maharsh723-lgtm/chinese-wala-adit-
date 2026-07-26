@@ -545,7 +545,7 @@ function validateCheckoutForm() {
     if (!btnConfirm) return;
 
     const txnId = txnInput ? txnInput.value.trim() : "";
-    if (txnId && currentPo.receiptUploaded) {
+    if (txnId) {
         btnConfirm.removeAttribute("disabled");
     } else {
         btnConfirm.setAttribute("disabled", "true");
@@ -593,7 +593,31 @@ function confirmCheckoutPayment() {
     const checkoutModal = document.getElementById("modalProcCheckout");
     if (checkoutModal) checkoutModal.style.display = "none";
 
-    showToast("Payment Verified", `Funds received. SMS order acceptance prompt sent to ${getSupplierPhone()}.`, "success");
+    showToast("Payment Verified", "Funds received. Sending SMS confirmation request...", "success");
+
+    // Send real SMS to 9978673137 via backend
+    try {
+        const token = localStorage.getItem("bk_token");
+        fetch(`${window.bk_state.API_BASE}/api/pos/requisitions/send-confirmation-sms`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ poId: currentPo.id, amount: currentPo.grandTotal })
+        }).then(res => res.json())
+          .then(data => {
+              console.log("Confirmation SMS sent successfully:", data);
+              showToast("SMS Sent", "Confirmation SMS dispatched to +91 99786 73137.", "success");
+          })
+          .catch(e => {
+              console.error("Failed to send SMS:", e);
+              showToast("SMS Dispatch Error", "Could not send automated SMS to supplier.", "error");
+          });
+    } catch (e) {
+        console.error("SMS fetch trigger failed:", e);
+    }
+
     window.renderProcurementScreen();
 
     // Automatically trigger and display the secure PO matching QR Code
@@ -615,17 +639,128 @@ function openSmsConfirmModal() {
     if (modal) modal.style.display = "flex";
 }
 
-function acceptSmsOrderPlacement() {
+async function acceptSmsOrderPlacement() {
     const modal = document.getElementById("modalProcSmsConfirm");
     if (modal) modal.style.display = "none";
+
+    // If standard currentPo is empty but AI currentPoState has items, copy them so it places correctly!
+    let usingAiDashboard = false;
+    if (currentPo.items.length === 0 && typeof window.bk_state.getCurrentPoState === 'function') {
+        const aiPo = window.bk_state.getCurrentPoState();
+        if (aiPo && aiPo.items && aiPo.items.length > 0) {
+            usingAiDashboard = true;
+            currentPo.id = aiPo.poNumber;
+            currentPo.subtotal = aiPo.totalCost;
+            currentPo.gst = Math.round(aiPo.totalCost * 0.18 * 100) / 100;
+            currentPo.grandTotal = Math.round((aiPo.totalCost + currentPo.gst) * 100) / 100;
+            currentPo.transactionId = aiPo.transactionId || `TXN${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+            currentPo.items = aiPo.items.map(item => {
+                const inv = window.bk_state.getInventory();
+                const matched = inv.find(i => i.label.toLowerCase() === item.label.toLowerCase());
+                return {
+                    productId: matched ? matched.id : "inv-custom",
+                    productName: item.label,
+                    quantity: item.qty,
+                    rate: item.unitCost,
+                    amount: item.total
+                };
+            });
+        }
+    }
 
     currentPo.status = "Order Sent (Placed)";
     currentPo.trackingStep = 3; // Timeline: Order Placed
 
-    const poId = activeOrderDetails ? activeOrderDetails.id : currentPo.id;
-    const amount = (activeOrderDetails ? activeOrderDetails.grandTotal : currentPo.grandTotal).toFixed(2);
+    const poId = currentPo.id;
+    const amount = currentPo.grandTotal.toFixed(2);
 
     showToast("📱 SMS Order Placed", `Sent to ${getSupplierPhone()}: "Order ${poId} ACCEPTED & Placed successfully."`, "whatsapp");
+
+    // Save Requisition Order in Database!
+    try {
+        const token = localStorage.getItem("bk_token");
+        const store = window.bk_state.getCurrentStore();
+        
+        const payload = {
+            id: currentPo.id,
+            branchName: store,
+            managerName: "Branch Manager",
+            subtotal: currentPo.subtotal,
+            gst: currentPo.gst,
+            grandTotal: currentPo.grandTotal,
+            paymentMethod: "UPI Transfer",
+            expectedDeliveryDate: getFutureDateStr(1),
+            notes: "Automated replenishment from Low Stock smart module.",
+            items: currentPo.items.map(item => ({
+                productId: item.productId,
+                productName: item.productName,
+                quantity: item.quantity,
+                rate: item.rate,
+                amount: item.amount,
+                gst: item.gst || (item.amount * 0.18),
+                total: item.total || (item.amount * 1.18)
+            }))
+        };
+
+        const response = await fetch(`${window.bk_state.API_BASE}/api/pos/requisitions`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            console.log("Purchase order persisted in database successfully.");
+            // Mark payment as paid in database
+            await fetch(`${window.bk_state.API_BASE}/api/pos/requisitions/${currentPo.id}/pay`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ transactionId: currentPo.transactionId })
+            });
+            
+            // Sync
+            window.bk_state.syncStateFromServer();
+        }
+    } catch (e) {
+        console.error("Failed to save PO to database:", e);
+    }
+
+    // Update the AI dashboard state too if we were using it!
+    if (usingAiDashboard && typeof window.bk_state.getCurrentPoState === 'function') {
+        const aiPo = window.bk_state.getCurrentPoState();
+        if (aiPo) {
+            aiPo.orderPlaced = true;
+            aiPo.supplierNotified = true;
+            aiPo.status = "Order Sent";
+            aiPo.timestamps.orderSent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (typeof renderAiProcurementScreen === 'function') {
+                renderAiProcurementScreen();
+            }
+        }
+    }
+
+    // Save active tracking details
+    activeOrderDetails = JSON.parse(JSON.stringify(currentPo));
+
+    // Clear and empty the cart draft!
+    currentPo.items = [];
+    currentPo.transactionId = "";
+    currentPo.receiptUploaded = false;
+    currentPo.paymentVerified = false;
+    currentPo.qrGenerated = false;
+    currentPo.trackingStep = 0;
+    currentPo.status = "Draft (Empty)";
+    currentPo.paymentStatus = "Pending Approval";
+    currentPo.id = "PO-2026-07-" + Math.floor(100 + Math.random()*900);
+    calculatePoTotals();
+
+    // Switch to Supplier Portal simulation automatically to guide user testing!
+    setProcMode("supplier");
 
     // Real-world Integration: Dispatch SMS and WhatsApp to the Master Supplier
     let cleanPhone = "919978673137"; // default fallback for India (+91)
@@ -816,6 +951,10 @@ function regeneratePoQr() {
 
 // Open Place Order confirm Modal
 function openConfirmPlaceModal() {
+    if (currentPo.status === "Payment Verified (Awaiting SMS Acceptance)") {
+        alert("Cannot place order. Please confirm order placement via SMS Acceptance Prompt first!");
+        return;
+    }
     if (!currentPo.paymentVerified) {
         alert("Cannot place order. Payment must be verified first!");
         return;

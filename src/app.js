@@ -12729,7 +12729,7 @@ function initApp() {
                                 <i data-lucide="upload"></i> Upload Receipt
                                 <input type="file" id="receiptFileInput" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;" accept="image/*,application/pdf">
                             </button>
-                            <button class="ai-procure-btn ai-procure-btn-primary" id="btnPaymentVerify" ${(currentPoState.paymentStatus === 'Paid' && currentPoState.invoiceUploaded) ? '' : 'disabled style="opacity:0.5; cursor:not-allowed;"'}>
+                            <button class="ai-procure-btn ai-procure-btn-primary" id="btnPaymentVerify" ${currentPoState.paymentStatus === 'Paid' ? '' : 'disabled style="opacity:0.5; cursor:not-allowed;"'}>
                                 <i data-lucide="shield-check"></i> Verify Payment
                             </button>
                         ` : `
@@ -13132,6 +13132,10 @@ function initApp() {
         const btnPlace = document.getElementById("btnPrPlaceOrder");
         if (btnPlace) {
             btnPlace.onclick = () => {
+                if (currentPoState.status === "Payment Verified (Awaiting SMS Acceptance)") {
+                    alert("Cannot place order. Please confirm order placement via SMS Acceptance Prompt first!");
+                    return;
+                }
                 if (!currentPoState.paymentVerified || currentPoState.status !== "Payment Verified") {
                     alert("Cannot place order. Payment must be verified by the AI Auditor first!");
                     return;
@@ -13211,8 +13215,8 @@ function initApp() {
         const btnVerify = document.getElementById("btnPaymentVerify");
         if (btnVerify) {
             btnVerify.onclick = () => {
-                if (!currentPoState.invoiceUploaded || currentPoState.paymentStatus !== "Paid") {
-                    alert("Cannot verify payment. Please mark as paid and upload a receipt first!");
+                if (currentPoState.paymentStatus !== "Paid") {
+                    alert("Cannot verify payment. Please mark as paid first!");
                     return;
                 }
                 btnVerify.disabled = true;
@@ -13222,9 +13226,39 @@ function initApp() {
                     currentPoState.paymentVerified = true;
                     currentPoState.paymentStatus = "Verified";
                     currentPoState.timestamps.paymentVerified = getTimestampStr();
-                    currentPoState.status = "Payment Verified";
-                    alert("Payment successfully verified by AI Auditor. Generate QR Code and Place Order are now unlocked!");
+                    currentPoState.status = "Payment Verified (Awaiting SMS Acceptance)";
+
+                    const gst = Math.round(currentPoState.totalCost * 0.18 * 100) / 100;
+                    const grandTotal = Math.round((currentPoState.totalCost + gst) * 100) / 100;
+
+                    // Trigger backend SMS to 9978673137
+                    try {
+                        const token = localStorage.getItem("bk_token");
+                        fetch(`${window.bk_state.API_BASE}/api/pos/requisitions/send-confirmation-sms`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ poId: currentPoState.poNumber, amount: grandTotal })
+                        }).then(res => res.json())
+                          .then(data => console.log("AI Procurement SMS sent:", data))
+                          .catch(e => console.error("Error sending AI PO SMS:", e));
+                    } catch(e) {
+                        console.error("SMS fetch trigger failed:", e);
+                    }
+
+                    alert("Payment successfully verified by AI Auditor. SMS order acceptance prompt sent to +91 99786 73137!");
                     renderAiProcurementScreen();
+
+                    // Show SMS Confirm modal
+                    const lblPoId = document.getElementById("lblSmsPoId");
+                    const lblPoAmount = document.getElementById("lblSmsPoAmount");
+                    if (lblPoId) lblPoId.innerText = currentPoState.poNumber;
+                    if (lblPoAmount) lblPoAmount.innerText = `₹${grandTotal.toFixed(2)}`;
+
+                    const modal = document.getElementById("modalProcSmsConfirm");
+                    if (modal) modal.style.display = "flex";
                 }, 1500);
             };
         }
@@ -13344,7 +13378,8 @@ function initApp() {
         getCurrentStore: () => currentStore,
         getCurrentRole: () => currentRole,
         API_BASE: API_BASE,
-        syncStateFromServer: syncStateFromServer
+        syncStateFromServer: syncStateFromServer,
+        getCurrentPoState: () => currentPoState
     };
 }
 
