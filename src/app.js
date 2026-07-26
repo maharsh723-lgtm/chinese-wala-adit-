@@ -9175,7 +9175,7 @@ function initApp() {
                     showToast("No active order found to send!");
                     return;
                 }
-                const cleanPhone = "919978673137";
+                const cleanPhone = "919726115954";
                 let text = `*BADI KATORI - ORDER CONFIRMED*\n`;
                 text += `--------------------------------\n`;
                 text += `Order ID: ${order.id}\n`;
@@ -9637,7 +9637,7 @@ function initApp() {
     });
 
     function triggerDirectWhatsAppConfirmation(order) {
-        const cleanPhone = "919978673137";
+        const cleanPhone = "919726115954";
         let text = `*BADI KATORI - ORDER CONFIRMED*\n`;
         text += `--------------------------------\n`;
         text += `Order ID: ${order.id}\n`;
@@ -11339,7 +11339,7 @@ function initApp() {
         document.getElementById("payModalAmount").textContent = `₹${amount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         document.getElementById("payModalPONumber").textContent = `PO Number: ${poId}`;
         
-        const upiURL = `upi://pay?pa=9978673137@ikwik&pn=Badi%20Katori%20QSR&am=${amount.toFixed(2)}&tr=${poId}&tn=PO%20Requisition%20${poId}&cu=INR`;
+        const upiURL = `upi://pay?pa=maharsh43@okhdfcbank&pn=Badi%20Katori%20QSR&am=${amount.toFixed(2)}&tr=${poId}&tn=PO%20Requisition%20${poId}&cu=INR`;
         
         const qrContainer = document.getElementById("payModalQRCode");
         if (qrContainer) {
@@ -12972,7 +12972,7 @@ function initApp() {
     // Dynamic QR Code generation panel template
     function renderProcurementQrCode() {
         const amount = currentPoState.totalCost || 0;
-        const upiURL = `upi://pay?pa=9978673137@ikwik&pn=Badi%20Katori&am=${amount.toFixed(2)}&tr=${currentPoState.poNumber}&tn=PO%20${currentPoState.poNumber}&cu=INR`;
+        const upiURL = `upi://pay?pa=maharsh43@okhdfcbank&pn=Badi%20Katori&am=${amount.toFixed(2)}&tr=${currentPoState.poNumber}&tn=PO%20${currentPoState.poNumber}&cu=INR`;
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(upiURL)}`;
         
         const qrItemsList = currentPoState.items.map(it => `

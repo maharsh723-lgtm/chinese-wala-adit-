@@ -3398,7 +3398,7 @@ async function sendBackgroundNotification(orderId) {
     if (!order) return;
 
     const message = `BADI KATORI: Order ${order.id} is confirmed & paid. Total: Rs ${parseFloat(order.grandTotal).toFixed(2)}. Mode: ${order.paymentMethod}. Customer: ${order.customerName || 'Guest'}.`;
-    const targetPhone = "9978673137";
+    const targetPhone = "9726115954";
     const apiKey = process.env.FAST2SMS_API_KEY;
 
     if (!apiKey) {
