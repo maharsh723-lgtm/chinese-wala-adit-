@@ -58,7 +58,7 @@ window.initProcurementModule = function() {
         copyToClipboard("50200084325729", "Bank Account number copied!");
     });
     document.getElementById("btnCopyUPI")?.addEventListener("click", () => {
-        copyToClipboard("maharsh43@okhdfcbank", "UPI ID copied!");
+        copyToClipboard("9978673137@ikwik", "UPI ID copied!");
     });
     document.getElementById("btnDownloadBankDetails")?.addEventListener("click", downloadBankDetailsFile);
 
@@ -519,10 +519,10 @@ function openCheckoutModal() {
     // Dynamic UPI QR generation based on exact grand total and PO reference ID!
     const imgEl = document.getElementById("imgProcUpiQr");
     if (imgEl) {
-        const upiLink = `upi://pay?pa=maharsh43@okhdfcbank&pn=Badi%20Katori&am=${currentPo.grandTotal.toFixed(2)}&cu=INR&tn=${currentPo.id}`;
+        const upiLink = `upi://pay?pa=9978673137@ikwik&pn=Badi%20Katori&am=${currentPo.grandTotal.toFixed(2)}&cu=INR&tn=${currentPo.id}`;
         imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiLink)}`;
         imgEl.onerror = () => {
-            imgEl.src = "./upi_qr.png"; // Fallback to user uploaded QR code if offline
+            imgEl.src = "./upi_qr.jpg"; // Fallback to user uploaded QR code if offline
         };
     }
 
@@ -632,7 +632,7 @@ function acceptSmsOrderPlacement() {
     showToast("📱 SMS Order Placed", `Sent to ${getSupplierPhone()}: "Order ${poId} ACCEPTED & Placed successfully."`, "whatsapp");
 
     // Real-world Integration: Dispatch SMS and WhatsApp to the Master Supplier
-    let cleanPhone = "919726115954"; // default fallback for India (+91)
+    let cleanPhone = "919978673137"; // default fallback for India (+91)
     const rawPhone = getSupplierPhone();
     if (rawPhone) {
         const digits = rawPhone.replace(/\D/g, '');
