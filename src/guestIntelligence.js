@@ -679,6 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ========================================================
     // GUEST PROFILE OVERLAY WITH TIMELINE & EDIT FORM
     // ========================================================
+    window.openGuestProfileOverlay = openGuestProfileOverlay;
     function openGuestProfileOverlay(id) {
         const overlay = document.getElementById("singleGuestProfileOverlay");
         const viewport = document.getElementById("singleGuestProfileDetailContent");
@@ -915,6 +916,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span style="color:#fff;">${escapeHTML(guest.notes)}</span>
             </div>
             ` : ''}
+
+            <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px; display:flex; justify-content:flex-end;">
+                <button class="saas-btn saas-btn-primary" onclick="document.getElementById('modalPOSGuestIntelligence').style.display='none'; window.openGuestProfileOverlay('${guest.id}');" style="padding: 6px 12px; font-size: 0.75rem; font-weight:800; display:flex; align-items:center; gap:6px;">
+                    <i data-lucide="plus-circle" style="width:14px; height:14px;"></i> Add / Edit Preferences
+                </button>
+            </div>
         `;
 
         document.getElementById("modalPOSGuestIntelligence").style.display = "flex";
