@@ -2192,6 +2192,8 @@ app.post('/api/pos/orders/:id/verify-payment', authenticateToken, (req, res) => 
       io.emit('pl_update');
       io.emit('order_verified', { id, store: order.store });
     }
+    
+    sendBackgroundNotification(id);
     res.json({ success: true, message: `Payment verified successfully for order ${id}` });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -3266,6 +3268,9 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
       }
     });
 
+    if (!isUpiPayment) {
+      sendBackgroundNotification(id);
+    }
   } catch (err) {
     console.error('Failed to save POS order:', err);
     res.status(500).json({ error: err.message });
@@ -3386,6 +3391,29 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+async function sendBackgroundNotification(orderId) {
+  try {
+    const order = db.prepare('SELECT * FROM pos_orders WHERE id = ?').get(orderId);
+    if (!order) return;
+
+    const message = `BADI KATORI: Order ${order.id} is confirmed & paid. Total: Rs ${parseFloat(order.grandTotal).toFixed(2)}. Mode: ${order.paymentMethod}. Customer: ${order.customerName || 'Guest'}.`;
+    const targetPhone = "9978673137";
+    const apiKey = process.env.FAST2SMS_API_KEY;
+
+    if (!apiKey) {
+      console.log(`[Background SMS Simulation] Target: ${targetPhone} | Msg: ${message}`);
+      return;
+    }
+
+    const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(apiKey)}&route=q&message=${encodeURIComponent(message)}&flash=0&numbers=${targetPhone}`;
+    const response = await fetch(url);
+    const result = await response.json();
+    console.log(`[Background SMS Response] Order: ${orderId}`, result);
+  } catch (err) {
+    console.error('Error sending background SMS:', err);
+  }
+}
 
 // Start Server after DB seeding is complete
 dbReady.then(() => {

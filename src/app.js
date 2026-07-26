@@ -9479,7 +9479,6 @@ function initApp() {
                 tokenNumber: posNextToken
             };
             renderGSTInvoice(orderObj);
-            triggerDirectWhatsAppConfirmation(orderObj);
             
             posCart = [];
             posAppliedCoupon = null;
@@ -9521,7 +9520,6 @@ function initApp() {
                 tokenNumber: posNextToken
             };
             renderGSTInvoice(orderObj);
-            triggerDirectWhatsAppConfirmation(orderObj);
             
             posCart = [];
             posAppliedCoupon = null;
@@ -9553,7 +9551,6 @@ function initApp() {
                 tokenNumber: posNextToken
             };
             renderGSTInvoice(orderObj);
-            triggerDirectWhatsAppConfirmation(orderObj);
             
             posCart = [];
             posAppliedCoupon = null;
