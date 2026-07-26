@@ -632,15 +632,28 @@ function acceptSmsOrderPlacement() {
     showToast("📱 SMS Order Placed", `Sent to ${getSupplierPhone()}: "Order ${poId} ACCEPTED & Placed successfully."`, "whatsapp");
 
     // Real-world Integration: Dispatch SMS and WhatsApp to the Master Supplier
-    const cleanPhone = getSupplierPhone().replace(/[^0-9]/g, '');
+    let cleanPhone = "919978673137"; // default fallback for India (+91)
+    const rawPhone = getSupplierPhone();
+    if (rawPhone) {
+        const digits = rawPhone.replace(/\D/g, '');
+        if (digits.length === 10) {
+            cleanPhone = "91" + digits;
+        } else if (digits.length > 10) {
+            cleanPhone = digits;
+        }
+    }
+    
     const message = `Order ${poId} ACCEPTED & Placed successfully. Total Amount: ₹${amount}`;
     
     // 1. WhatsApp API trigger
     window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`, '_blank');
 
-    // 2. Native SMS scheme trigger
+    // 2. Native SMS scheme trigger (Detecting iOS vs Android separator differences)
     setTimeout(() => {
-        window.location.href = `sms:${getSupplierPhone().replace(/\s/g, '')}?body=${encodeURIComponent(message)}`;
+        const ua = navigator.userAgent.toLowerCase();
+        const isiOS = ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1 || ua.indexOf('ipod') > -1;
+        const separator = isiOS ? '&' : '?';
+        window.location.href = `sms:${cleanPhone}${separator}body=${encodeURIComponent(message)}`;
     }, 1200);
 
     // Dispatch notification to Owner Dashboard
