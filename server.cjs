@@ -477,6 +477,255 @@ app.put('/api/inventory/:id/edit', (req, res) => {
   }
 });
 
+app.post('/api/inventory/upload-excel', authenticateToken, upload.single('file'), (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded.' });
+    }
+
+    let targetStore = req.user.store;
+    if (req.user.role === 'owner') {
+      targetStore = req.body.store || 'VESU';
+    }
+    console.log(`Processing uploaded Excel inventory for store: ${targetStore}`);
+
+    const workbook = XLSX.read(file.buffer, { type: 'buffer' });
+    const sheetNames = workbook.SheetNames;
+
+    // Find the best sheet matching store name (e.g. VESU -> "VESU CLOSING APR'26" or "VESU")
+    let selectedSheetName = sheetNames[0];
+    for (const sheet of sheetNames) {
+      if (sheet.toLowerCase().includes(targetStore.toLowerCase())) {
+        selectedSheetName = sheet;
+        break;
+      }
+    }
+    console.log(`Selected sheet for parsing: "${selectedSheetName}"`);
+
+    const worksheet = workbook.Sheets[selectedSheetName];
+    // Convert worksheet to 2D array to locate headers dynamically
+    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+    // Find headers row
+    let headerRowIdx = -1;
+    let formatType = ''; // 'ds' (Dada Saheb / Item Details) or 'vesu' (STOCK STATUS)
+    let colIndices = { name: -1, category: -1, unit: -1, stock: -1, cost: -1 };
+
+    for (let r = 0; r < Math.min(rows.length, 30); r++) {
+      const row = rows[r];
+      if (!row || row.length === 0) continue;
+
+      const rowStr = row.map(c => String(c).trim().toLowerCase());
+      
+      // Look for Dada Saheb foods format headers
+      const itemDetailsIdx = rowStr.indexOf('item details');
+      if (itemDetailsIdx > -1) {
+        headerRowIdx = r;
+        formatType = 'ds';
+        colIndices.name = itemDetailsIdx;
+        colIndices.category = rowStr.indexOf('parent group');
+        colIndices.unit = rowStr.indexOf('unit');
+        colIndices.stock = rowStr.indexOf('closing');
+        break;
+      }
+
+      // Look for Vesu format headers
+      const stockStatusIdx = rowStr.indexOf('stock status');
+      if (stockStatusIdx > -1) {
+        headerRowIdx = r;
+        formatType = 'vesu';
+        colIndices.name = stockStatusIdx;
+        colIndices.cost = rowStr.indexOf('price/pkd');
+        colIndices.stock = rowStr.indexOf('closing');
+        break;
+      }
+    }
+
+    if (headerRowIdx === -1) {
+      // Fallback defaults if no header row found
+      formatType = 'fallback';
+      colIndices = { name: 0, category: 1, unit: 2, stock: 3, cost: -1 };
+      headerRowIdx = 0; 
+      console.log('No specific headers found. Using fallback column indices.');
+    }
+
+    console.log(`Format detected: ${formatType}, headers on row: ${headerRowIdx}`);
+
+    const parsedItems = [];
+    let updatedCount = 0;
+    let insertedCount = 0;
+
+    // Helper functions copy-pasted or adapted from db.cjs
+    function getCategoryHelper(name) {
+      const lower = name.toLowerCase();
+      if (lower.includes('bun') || lower.includes('bread') || lower.includes('kulche') || lower.includes('bhature') || lower.includes('puri') || lower.includes('kachori') || lower.includes('samosa')) return 'Bakery Breads';
+      if (lower.includes('patty') || lower.includes('patties') || lower.includes('bhalla') || lower.includes('tikki') || lower.includes('munglet')) return 'Frozen Foods';
+      if (lower.includes('chutney') || lower.includes('sauce') || lower.includes('chatney') || lower.includes('oil') || lower.includes('syrup') || lower.includes('kadi')) return 'Sauces & Spreads';
+      if (lower.includes('dahi') || lower.includes('cheese') || lower.includes('butter') || lower.includes('cream')) return 'Dairy Packets';
+      if (lower.includes('lettuce') || lower.includes('beet') || lower.includes('carrot') || lower.includes('onion') || lower.includes('tomato') || lower.includes('chilli') || lower.includes('adrak') || lower.includes('dhania') || lower.includes('lemon') || lower.includes('potato') || lower.includes('alu') || lower.includes('chana') || lower.includes('spices') || lower.includes('masala')) return 'Fresh Produce';
+      if (lower.includes('spoon') || lower.includes('dish') || lower.includes('bowl') || lower.includes('tissue') || lower.includes('paper') || lower.includes('plastic')) return 'Packaging & Cutlery';
+      return 'Chaat Ingredients';
+    }
+
+    function getUnitHelper(name) {
+      const lower = name.toLowerCase();
+      if (lower.includes('spoon') || lower.includes('dish') || lower.includes('bowl') || lower.includes('tissue') || lower.includes('paper') || lower.includes('plastic')) return 'Piece';
+      if (lower.includes('ml') || lower.includes('oil') || lower.includes('syrup') || lower.includes('water') || lower.includes('kadi') || lower.includes('batter')) return 'ml';
+      return 'gm';
+    }
+
+    // Prepare insert & update statements
+    const checkStmt = db.prepare('SELECT id, stock FROM inventory WHERE store = ? AND label = ?');
+    const updateStmt = db.prepare('UPDATE inventory SET stock = ?, unitCost = ?, category = ?, unit = ?, closingStock = ? WHERE id = ?');
+    const insertStmt = db.prepare(`
+      INSERT INTO inventory (id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status, openingStock, closingStock)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    // Parse subsequent data rows
+    for (let r = headerRowIdx + 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (!row || row.length === 0) continue;
+
+      const nameVal = row[colIndices.name];
+      if (!nameVal || String(nameVal).trim() === '' || String(nameVal).toLowerCase().includes('total') || String(nameVal).toLowerCase().includes('status')) {
+        continue;
+      }
+
+      const name = String(nameVal).trim();
+      const stock = Math.round(parseFloat(row[colIndices.stock]) || 0);
+      
+      let cost = 10.00; // default
+      if (colIndices.cost > -1 && row[colIndices.cost] !== undefined && row[colIndices.cost] !== '') {
+        cost = parseFloat(row[colIndices.cost]) || 10.00;
+      }
+
+      let category = getCategoryHelper(name);
+      if (colIndices.category > -1 && row[colIndices.category]) {
+        category = String(row[colIndices.category]).trim();
+      }
+
+      let unit = getUnitHelper(name);
+      if (colIndices.unit > -1 && row[colIndices.unit]) {
+        unit = String(row[colIndices.unit]).trim();
+      }
+
+      // Check if item exists in db for this store
+      const existing = checkStmt.get(targetStore, name);
+      if (existing) {
+        // Update existing item
+        updateStmt.run(stock, cost, category, unit, stock, existing.id);
+        updatedCount++;
+      } else {
+        // Insert new item
+        const newId = `inv-up-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        insertStmt.run(
+          newId,
+          name,
+          category,
+          stock,
+          unit,
+          1000, // default reorder point
+          cost,
+          '2026-12-31', // default expiry
+          targetStore,
+          stock > 1000 ? 'OK' : 'LOW STOCK',
+          stock, // openingStock
+          stock  // closingStock
+        );
+        insertedCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Inventory updated successfully. Updated: ${updatedCount} items, Added: ${insertedCount} items.`,
+      updated: updatedCount,
+      added: insertedCount
+    });
+
+  } catch (err) {
+    console.error('Error uploading Excel inventory:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/inventory/batch-update', authenticateToken, (req, res) => {
+  try {
+    const { updates, store } = req.body;
+    if (!updates || !Array.isArray(updates)) {
+      return res.status(400).json({ error: 'Invalid updates array.' });
+    }
+
+    let targetStore = req.user.store;
+    if (req.user.role === 'owner') {
+      targetStore = store || 'VESU';
+    }
+    console.log(`Processing batch inventory update for store: ${targetStore}`);
+
+    const checkStmt = db.prepare('SELECT id FROM inventory WHERE store = ? AND label = ?');
+    const updateStmt = db.prepare('UPDATE inventory SET stock = ?, unitCost = ?, category = ?, unit = ?, closingStock = ? WHERE id = ?');
+    const insertStmt = db.prepare(`
+      INSERT INTO inventory (id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status, openingStock, closingStock)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    // Run in a single transaction
+    const executeBatch = db.transaction(() => {
+      let updatedCount = 0;
+      let insertedCount = 0;
+
+      for (const item of updates) {
+        const name = String(item.label).trim();
+        const stock = parseInt(item.newStock) || 0;
+        const reorder = parseInt(item.newReorder) || 1000;
+        const cost = parseFloat(item.newCost) || 10.00;
+        const category = item.category || 'Chaat Ingredients';
+        const unit = item.unit || 'gm';
+        const expiry = item.newExpiry || '2026-12-31';
+        const status = stock < reorder ? 'LOW STOCK' : 'OK';
+
+        const existing = checkStmt.get(targetStore, name);
+        if (existing) {
+          updateStmt.run(stock, cost, category, unit, stock, existing.id);
+          updatedCount++;
+        } else {
+          const newId = `inv-up-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+          insertStmt.run(
+            newId,
+            name,
+            category,
+            stock,
+            unit,
+            reorder,
+            cost,
+            expiry,
+            targetStore,
+            status,
+            stock,
+            stock
+          );
+          insertedCount++;
+        }
+      }
+      return { updatedCount, insertedCount };
+    });
+
+    const result = executeBatch();
+    res.json({
+      success: true,
+      message: `Batch update successful. Updated: ${result.updatedCount}, Added: ${result.insertedCount}`,
+      updated: result.updatedCount,
+      added: result.insertedCount
+    });
+
+  } catch (err) {
+    console.error('Error in batch inventory update:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/inventory/clear', authenticateToken, (req, res) => {
   try {
     let targetStore = req.user.store;

@@ -20,7 +20,7 @@ function getOffsetDateStr(offsetDays) {
 // db.exec('DROP TABLE IF EXISTS employees');
 // db.exec('DROP TABLE IF EXISTS leave_requests');
 // db.exec('DROP TABLE IF EXISTS sops');
-// db.exec('DROP TABLE IF EXISTS inventory');
+db.exec('DROP TABLE IF EXISTS inventory');
 // db.exec('DROP TABLE IF EXISTS wastage');
 // db.exec('DROP TABLE IF EXISTS checklists');
 // db.exec('DROP TABLE IF EXISTS eod_reports');
@@ -637,6 +637,91 @@ try {
   Object.keys(manualIngredients).forEach(k => {
     uniqueIngredients[k] = manualIngredients[k];
   });
+
+  // Parse inventory.xlsx if it exists
+  try {
+    const invExcelPath = path.join(__dirname, 'inventory.xlsx');
+    console.log('Checking for inventory.xlsx at:', invExcelPath);
+    const invWorkbook = XLSX.readFile(invExcelPath);
+    const invSheetNames = invWorkbook.SheetNames;
+    
+    // Read from the sheets to get all unique items
+    invSheetNames.forEach(sheetName => {
+      const worksheet = invWorkbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+      
+      let headerRowIdx = -1;
+      let colIndices = { name: -1, category: -1, unit: -1, cost: -1 };
+      
+      for (let r = 0; r < Math.min(rows.length, 30); r++) {
+        const row = rows[r];
+        if (!row || row.length === 0) continue;
+        const rowStr = row.map(c => String(c).trim().toLowerCase());
+        
+        const itemDetailsIdx = rowStr.indexOf('item details');
+        if (itemDetailsIdx > -1) {
+          headerRowIdx = r;
+          colIndices.name = itemDetailsIdx;
+          colIndices.category = rowStr.indexOf('parent group');
+          colIndices.unit = rowStr.indexOf('unit');
+          break;
+        }
+        
+        const stockStatusIdx = rowStr.indexOf('stock status');
+        if (stockStatusIdx > -1) {
+          headerRowIdx = r;
+          colIndices.name = stockStatusIdx;
+          colIndices.cost = rowStr.indexOf('price/pkd');
+          break;
+        }
+      }
+      
+      if (headerRowIdx !== -1) {
+        for (let r = headerRowIdx + 1; r < rows.length; r++) {
+          const row = rows[r];
+          if (!row || row.length === 0) continue;
+          
+          const nameVal = row[colIndices.name];
+          if (!nameVal || String(nameVal).trim() === '' || String(nameVal).toLowerCase().includes('total') || String(nameVal).toLowerCase().includes('status')) {
+            continue;
+          }
+          
+          const name = String(nameVal).trim();
+          
+          let cost = 10.00;
+          if (colIndices.cost > -1 && row[colIndices.cost] !== undefined && row[colIndices.cost] !== '') {
+            cost = parseFloat(row[colIndices.cost]) || 10.00;
+          }
+          
+          let unit = '';
+          if (colIndices.unit > -1 && row[colIndices.unit]) {
+            unit = String(row[colIndices.unit]).trim();
+          } else {
+            const lower = name.toLowerCase();
+            if (lower.includes('spoon') || lower.includes('dish') || lower.includes('bowl') || lower.includes('tissue') || lower.includes('paper') || lower.includes('plastic')) {
+              unit = 'Piece';
+            } else if (lower.includes('ml') || lower.includes('oil') || lower.includes('syrup') || lower.includes('water') || lower.includes('kadi') || lower.includes('batter')) {
+              unit = 'ml';
+            } else {
+              unit = 'gm';
+            }
+          }
+          
+          if (!uniqueIngredients[name]) {
+            uniqueIngredients[name] = {
+              rates: [cost],
+              unit: unit
+            };
+          } else {
+            uniqueIngredients[name].rates.push(cost);
+          }
+        }
+      }
+    });
+    console.log(`Merged inventory.xlsx items successfully. Total unique inventory types: ${Object.keys(uniqueIngredients).length}`);
+  } catch (err) {
+    console.error("Failed to parse inventory.xlsx during initialization:", err);
+  }
 
   Object.keys(uniqueIngredients).forEach(name => {
     const item = uniqueIngredients[name];
@@ -1791,6 +1876,224 @@ try {
   
 } catch (err) {
   console.error("Migration Error adding login employees:", err);
+}
+
+// Targeted inventory seeding from Excel files if inventory table is empty
+try {
+  const tableCheck = db.prepare("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='inventory'").get().count;
+  if (tableCheck > 0) {
+    const rowCheck = db.prepare("SELECT COUNT(*) as count FROM inventory").get().count;
+    if (rowCheck === 0) {
+      console.log('Inventory table is empty. Seeding from recipe costing.xlsx and inventory.xlsx...');
+      
+      let uniqueIngredients = {};
+      
+      // 1. Read recipe costing.xlsx
+      try {
+        const excelFilename = process.env.RECIPE_EXCEL_FILE || 'recipe costing.xlsx';
+        const excelPath = path.isAbsolute(excelFilename) ? excelFilename : path.join(__dirname, excelFilename);
+        const workbook = XLSX.readFile(excelPath);
+        const sheet = workbook.Sheets['Sheet1'];
+        const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        
+        let rawRecipes = [];
+        let currentRecipe = null;
+        let rawRows = [];
+
+        for (let i = 0; i < data.length; i++) {
+          const row = data[i];
+          if (!row || row.length === 0) continue;
+
+          const isHeader = row.some(cell => typeof cell === 'string' && cell.trim() === 'INGREDIENTS');
+          if (isHeader) {
+            if (currentRecipe) {
+              rawRecipes.push({ currentRecipe, rawRows });
+            }
+            currentRecipe = {};
+            rawRows = [];
+            continue;
+          }
+          if (currentRecipe) {
+            rawRows.push(row);
+          }
+        }
+        if (currentRecipe) {
+          rawRecipes.push({ currentRecipe, rawRows });
+        }
+
+        rawRecipes.forEach(item => {
+          const rows = item.rawRows;
+          rows.forEach(row => {
+            const ingNameVal = row[0];
+            const qtyVal = parseFloat(row[1]) || 0;
+            const rateVal = parseFloat(row[2]) || 0;
+            
+            if (ingNameVal && typeof ingNameVal === 'string' && !ingNameVal.includes(':') && ingNameVal.trim() !== '' && !ingNameVal.toLowerCase().includes('total')) {
+              const cleanIngName = ingNameVal.trim();
+              if (!uniqueIngredients[cleanIngName]) {
+                uniqueIngredients[cleanIngName] = { rates: [], unit: 'gm' };
+              }
+              if (rateVal > 0) {
+                uniqueIngredients[cleanIngName].rates.push(rateVal);
+              }
+            }
+          });
+        });
+      } catch (err) {
+        console.log('No recipe costing file found or failed parsing:', err.message);
+      }
+      
+      // 2. Add manual ingredients
+      const manualIngredients = {
+        'Milk': { rates: [0.06], unit: 'ml' },
+        'Coffee Beans': { rates: [1.2], unit: 'gm' },
+        'Tea Leaves': { rates: [0.4], unit: 'gm' },
+        'Burger Buns': { rates: [10.0], unit: 'Piece' },
+        'Veg Patty': { rates: [15.0], unit: 'Piece' },
+        'Sandwich Bread': { rates: [4.0], unit: 'Piece' },
+        'Maggie Noodles': { rates: [12.0], unit: 'Piece' },
+        'Frozen French Fries': { rates: [0.15], unit: 'gm' },
+        'Lassi Dahi': { rates: [0.08], unit: 'gm' }
+      };
+      Object.keys(manualIngredients).forEach(k => {
+        uniqueIngredients[k] = manualIngredients[k];
+      });
+
+      // 3. Read inventory.xlsx
+      try {
+        const invExcelPath = path.join(__dirname, 'inventory.xlsx');
+        const invWorkbook = XLSX.readFile(invExcelPath);
+        invWorkbook.SheetNames.forEach(sheetName => {
+          const worksheet = invWorkbook.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+          
+          let headerRowIdx = -1;
+          let colIndices = { name: -1, category: -1, unit: -1, cost: -1 };
+          
+          for (let r = 0; r < Math.min(rows.length, 30); r++) {
+            const row = rows[r];
+            if (!row || row.length === 0) continue;
+            const rowStr = row.map(c => String(c).trim().toLowerCase());
+            
+            const itemDetailsIdx = rowStr.indexOf('item details');
+            if (itemDetailsIdx > -1) {
+              headerRowIdx = r;
+              colIndices.name = itemDetailsIdx;
+              colIndices.category = rowStr.indexOf('parent group');
+              colIndices.unit = rowStr.indexOf('unit');
+              break;
+            }
+            
+            const stockStatusIdx = rowStr.indexOf('stock status');
+            if (stockStatusIdx > -1) {
+              headerRowIdx = r;
+              colIndices.name = stockStatusIdx;
+              colIndices.cost = rowStr.indexOf('price/pkd');
+              break;
+            }
+          }
+          
+          if (headerRowIdx !== -1) {
+            for (let r = headerRowIdx + 1; r < rows.length; r++) {
+              const row = rows[r];
+              if (!row || row.length === 0) continue;
+              const nameVal = row[colIndices.name];
+              if (!nameVal || String(nameVal).trim() === '' || String(nameVal).toLowerCase().includes('total') || String(nameVal).toLowerCase().includes('status')) {
+                continue;
+              }
+              const name = String(nameVal).trim();
+              let cost = 10.00;
+              if (colIndices.cost > -1 && row[colIndices.cost] !== undefined && row[colIndices.cost] !== '') {
+                cost = parseFloat(row[colIndices.cost]) || 10.00;
+              }
+              
+              let unit = '';
+              if (colIndices.unit > -1 && row[colIndices.unit]) {
+                unit = String(row[colIndices.unit]).trim();
+              } else {
+                const lower = name.toLowerCase();
+                if (lower.includes('spoon') || lower.includes('dish') || lower.includes('bowl') || lower.includes('tissue') || lower.includes('paper') || lower.includes('plastic')) {
+                  unit = 'Piece';
+                } else if (lower.includes('ml') || lower.includes('oil') || lower.includes('syrup') || lower.includes('water') || lower.includes('kadi') || lower.includes('batter')) {
+                  unit = 'ml';
+                } else {
+                  unit = 'gm';
+                }
+              }
+              
+              if (!uniqueIngredients[name]) {
+                uniqueIngredients[name] = { rates: [cost], unit: unit };
+              } else {
+                uniqueIngredients[name].rates.push(cost);
+              }
+            }
+          }
+        });
+      } catch (err) {
+        console.log("Failed to parse inventory.xlsx during fallback seeding:", err.message);
+      }
+
+      // Compute average rates
+      Object.keys(uniqueIngredients).forEach(name => {
+        const item = uniqueIngredients[name];
+        const avgRate = item.rates.length > 0 ? (item.rates.reduce((a,b)=>a+b, 0) / item.rates.length) : 10.00;
+        item.unitCost = avgRate;
+        if (!item.unit) {
+          const lower = name.toLowerCase();
+          if (lower.includes('spoon') || lower.includes('dish') || lower.includes('bowl') || lower.includes('tissue') || lower.includes('paper') || lower.includes('plastic')) {
+            item.unit = 'Piece';
+          } else if (lower.includes('ml') || lower.includes('oil') || lower.includes('syrup') || lower.includes('water') || lower.includes('kadi') || lower.includes('batter')) {
+            item.unit = 'ml';
+          } else {
+            item.unit = 'gm';
+          }
+        }
+      });
+
+      function getCategoryHelper(name) {
+        const lower = name.toLowerCase();
+        if (lower.includes('bun') || lower.includes('bread') || lower.includes('kulche') || lower.includes('bhature') || lower.includes('puri') || lower.includes('kachori') || lower.includes('samosa')) return 'Bakery Breads';
+        if (lower.includes('patty') || lower.includes('patties') || lower.includes('bhalla') || lower.includes('tikki') || lower.includes('munglet')) return 'Frozen Foods';
+        if (lower.includes('chutney') || lower.includes('sauce') || lower.includes('chatney') || lower.includes('oil') || lower.includes('syrup') || lower.includes('kadi')) return 'Sauces & Spreads';
+        if (lower.includes('dahi') || lower.includes('cheese') || lower.includes('butter') || lower.includes('cream')) return 'Dairy Packets';
+        if (lower.includes('lettuce') || lower.includes('beet') || lower.includes('carrot') || lower.includes('onion') || lower.includes('tomato') || lower.includes('chilli') || lower.includes('adrak') || lower.includes('dhania') || lower.includes('lemon') || lower.includes('potato') || lower.includes('alu') || lower.includes('chana') || lower.includes('spices') || lower.includes('masala')) return 'Fresh Produce';
+        if (lower.includes('spoon') || lower.includes('dish') || lower.includes('bowl') || lower.includes('tissue') || lower.includes('paper') || lower.includes('plastic')) return 'Packaging & Cutlery';
+        return 'Chaat Ingredients';
+      }
+
+      // Seed
+      const insertInv = db.prepare(`
+        INSERT INTO inventory (id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status, openingStock, closingStock)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      const branches = ['VESU', 'ADAJAN', 'CT LIGHT', 'WAREHOUSE'];
+      let invCounter = 1;
+      for (const branch of branches) {
+        Object.keys(uniqueIngredients).forEach(name => {
+          const item = uniqueIngredients[name];
+          const category = getCategoryHelper(name);
+          const stock = branch === 'WAREHOUSE' ? 50000 : 5000;
+          insertInv.run(
+            `inv-${invCounter++}`,
+            name,
+            category,
+            stock,
+            item.unit,
+            1000,
+            item.unitCost,
+            '2026-12-31',
+            branch,
+            'OK',
+            stock,
+            stock
+          );
+        });
+      }
+      console.log(`Successfully seeded ${invCounter - 1} inventory rows into SQLite.`);
+    }
+  }
+} catch (err) {
+  console.error("Critical error in fallback inventory seeding:", err);
 }
 
 module.exports = { db, dbReady };

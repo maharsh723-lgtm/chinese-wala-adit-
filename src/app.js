@@ -5401,17 +5401,17 @@ function initApp() {
                     return;
                 }
 
-                 // Find headers with smart heuristic mapping (scan up to first 10 rows for non-empty headers)
+                 // Find headers with smart heuristic mapping (scan up to first 15 rows for non-empty headers)
                  let headerRowIndex = 0;
                  let headerRow = [];
                  let labelIdx = -1;
 
-                 for (let r = 0; r < Math.min(10, rows.length); r++) {
+                 for (let r = 0; r < Math.min(15, rows.length); r++) {
                      const rowCells = rows[r];
                      if (!rowCells || rowCells.length === 0) continue;
                      const tempHeaders = rowCells.map(h => String(h || '').trim().toLowerCase());
                      const idx = tempHeaders.findIndex(h => 
-                         (h.includes('name') || h.includes('label') || h === 'item' || h === 'product') && 
+                         (h.includes('name') || h.includes('label') || h.includes('item') || h.includes('product') || h.includes('stock status')) && 
                          !h.includes('id') && !h.includes('no') && !h.includes('code') && !h.includes('num')
                      );
                      if (idx !== -1) {
@@ -5424,22 +5424,23 @@ function initApp() {
 
                  const categoryIdx = headerRow.findIndex(h => h.includes('category') || h.includes('group') || h.includes('dept') || h.includes('type'));
                  const unitIdx = headerRow.findIndex(h => h.includes('unit') || h.includes('measure') || h.includes('uom'));
-                 const stockIdx = headerRow.findIndex(h => h.includes('stock') || h.includes('quantity') || h.includes('qty') || h.includes('count') || h === 'qty');
+                 const stockIdx = headerRow.findIndex(h => h.includes('stock') || h.includes('quantity') || h.includes('qty') || h.includes('count') || h === 'qty' || h.includes('closing'));
                  const reorderIdx = headerRow.findIndex(h => h.includes('reorder') || h.includes('min') || h.includes('minimum') || h.includes('limit'));
                  
-                 // Prevent overlap between raw cost and selling/retail prices
                  const costIdx = headerRow.findIndex(h => 
                      h.includes('raw') || 
-                     (h.includes('cost') && !h.includes('retail') && !h.includes('suggested') && !h.includes('selling') && !h.includes('price')) ||
-                     h.includes('unit cost') || h.includes('rate')
+                     h.includes('price/pkd') ||
+                     h.includes('unit cost') || 
+                     h.includes('rate') ||
+                     (h.includes('price') && !h.includes('final') && !h.includes('suggested') && !h.includes('selling') && !h.includes('retail'))
                  );
                  const expiryIdx = headerRow.findIndex(h => h.includes('expiry') || h.includes('date') || h.includes('exp'));
 
                  // Fallback for label/item name index if name was not detected specifically
-                 const finalLabelIdx = labelIdx !== -1 ? labelIdx : headerRow.findIndex(h => h.includes('item') || h.includes('product') || h.includes('label'));
+                 const finalLabelIdx = labelIdx !== -1 ? labelIdx : headerRow.findIndex(h => h.includes('item') || h.includes('product') || h.includes('label') || h.includes('stock status'));
 
                  if (finalLabelIdx === -1) {
-                     alert("Could not identify the 'Item Name' column in Excel. Please check headers.");
+                     alert("Could not identify the 'Item Name' or 'Stock Status' column in Excel. Please check headers.");
                      resetBulkImport();
                      return;
                  }
@@ -5448,26 +5449,45 @@ function initApp() {
                  const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
                  const storeInv = inventory.filter(i => i.store === targetStore);
 
+                 // Helper functions for fallback category and unit based on item name
+                 function getCategoryHelper(name) {
+                     const lower = name.toLowerCase();
+                     if (lower.includes('bun') || lower.includes('bread') || lower.includes('kulche') || lower.includes('bhature') || lower.includes('puri') || lower.includes('kachori') || lower.includes('samosa')) return 'Bakery Breads';
+                     if (lower.includes('patty') || lower.includes('patties') || lower.includes('bhalla') || lower.includes('tikki') || lower.includes('munglet')) return 'Frozen Foods';
+                     if (lower.includes('chutney') || lower.includes('sauce') || lower.includes('chatney') || lower.includes('oil') || lower.includes('syrup') || lower.includes('kadi')) return 'Sauces & Spreads';
+                     if (lower.includes('dahi') || lower.includes('cheese') || lower.includes('butter') || lower.includes('cream')) return 'Dairy Packets';
+                     if (lower.includes('lettuce') || lower.includes('beet') || lower.includes('carrot') || lower.includes('onion') || lower.includes('tomato') || lower.includes('chilli') || lower.includes('adrak') || lower.includes('dhania') || lower.includes('lemon') || lower.includes('potato') || lower.includes('alu') || lower.includes('chana') || lower.includes('spices') || lower.includes('masala')) return 'Fresh Produce';
+                     if (lower.includes('spoon') || lower.includes('dish') || lower.includes('bowl') || lower.includes('tissue') || lower.includes('paper') || lower.includes('plastic')) return 'Packaging & Cutlery';
+                     return 'Chaat Ingredients';
+                 }
+
+                 function getUnitHelper(name) {
+                     const lower = name.toLowerCase();
+                     if (lower.includes('spoon') || lower.includes('dish') || lower.includes('bowl') || lower.includes('tissue') || lower.includes('paper') || lower.includes('plastic')) return 'Piece';
+                     if (lower.includes('ml') || lower.includes('oil') || lower.includes('syrup') || lower.includes('water') || lower.includes('kadi') || lower.includes('batter')) return 'ml';
+                     return 'gm';
+                 }
+
                  for (let i = headerRowIndex + 1; i < rows.length; i++) {
                      const row = rows[i];
                      if (!row || row.length === 0) continue;
 
                      const labelVal = String(row[finalLabelIdx] || '').trim();
-                     if (!labelVal) continue;
+                     if (!labelVal || labelVal.toLowerCase().includes('total') || labelVal.toLowerCase().includes('status')) continue;
 
                      // Match with existing item
                      const matchedItem = storeInv.find(item => item.label.toLowerCase() === labelVal.toLowerCase());
                      
-                     const categoryVal = categoryIdx !== -1 && row[categoryIdx] !== undefined ? String(row[categoryIdx]).trim() : (matchedItem ? matchedItem.category : 'Bulk Import');
-                     const unitVal = unitIdx !== -1 && row[unitIdx] !== undefined ? String(row[unitIdx]).trim() : (matchedItem ? matchedItem.unit : 'Piece');
+                     const categoryVal = categoryIdx !== -1 && row[categoryIdx] !== undefined && String(row[categoryIdx]).trim() !== '' ? String(row[categoryIdx]).trim() : (matchedItem ? matchedItem.category : getCategoryHelper(labelVal));
+                     const unitVal = unitIdx !== -1 && row[unitIdx] !== undefined && String(row[unitIdx]).trim() !== '' ? String(row[unitIdx]).trim() : (matchedItem ? matchedItem.unit : getUnitHelper(labelVal));
                      const newStock = stockIdx !== -1 && row[stockIdx] !== undefined ? parseInt(row[stockIdx], 10) : (matchedItem ? matchedItem.stock : 0);
-                     const newReorder = reorderIdx !== -1 && row[reorderIdx] !== undefined ? parseInt(row[reorderIdx], 10) : (matchedItem ? matchedItem.reorder : 10);
-                     const newCost = costIdx !== -1 && row[costIdx] !== undefined ? cleanFloat(row[costIdx]) : (matchedItem ? matchedItem.unitCost : 0.00);
-                    const newExpiry = expiryIdx !== -1 && row[expiryIdx] !== undefined ? String(row[expiryIdx]) : (matchedItem ? matchedItem.expiryDate : "");
+                     const newReorder = reorderIdx !== -1 && row[reorderIdx] !== undefined ? parseInt(row[reorderIdx], 10) : (matchedItem ? matchedItem.reorder : 1000);
+                     const newCost = costIdx !== -1 && row[costIdx] !== undefined && row[costIdx] !== '' ? cleanFloat(row[costIdx]) : (matchedItem ? matchedItem.unitCost : 10.00);
+                     const newExpiry = expiryIdx !== -1 && row[expiryIdx] !== undefined ? String(row[expiryIdx]) : (matchedItem ? matchedItem.expiryDate : "2026-12-31");
 
-                    if (isNaN(newStock) || isNaN(newReorder)) continue;
+                     if (isNaN(newStock) || isNaN(newReorder)) continue;
 
-                    if (matchedItem) {
+                     if (matchedItem) {
                         parsedUpdates.push({
                             id: matchedItem.id,
                             isNew: false,
@@ -5650,56 +5670,32 @@ function initApp() {
 
         const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
 
-        let successCount = 0;
-        for (const item of currentParsedBulkUpdates) {
-            const status = item.newStock < item.newReorder ? 'LOW STOCK' : 'OK';
-            
-            if (item.isNew) {
-                try {
-                    const res = await fetch(`${API_BASE}/api/inventory`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            id: item.id,
-                            label: item.label,
-                            category: item.category || 'Bulk Import',
-                            stock: item.newStock,
-                            unit: item.unit || 'Piece',
-                            reorder: item.newReorder,
-                            unitCost: item.newCost,
-                            expiryDate: item.newExpiry,
-                            store: targetStore,
-                            status
-                        })
-                    });
-                    if (res.ok) successCount++;
-                } catch (err) {
-                    console.error("Failed to add new item during bulk import:", item.label, err);
-                }
+        try {
+            const token = localStorage.getItem("bk_token");
+            const res = await fetch(`${API_BASE}/api/inventory/batch-update`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    updates: currentParsedBulkUpdates,
+                    store: targetStore
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                alert(data.message || `Successfully processed bulk updates.`);
             } else {
-                try {
-                    const res = await fetch(`${API_BASE}/api/inventory/${item.id}/edit`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            label: item.label,
-                            category: item.category,
-                            stock: item.newStock,
-                            unit: item.unit,
-                            reorder: item.newReorder,
-                            unitCost: item.newCost,
-                            expiryDate: item.newExpiry,
-                            status
-                        })
-                    });
-                    if (res.ok) successCount++;
-                } catch (err) {
-                    console.error("Failed to update item during bulk import:", item.label, err);
-                }
+                const err = await res.json();
+                alert(`Error: ${err.error || 'Failed to apply updates.'}`);
             }
+        } catch (err) {
+            console.error("Batch update failed:", err);
+            alert("Failed to connect to batch update server endpoint.");
         }
 
-        alert(`Successfully processed ${successCount} items (updates and new additions).`);
         closeModal('modalBulkImport');
         resetBulkImport();
         await syncStateFromServer();
