@@ -549,7 +549,7 @@ function validateCheckoutForm() {
     if (!btnConfirm) return;
 
     const txnId = txnInput ? txnInput.value.trim() : "";
-    if (txnId) {
+    if (txnId && currentPo.receiptUploaded) {
         btnConfirm.removeAttribute("disabled");
     } else {
         btnConfirm.setAttribute("disabled", "true");
@@ -568,7 +568,7 @@ function uploadCheckoutReceipt() {
             const fileLabel = document.getElementById("txtCheckoutFileName");
             if (fileLabel) fileLabel.innerText = file.name;
             
-            const btnUpload = document.getElementById("btnProcUploadReceipt");
+            const btnUpload = document.getElementById("btnCheckoutUpload");
             if (btnUpload) {
                 btnUpload.innerHTML = `<i data-lucide="check" style="color:var(--success);"></i> ${file.name.substring(0, 12)}...`;
                 btnUpload.style.borderColor = "var(--success)";
@@ -820,13 +820,20 @@ function regeneratePoQr() {
 
 // Open Place Order confirm Modal
 function openConfirmPlaceModal() {
-    if (!currentPo.paymentVerified) return;
+    if (!currentPo.paymentVerified) {
+        alert("Cannot place order. Payment must be verified first!");
+        return;
+    }
     const modal = document.getElementById("modalProcConfirmPlace");
     if (modal) modal.style.display = "flex";
 }
 
 // Confirm and Send Order to Master Supplier
 async function confirmAndSendOrder() {
+    if (!currentPo.paymentVerified) {
+        alert("Cannot place order. Payment must be verified first!");
+        return;
+    }
     const modal = document.getElementById("modalProcConfirmPlace");
     if (modal) modal.style.display = "none";
 

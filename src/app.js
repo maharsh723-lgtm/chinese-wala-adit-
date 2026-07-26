@@ -12703,7 +12703,7 @@ function initApp() {
                                 <i data-lucide="upload"></i> Upload Receipt
                                 <input type="file" id="receiptFileInput" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;" accept="image/*,application/pdf">
                             </button>
-                            <button class="ai-procure-btn ai-procure-btn-primary" id="btnPaymentVerify" ${currentPoState.paymentStatus === 'Paid' ? '' : 'disabled style="opacity:0.5; cursor:not-allowed;"'}>
+                            <button class="ai-procure-btn ai-procure-btn-primary" id="btnPaymentVerify" ${(currentPoState.paymentStatus === 'Paid' && currentPoState.invoiceUploaded) ? '' : 'disabled style="opacity:0.5; cursor:not-allowed;"'}>
                                 <i data-lucide="shield-check"></i> Verify Payment
                             </button>
                         ` : `
@@ -13106,6 +13106,10 @@ function initApp() {
         const btnPlace = document.getElementById("btnPrPlaceOrder");
         if (btnPlace) {
             btnPlace.onclick = () => {
+                if (!currentPoState.paymentVerified || currentPoState.status !== "Payment Verified") {
+                    alert("Cannot place order. Payment must be verified by the AI Auditor first!");
+                    return;
+                }
                 const proceed = confirm("Are you sure you want to send this purchase order to the supplier?");
                 if (!proceed) return;
 
@@ -13170,7 +13174,9 @@ function initApp() {
         if (receiptInput) {
             receiptInput.onchange = () => {
                 if (receiptInput.files.length > 0) {
+                    currentPoState.invoiceUploaded = true;
                     alert(`Receipt File Uploaded: ${receiptInput.files[0].name}`);
+                    renderAiProcurementScreen();
                 }
             };
         }
@@ -13179,6 +13185,10 @@ function initApp() {
         const btnVerify = document.getElementById("btnPaymentVerify");
         if (btnVerify) {
             btnVerify.onclick = () => {
+                if (!currentPoState.invoiceUploaded || currentPoState.paymentStatus !== "Paid") {
+                    alert("Cannot verify payment. Please mark as paid and upload a receipt first!");
+                    return;
+                }
                 btnVerify.disabled = true;
                 btnVerify.innerHTML = '<i class="spinner-icon"></i> Verifying...';
 
