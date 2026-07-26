@@ -12272,15 +12272,10 @@ function initApp() {
                 currentPoState.priority = "High";
                 currentPoState.status = "Purchase Request Generated";
             } else {
-                // Fallback demo items to ensure the UI is fully functional and populated
-                currentPoState.items = [
-                    { label: "Fried Alu Tikki", qty: 150, unit: "Piece", unitCost: 6.10, total: 915.00 },
-                    { label: "Dahi", qty: 5000, unit: "gm", unitCost: 0.085, total: 425.00 },
-                    { label: "Sonth Chatney", qty: 3000, unit: "gm", unitCost: 0.06, total: 180.00 },
-                    { label: "Samosa", qty: 80, unit: "Piece", unitCost: 12.10, total: 968.00 }
-                ];
-                currentPoState.priority = "High";
-                currentPoState.status = "Purchase Request Generated";
+                // Start empty if no low stock items are present
+                currentPoState.items = [];
+                currentPoState.priority = "Normal";
+                currentPoState.status = "Draft";
             }
             currentPoState.totalCost = currentPoState.items.reduce((sum, item) => sum + item.total, 0);
             currentPoState.totalCost = Math.round(currentPoState.totalCost * 100) / 100;

@@ -216,14 +216,10 @@ window.renderProcurementScreen = function() {
             currentPo.status = "Low Stock Detected";
             currentPo.priority = outStock.length > 0 ? "Critical" : "High";
         } else {
-            // Fallback items so dashboard is not empty on first load
-            currentPo.items = [
-                { productId: "inv-1", productName: "Fried Alu Tikki", quantity: 50, stock: 1, rate: 6.10, amount: 305.00 },
-                { productId: "inv-2", productName: "Dahi", quantity: 50, stock: 1, rate: 111.00, amount: 5550.00 },
-                { productId: "inv-12", productName: "Samosa", quantity: 50, stock: 1, rate: 12.10, amount: 605.00 }
-            ];
-            currentPo.status = "Low Stock Detected (Simulated)";
-            currentPo.priority = "High";
+            // Start empty if no low stock items are present
+            currentPo.items = [];
+            currentPo.status = "Draft";
+            currentPo.priority = "Normal";
         }
         calculatePoTotals();
     }
