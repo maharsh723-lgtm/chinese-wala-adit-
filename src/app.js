@@ -9466,7 +9466,7 @@ function initApp() {
             showToast("OFFLINE MODE: Order saved in local queue. Will sync when online.");
             deductLocalInventory(posCart);
             
-            renderGSTInvoice({
+            const orderObj = {
                 id: orderId,
                 date: new Date().toISOString().split('T')[0],
                 time: new Date().toTimeString().split(' ')[0],
@@ -9477,8 +9477,9 @@ function initApp() {
                 subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
                 items: posCart,
                 tokenNumber: posNextToken
-            });
-            document.getElementById("modalPOSInvoice").style.display = "flex";
+            };
+            renderGSTInvoice(orderObj);
+            triggerDirectWhatsAppConfirmation(orderObj);
             
             posCart = [];
             posAppliedCoupon = null;
@@ -9506,7 +9507,7 @@ function initApp() {
             
             syncStateFromServer();
             
-            renderGSTInvoice({
+            const orderObj = {
                 id: result.order.id,
                 date: result.order.date,
                 time: result.order.time,
@@ -9518,8 +9519,9 @@ function initApp() {
                 items: posCart,
                 kotNumber: result.order.kotNumber,
                 tokenNumber: posNextToken
-            });
-            document.getElementById("modalPOSInvoice").style.display = "flex";
+            };
+            renderGSTInvoice(orderObj);
+            triggerDirectWhatsAppConfirmation(orderObj);
             
             posCart = [];
             posAppliedCoupon = null;
@@ -9538,7 +9540,7 @@ function initApp() {
             
             deductLocalInventory(posCart);
             
-            renderGSTInvoice({
+            const orderObj = {
                 id: orderId,
                 date: new Date().toISOString().split('T')[0],
                 time: new Date().toTimeString().split(' ')[0],
@@ -9549,8 +9551,9 @@ function initApp() {
                 subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
                 items: posCart,
                 tokenNumber: posNextToken
-            });
-            document.getElementById("modalPOSInvoice").style.display = "flex";
+            };
+            renderGSTInvoice(orderObj);
+            triggerDirectWhatsAppConfirmation(orderObj);
             
             posCart = [];
             posAppliedCoupon = null;
@@ -9635,6 +9638,37 @@ function initApp() {
     window.addEventListener('online', () => {
         syncOfflineOrdersToServer();
     });
+
+    function triggerDirectWhatsAppConfirmation(order) {
+        const cleanPhone = "919978673137";
+        let text = `*BADI KATORI - ORDER CONFIRMED*\n`;
+        text += `--------------------------------\n`;
+        text += `Order ID: ${order.id}\n`;
+        text += `Date: ${order.date} | Time: ${order.time || '12:00:00'}\n`;
+        text += `Type: ${order.orderType}\n`;
+        if (order.tableName) text += `Table: ${order.tableName}\n`;
+        text += `--------------------------------\n`;
+        text += `*Items:*\n`;
+        order.items.forEach(item => {
+            let itemPrice = item.price;
+            if (item.modifiers && item.modifiers.length > 0) {
+                item.modifiers.forEach(mName => {
+                    const modInfo = posModifiers.find(m => m.name === mName);
+                    if (modInfo) itemPrice += modInfo.price;
+                });
+            }
+            text += `- ${item.productName} (x${item.quantity}) @ ₹${itemPrice.toFixed(2)} - Sub: ₹${(itemPrice * item.quantity).toFixed(2)}\n`;
+        });
+        text += `--------------------------------\n`;
+        if (order.discount > 0) text += `Discount: -₹${order.discount.toFixed(2)}\n`;
+        text += `Service Charge (5%): ₹${order.serviceCharge.toFixed(2)}\n`;
+        text += `*GRAND TOTAL:* ₹${order.grandTotal.toFixed(2)}\n`;
+        text += `Payment Method: ${order.paymentMethod}\n`;
+        text += `Status: PAID / CONFIRMED\n`;
+        
+        const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    }
 
     function renderGSTInvoice(order) {
         const printArea = document.getElementById("invoicePrintArea");
