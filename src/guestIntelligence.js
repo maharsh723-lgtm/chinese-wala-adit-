@@ -553,7 +553,19 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:20px;">
-                <div style="font-weight:700; margin-bottom:16px; color:#fff;">Dietary Preference Registry</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                    <div style="font-weight:700; color:#fff;">Dietary Preference Registry</div>
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <span style="font-size:0.75rem; color:var(--text-secondary);">Add preference for:</span>
+                        <select id="btnAddPreferenceGuestSelect" class="reports-filter-select" style="width:200px; padding: 4px 8px; font-size: 0.75rem; background: #151312; border: 1px solid var(--border); color:#fff; border-radius:4px;">
+                            <option value="">-- Select Guest --</option>
+                            ${guests.map(g => `<option value="${g.id}">${escapeHTML(g.name)} (${g.phone})</option>`).join('')}
+                        </select>
+                        <button class="saas-btn saas-btn-primary" id="btnGoAddPreference" style="padding: 4px 12px; font-size: 0.75rem; font-weight:800; display:flex; align-items:center; gap:4px;">
+                            <i data-lucide="plus-circle" style="width:12px; height:12px;"></i> Add Preference
+                        </button>
+                    </div>
+                </div>
                 <table class="saas-table">
                     <thead>
                         <tr>
@@ -561,6 +573,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <th>Phone</th>
                             <th>Allergies & Restrictions</th>
                             <th>Custom Prep Instructions</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -578,6 +591,11 @@ document.addEventListener("DOMContentLoaded", () => {
                                     <td>${g.phone}</td>
                                     <td><div style="display:flex; gap:6px;">${activeBadges.join('')}</div></td>
                                     <td style="color:#c29f68; font-weight:600;">${escapeHTML(g.notes || 'None')}</td>
+                                    <td>
+                                        <button class="saas-btn saas-btn-secondary" onclick="window.openGuestProfileOverlay('${g.id}')" style="padding: 4px 8px; font-size: 0.72rem; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
+                                            <i data-lucide="edit-3" style="width:12px; height:12px;"></i> Edit
+                                        </button>
+                                    </td>
                                 </tr>
                             `;
                         }).join('')}
@@ -585,6 +603,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 </table>
             </div>
         `;
+
+        const select = document.getElementById("btnAddPreferenceGuestSelect");
+        const btn = document.getElementById("btnGoAddPreference");
+        if (select && btn) {
+            btn.onclick = () => {
+                const guestId = select.value;
+                if (!guestId) {
+                    alert("Please select a guest first!");
+                    return;
+                }
+                window.openGuestProfileOverlay(guestId);
+            };
+        }
+        if (typeof lucide !== "undefined") lucide.createIcons();
     }
 
     // ==========================================
@@ -917,11 +949,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             ` : ''}
 
-            <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px; display:flex; justify-content:flex-end;">
-                <button class="saas-btn saas-btn-primary" onclick="document.getElementById('modalPOSGuestIntelligence').style.display='none'; window.openGuestProfileOverlay('${guest.id}');" style="padding: 6px 12px; font-size: 0.75rem; font-weight:800; display:flex; align-items:center; gap:6px;">
-                    <i data-lucide="plus-circle" style="width:14px; height:14px;"></i> Add / Edit Preferences
-                </button>
-            </div>
         `;
 
         document.getElementById("modalPOSGuestIntelligence").style.display = "flex";
