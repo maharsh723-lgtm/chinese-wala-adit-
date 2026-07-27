@@ -5473,7 +5473,8 @@ function initApp() {
                      if (!row || row.length === 0) continue;
 
                      const labelVal = String(row[finalLabelIdx] || '').trim();
-                     if (!labelVal || labelVal.toLowerCase().includes('total') || labelVal.toLowerCase().includes('status')) continue;
+                     const val = labelVal.toLowerCase();
+                     if (!labelVal || val.startsWith('(') || val.endsWith(')') || val.includes('as on :') || val === 'jain' || val === 'status' || val === 'item details' || val === 'stock status' || val.includes('all item') || val.includes('total')) continue;
 
                      // Match with existing item
                      const matchedItem = storeInv.find(item => item.label.toLowerCase() === labelVal.toLowerCase());

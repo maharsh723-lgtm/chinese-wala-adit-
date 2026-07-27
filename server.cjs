@@ -594,6 +594,10 @@ app.post('/api/inventory/upload-excel', authenticateToken, upload.single('file')
       }
 
       const name = String(nameVal).trim();
+      const val = name.toLowerCase();
+      if (val.startsWith('(') || val.endsWith(')') || val.includes('as on :') || val === 'jain' || val === 'status' || val === 'item details' || val === 'stock status' || val.includes('all item')) {
+        continue;
+      }
       const stock = Math.round(parseFloat(row[colIndices.stock]) || 0);
       
       let cost = 10.00; // default
@@ -678,6 +682,10 @@ app.post('/api/inventory/batch-update', authenticateToken, (req, res) => {
 
       for (const item of updates) {
         const name = String(item.label).trim();
+        const val = name.toLowerCase();
+        if (val.startsWith('(') || val.endsWith(')') || val.includes('as on :') || val === 'jain' || val === 'status' || val === 'item details' || val === 'stock status' || val.includes('all item')) {
+          continue;
+        }
         const stock = parseInt(item.newStock) || 0;
         const reorder = parseInt(item.newReorder) || 1000;
         const cost = parseFloat(item.newCost) || 10.00;

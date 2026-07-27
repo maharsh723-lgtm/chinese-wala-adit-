@@ -20,7 +20,7 @@ function getOffsetDateStr(offsetDays) {
 // db.exec('DROP TABLE IF EXISTS employees');
 // db.exec('DROP TABLE IF EXISTS leave_requests');
 // db.exec('DROP TABLE IF EXISTS sops');
-db.exec('DROP TABLE IF EXISTS inventory');
+// db.exec('DROP TABLE IF EXISTS inventory');
 // db.exec('DROP TABLE IF EXISTS wastage');
 // db.exec('DROP TABLE IF EXISTS checklists');
 // db.exec('DROP TABLE IF EXISTS eod_reports');
@@ -724,6 +724,11 @@ try {
   }
 
   Object.keys(uniqueIngredients).forEach(name => {
+    const val = name.trim().toLowerCase();
+    if (!name || val.startsWith('(') || val.endsWith(')') || val.includes('as on :') || val === 'jain' || val === 'status' || val === 'item details' || val === 'stock status' || val.includes('all item')) {
+      delete uniqueIngredients[name];
+      return;
+    }
     const item = uniqueIngredients[name];
     const avgRate = item.rates.length > 0 ? (item.rates.reduce((a,b)=>a+b, 0) / item.rates.length) : 10.00;
     item.unitCost = avgRate;
@@ -2035,6 +2040,11 @@ try {
 
       // Compute average rates
       Object.keys(uniqueIngredients).forEach(name => {
+        const val = name.trim().toLowerCase();
+        if (!name || val.startsWith('(') || val.endsWith(')') || val.includes('as on :') || val === 'jain' || val === 'status' || val === 'item details' || val === 'stock status' || val.includes('all item')) {
+          delete uniqueIngredients[name];
+          return;
+        }
         const item = uniqueIngredients[name];
         const avgRate = item.rates.length > 0 ? (item.rates.reduce((a,b)=>a+b, 0) / item.rates.length) : 10.00;
         item.unitCost = avgRate;
