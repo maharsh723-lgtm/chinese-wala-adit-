@@ -8152,7 +8152,8 @@ function initApp() {
         let optionsHtml = '';
         posCustomers.forEach(cust => {
             const selectedAttr = cust.id === posSelectedCustomer ? 'selected' : '';
-            optionsHtml += `<option value="${cust.id}" ${selectedAttr}>${cust.phone}</option>`;
+            const displayLabel = cust.id === 'cust-1' ? '-' : cust.phone;
+            optionsHtml += `<option value="${cust.id}" ${selectedAttr}>${displayLabel}</option>`;
         });
         select.innerHTML = optionsHtml;
         
@@ -8168,11 +8169,11 @@ function initApp() {
 
         const phoneInput = document.getElementById("posCustomerPhoneInput");
         if (phoneInput) {
-            phoneInput.value = activeCust && activeCust.phone ? activeCust.phone : '';
+            phoneInput.value = activeCust && activeCust.phone && activeCust.id !== 'cust-1' ? activeCust.phone : '';
         }
         const phoneDisplay = document.getElementById("posCustomerPhoneDisplay");
         if (phoneDisplay) {
-            phoneDisplay.textContent = activeCust && activeCust.phone ? `📞 ${activeCust.phone}` : '📞 No phone number';
+            phoneDisplay.textContent = activeCust && activeCust.phone && activeCust.id !== 'cust-1' ? `📞 ${activeCust.phone}` : '📞 -';
         }
 
         // Render preferences and notes
