@@ -416,32 +416,6 @@ const seededEmployees = [
     activePunch: null,
     history: []
   },
-  {
-    id: "1",
-    name: "John Doe",
-    role: "Crew Member",
-    mobile: "9876543210",
-    shiftStart: "06:00",
-    roleKey: "staff",
-    password: "password123",
-    status: "Active",
-    store: "VESU",
-    activePunch: null,
-    history: []
-  },
-  {
-    id: "EMP102",
-    name: "Alice Smith",
-    role: "Kitchen Staff",
-    mobile: "9876543211",
-    shiftStart: "06:00",
-    roleKey: "kitchen",
-    password: "password123",
-    status: "Active",
-    store: "VESU",
-    activePunch: null,
-    history: []
-  },
   // ADAJAN
   {
     id: "EMP105",
@@ -456,32 +430,6 @@ const seededEmployees = [
     activePunch: null,
     history: []
   },
-  {
-    id: "EMP106",
-    name: "Sunita Rao",
-    role: "Crew Member",
-    mobile: "9876543215",
-    shiftStart: "06:00",
-    roleKey: "staff",
-    password: "password123",
-    status: "Active",
-    store: "ADAJAN",
-    activePunch: null,
-    history: []
-  },
-  {
-    id: "EMP107",
-    name: "Vikas Gupta",
-    role: "Kitchen Staff",
-    mobile: "9876543216",
-    shiftStart: "06:00",
-    roleKey: "kitchen",
-    password: "password123",
-    status: "Active",
-    store: "ADAJAN",
-    activePunch: null,
-    history: []
-  },
   // CT LIGHT
   {
     id: "EMP103",
@@ -490,32 +438,6 @@ const seededEmployees = [
     mobile: "9876543212",
     shiftStart: "14:00",
     roleKey: "sm",
-    password: "password123",
-    status: "Active",
-    store: "CT LIGHT",
-    activePunch: null,
-    history: []
-  },
-  {
-    id: "EMP108",
-    name: "Amit Patel",
-    role: "Crew Member",
-    mobile: "9876543217",
-    shiftStart: "06:00",
-    roleKey: "staff",
-    password: "password123",
-    status: "Active",
-    store: "CT LIGHT",
-    activePunch: null,
-    history: []
-  },
-  {
-    id: "EMP109",
-    name: "Preeti Singh",
-    role: "Kitchen Staff",
-    mobile: "9876543218",
-    shiftStart: "06:00",
-    roleKey: "kitchen",
     password: "password123",
     status: "Active",
     store: "CT LIGHT",
