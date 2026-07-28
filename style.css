@@ -3842,8 +3842,8 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
     flex-direction: column;
     overflow: hidden;
     flex: 1;
-    max-height: 340px; /* Prevent cart from growing infinitely and pushing other panels offscreen */
-    min-height: 160px; /* Ensure a clean minimum height */
+    max-height: 550px; /* Taller cart window to show many items at once */
+    min-height: 380px; /* Increased default height */
 }
 
 /* Integrated Cart Footer */
