@@ -8861,14 +8861,14 @@ function initApp() {
                     return;
                 }
                 
-                const veg = document.getElementById("newCustomerVeg")?.checked || false;
-                const jain = document.getElementById("newCustomerJain")?.checked || false;
-                const vegan = document.getElementById("newCustomerVegan")?.checked || false;
-                const eggless = document.getElementById("newCustomerEggless")?.checked || false;
-                const noOnion = document.getElementById("newCustomerNoOnion")?.checked || false;
-                const noGarlic = document.getElementById("newCustomerNoGarlic")?.checked || false;
-                const nut = document.getElementById("newCustomerNut")?.checked || false;
-                const gluten = document.getElementById("newCustomerGluten")?.checked || false;
+                const veg = false;
+                const jain = false;
+                const vegan = false;
+                const eggless = false;
+                const noOnion = false;
+                const noGarlic = false;
+                const nut = false;
+                const gluten = false;
                 const favFood = document.getElementById("newCustomerFavFood")?.value.trim() || 'N/A';
                 const favDrink = document.getElementById("newCustomerFavDrink")?.value.trim() || 'N/A';
                 const notes = document.getElementById("newCustomerNotes")?.value.trim() || '';
@@ -8923,14 +8923,6 @@ function initApp() {
                     // Reset form fields
                     document.getElementById("newCustomerName").value = '';
                     document.getElementById("newCustomerPhone").value = '';
-                    if (document.getElementById("newCustomerVeg")) document.getElementById("newCustomerVeg").checked = false;
-                    if (document.getElementById("newCustomerJain")) document.getElementById("newCustomerJain").checked = false;
-                    if (document.getElementById("newCustomerVegan")) document.getElementById("newCustomerVegan").checked = false;
-                    if (document.getElementById("newCustomerEggless")) document.getElementById("newCustomerEggless").checked = false;
-                    if (document.getElementById("newCustomerNoOnion")) document.getElementById("newCustomerNoOnion").checked = false;
-                    if (document.getElementById("newCustomerNoGarlic")) document.getElementById("newCustomerNoGarlic").checked = false;
-                    if (document.getElementById("newCustomerNut")) document.getElementById("newCustomerNut").checked = false;
-                    if (document.getElementById("newCustomerGluten")) document.getElementById("newCustomerGluten").checked = false;
                     if (document.getElementById("newCustomerFavFood")) document.getElementById("newCustomerFavFood").value = '';
                     if (document.getElementById("newCustomerFavDrink")) document.getElementById("newCustomerFavDrink").value = '';
                     if (document.getElementById("newCustomerNotes")) document.getElementById("newCustomerNotes").value = '';
