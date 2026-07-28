@@ -2935,17 +2935,17 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
     padding-right: 4px;
 }
 
-/* Custom Side-by-Side Row in Right Pane */
+/* Custom Stack/Row in Right Pane */
 .pos-right-top-row-new {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 12px;
     flex-shrink: 0;
 }
 
 /* Make cards in the top row more compact */
 .pos-right-top-row-new .checkout-card-new {
-    padding: 10px 12px;
+    padding: 12px 14px;
     margin: 0;
 }
 
@@ -2959,32 +2959,33 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
     flex-shrink: 0;
 }
 
-/* Compact stats badges */
+/* Premium stats badges in grid layout */
 .pos-right-top-row-new .customer-stats-grid-new {
-    display: flex !important;
-    justify-content: space-between;
-    gap: 4px;
-    margin-top: 6px;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
 }
 .pos-right-top-row-new .stat-badge-new {
-    flex: 1;
-    padding: 4px;
-    border-radius: 6px;
-    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
     background: var(--pos-cream-bg);
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    text-align: center;
-    box-sizing: border-box;
+    justify-content: center;
+    border: 1px solid rgba(46, 35, 31, 0.04);
 }
 .pos-right-top-row-new .stat-lbl-new {
-    font-size: 0.52rem;
+    font-size: 0.58rem;
     font-weight: 700;
     color: var(--text-tertiary);
     text-transform: uppercase;
     margin-bottom: 2px;
+    letter-spacing: 0.3px;
 }
 .pos-right-top-row-new .stat-val-new {
-    font-size: 0.68rem;
+    font-size: 0.85rem;
     font-weight: 800;
     color: var(--pos-espresso);
 }

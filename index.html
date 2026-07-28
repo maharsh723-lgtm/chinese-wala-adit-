@@ -5674,15 +5674,17 @@
                                             <i data-lucide="plus-circle"></i> New Profile
                                         </button>
                                     </div>
-                                    <div class="customer-select-row-new">
-                                        <select id="posCustomerSelect" class="pos-select-new">
-                                            <!-- Populated dynamically -->
-                                        </select>
+                                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-top: 4px;">
+                                        <div class="customer-select-row-new">
+                                            <select id="posCustomerSelect" class="pos-select-new">
+                                                <!-- Populated dynamically -->
+                                            </select>
+                                        </div>
+                                        <div class="customer-phone-row-new">
+                                            <input type="tel" id="posCustomerPhoneInput" placeholder="Phone (Mandatory)" class="pos-input" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border: 1px solid rgba(46, 35, 31, 0.08); border-radius: 8px; font-size: 0.82rem; font-weight: 700; background: var(--pos-cream-bg); color: var(--pos-espresso); outline: none;">
+                                        </div>
                                     </div>
-                                    <div class="customer-phone-row-new" style="margin-top: 8px;">
-                                        <input type="tel" id="posCustomerPhoneInput" placeholder="Enter Customer Phone (Mandatory)" class="pos-input" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border: 1px solid rgba(46, 35, 31, 0.08); border-radius: 8px; font-size: 0.82rem; font-weight: 700; background: var(--pos-cream-bg); color: var(--pos-espresso); outline: none;">
-                                        <small style="font-size: 0.58rem; color: var(--pos-accent-red, #ef4444); margin-top: 4px; font-weight: 800; display: block; letter-spacing: 0.2px;">* Phone number required to complete bill</small>
-                                    </div>
+                                    <small style="font-size: 0.58rem; color: var(--pos-accent-red, #ef4444); margin-top: 4px; font-weight: 800; display: block; letter-spacing: 0.2px;">* Phone number required to complete bill</small>
                                     
                                     <!-- Premium Loyalty & Wallet indicators -->
                                     <div class="customer-stats-grid-new" id="customerLoyaltyPoints" style="display: none;">
@@ -6812,25 +6814,25 @@
     </div>
 
     <!-- 2. Create Customer Modal -->
-    <div class="modal-overlay" id="modalPOSCreateCustomer" style="z-index: 10000;">
-        <div class="modal-content" style="max-width: 400px; width: 95%;">
-            <div class="modal-header">
-                <h3>Create Customer Profile</h3>
-                <div class="modal-close" onclick="document.getElementById('modalPOSCreateCustomer').style.display='none'"><i data-lucide="x"></i></div>
+    <div class="modal-overlay" id="modalPOSCreateCustomer" style="z-index: 10000; display: none;">
+        <div class="modal-content" style="max-width: 400px; width: 95%; background: rgba(21, 19, 18, 0.95); border: 1px solid #c29f68; box-shadow: 0 8px 32px rgba(194, 159, 104, 0.2); backdrop-filter: blur(10px); color: #fff;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(194, 159, 104, 0.2); padding-bottom: 12px;">
+                <h3 style="color: #c29f68; display: flex; align-items: center; gap: 8px;"><i data-lucide="user-plus"></i> Create Customer Profile</h3>
+                <div class="modal-close" onclick="document.getElementById('modalPOSCreateCustomer').style.display='none'" style="color: #fff; cursor: pointer;"><i data-lucide="x"></i></div>
             </div>
             <div class="modal-body" style="padding: 20px 16px; display:flex; flex-direction:column; gap:16px;">
                 <div>
-                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px;">Full Name</label>
-                    <input type="text" id="newCustomerName" placeholder="Enter customer's name" class="pos-input" style="width:100%;">
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Full Name</label>
+                    <input type="text" id="newCustomerName" placeholder="Enter customer's name" class="pos-input" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
                 </div>
                 <div>
-                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px;">Mobile Number</label>
-                    <input type="text" id="newCustomerPhone" placeholder="Enter mobile number" class="pos-input" style="width:100%;">
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Mobile Number</label>
+                    <input type="text" id="newCustomerPhone" placeholder="Enter mobile number" class="pos-input" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="saas-btn saas-btn-secondary" onclick="document.getElementById('modalPOSCreateCustomer').style.display='none'">Cancel</button>
-                <button type="button" class="saas-btn saas-btn-primary" id="btnSaveNewCustomer">Create & Select</button>
+            <div class="modal-footer" style="border-top: 1px solid rgba(194, 159, 104, 0.2); padding-top: 14px; display: flex; gap: 12px;">
+                <button type="button" class="saas-btn saas-btn-secondary" onclick="document.getElementById('modalPOSCreateCustomer').style.display='none'" style="flex: 1; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #fff; font-weight: 700;">Cancel</button>
+                <button type="button" class="saas-btn saas-btn-primary" id="btnSaveNewCustomer" style="flex: 1; background: #c29f68; color: #000; font-weight: 800; border: none; padding: 10px;">Create & Select</button>
             </div>
         </div>
     </div>
