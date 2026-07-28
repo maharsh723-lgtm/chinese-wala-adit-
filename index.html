@@ -5674,17 +5674,15 @@
                                             <i data-lucide="plus-circle"></i> New Profile
                                         </button>
                                     </div>
-                                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-top: 4px;">
-                                        <div class="customer-select-row-new">
-                                            <select id="posCustomerSelect" class="pos-select-new">
-                                                <!-- Populated dynamically -->
-                                            </select>
-                                        </div>
-                                        <div class="customer-phone-row-new">
-                                            <input type="tel" id="posCustomerPhoneInput" placeholder="Phone (Mandatory)" class="pos-input" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border: 1px solid rgba(46, 35, 31, 0.08); border-radius: 8px; font-size: 0.82rem; font-weight: 700; background: var(--pos-cream-bg); color: var(--pos-espresso); outline: none;">
-                                        </div>
+                                    <div class="customer-select-row-new" style="margin-top: 4px;">
+                                        <select id="posCustomerSelect" class="pos-select-new">
+                                            <!-- Populated dynamically -->
+                                        </select>
                                     </div>
-                                    <small style="font-size: 0.58rem; color: var(--pos-accent-red, #ef4444); margin-top: 4px; font-weight: 800; display: block; letter-spacing: 0.2px;">* Phone number required to complete bill</small>
+                                    <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                        <span id="posCustomerPhoneDisplay" style="font-size: 0.8rem; font-weight: 700; color: var(--pos-espresso); opacity: 0.75; display: flex; align-items: center; gap: 4px;"></span>
+                                        <input type="hidden" id="posCustomerPhoneInput">
+                                    </div>
                                     
                                     <!-- Premium Loyalty & Wallet indicators -->
                                     <div class="customer-stats-grid-new" id="customerLoyaltyPoints" style="display: none;">

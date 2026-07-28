@@ -8111,6 +8111,10 @@ function initApp() {
         if (phoneInput) {
             phoneInput.value = activeCust && activeCust.phone ? activeCust.phone : '';
         }
+        const phoneDisplay = document.getElementById("posCustomerPhoneDisplay");
+        if (phoneDisplay) {
+            phoneDisplay.textContent = activeCust && activeCust.phone ? `📞 ${activeCust.phone}` : '📞 No phone number';
+        }
     }
 
     function renderTableDropdown() {
