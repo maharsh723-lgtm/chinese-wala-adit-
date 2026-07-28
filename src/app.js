@@ -8152,7 +8152,7 @@ function initApp() {
         let optionsHtml = '';
         posCustomers.forEach(cust => {
             const selectedAttr = cust.id === posSelectedCustomer ? 'selected' : '';
-            optionsHtml += `<option value="${cust.id}" ${selectedAttr}>${cust.name} (${cust.phone})</option>`;
+            optionsHtml += `<option value="${cust.id}" ${selectedAttr}>${cust.phone}</option>`;
         });
         select.innerHTML = optionsHtml;
         
