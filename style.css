@@ -4139,42 +4139,53 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
 .cart-item-row-new {
     display: flex;
     flex-direction: column;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(46, 35, 31, 0.05);
-    padding: 6px;
-    transition: all 0.2s ease;
+    padding: 12px;
+    background: #ffffff;
+    border: 1px solid rgba(46, 35, 31, 0.06);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(46, 35, 31, 0.02);
+}
+
+.cart-item-row-new:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(46, 35, 31, 0.05);
+    border-color: rgba(194, 159, 104, 0.25);
 }
 
 .cart-item-row-new.selected {
-    background: rgba(194, 159, 104, 0.08) !important;
-    border-left: 3px solid #C29F68;
-    padding-left: 9px;
-    border-radius: 8px;
+    background: rgba(194, 159, 104, 0.04) !important;
+    border: 1.5px solid var(--pos-beige) !important;
+    box-shadow: 0 4px 12px rgba(194, 159, 104, 0.1);
 }
 
 .cart-item-main-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 }
 
 .cart-item-thumb-new {
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
     object-fit: cover;
+    border: 1px solid rgba(46, 35, 31, 0.06);
 }
 
 .cart-item-desc-new {
     flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 4px;
 }
 
 .cart-item-title-new {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 800;
     color: var(--pos-espresso);
+    line-height: 1.2;
 }
 
 .cart-item-mods-container {
@@ -4185,38 +4196,43 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
 }
 
 .cart-mod-tag {
-    font-size: 0.6rem;
+    font-size: 0.62rem;
     font-weight: 700;
     color: var(--pos-beige);
+    background: rgba(194, 159, 104, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
 }
 
 .cart-item-qty-actions {
     display: flex;
     align-items: center;
-    background: var(--pos-cream-bg);
-    border-radius: 6px;
-    padding: 2px;
-    gap: 4px;
+    background: #FAF6F0;
+    border-radius: 20px;
+    padding: 3px;
+    gap: 6px;
+    border: 1px solid rgba(46, 35, 31, 0.04);
 }
 
 .cart-qty-btn-new {
-    background: none;
+    background: #ffffff;
     border: none;
     color: var(--pos-espresso);
-    opacity: 0.7;
     cursor: pointer;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    transition: background 0.15s;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .cart-qty-btn-new:hover {
-    background: rgba(46, 35, 31, 0.06);
-    opacity: 1;
+    background: var(--pos-espresso);
+    color: #ffffff;
+    transform: scale(1.05);
 }
 
 .cart-qty-btn-new i {
@@ -4225,18 +4241,18 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
 }
 
 .cart-qty-num {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 800;
     color: var(--pos-espresso);
-    min-width: 14px;
+    min-width: 18px;
     text-align: center;
 }
 
 .cart-item-subtotal-new {
-    font-size: 0.8rem;
-    font-weight: 800;
+    font-size: 0.88rem;
+    font-weight: 900;
     color: var(--pos-espresso);
-    min-width: 60px;
+    min-width: 65px;
     text-align: right;
 }
 
@@ -4244,49 +4260,58 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 6px;
-    padding-left: 40px;
+    margin-top: 10px;
+    border-top: 1px dashed rgba(46, 35, 31, 0.06);
+    padding-top: 8px;
 }
 
 .notes-icon-mini {
-    width: 11px;
-    height: 11px;
-    color: var(--text-tertiary);
+    width: 12px;
+    height: 12px;
+    color: var(--pos-beige);
+    opacity: 0.8;
 }
 
 .cart-item-notes-input-new {
-    background: transparent;
-    border: none;
-    border-bottom: 1.5px solid transparent;
+    background: #FAF6F0;
+    border: 1px solid rgba(46, 35, 31, 0.08);
+    border-radius: 8px;
     outline: none;
     font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--text-secondary);
+    font-weight: 700;
+    color: var(--pos-espresso);
     flex: 1;
-    padding: 2px 0;
-    transition: border-color 0.2s;
+    padding: 5px 10px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
 .cart-item-notes-input-new:focus {
     border-color: var(--pos-beige);
-    color: var(--pos-espresso);
+    background: #ffffff;
+    box-shadow: 0 0 0 2px rgba(194, 159, 104, 0.1);
 }
 
 .cart-item-customize-link {
-    background: none;
-    border: none;
+    background: rgba(194, 159, 104, 0.08);
+    border: 1px solid rgba(194, 159, 104, 0.15);
     color: var(--pos-beige);
     font-size: 0.7rem;
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 3px;
-    transition: color 0.2s;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    height: 28px;
+    box-sizing: border-box;
 }
 
 .cart-item-customize-link:hover {
-    color: var(--pos-espresso);
+    background: var(--pos-beige);
+    color: #ffffff;
 }
 
 .cart-item-customize-link i {
@@ -4295,22 +4320,24 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
 }
 
 .cart-item-delete-btn {
-    background: none;
-    border: none;
-    color: var(--pos-accent-red);
-    opacity: 0.7;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.12);
+    color: #EF4444;
     cursor: pointer;
-    padding: 2px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    transition: opacity 0.2s;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
 .cart-item-delete-btn:hover {
-    opacity: 1;
-    background: rgba(239, 68, 68, 0.08);
+    background: #EF4444;
+    color: #ffffff;
+    transform: scale(1.05);
 }
 
 .cart-item-delete-btn i {
