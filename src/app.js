@@ -494,7 +494,7 @@ function initApp() {
                 localStorage.setItem("bk_logged_in_user", JSON.stringify(currentUser));
 
                 renderAllLists();
-        if (screenId === "training") renderTrainingScreen();
+        if (currentActiveScreen === "training") renderTrainingScreen();
                 
                 if (typeof window.refreshAccountingData === 'function') {
                     window.refreshAccountingData();
