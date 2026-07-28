@@ -216,6 +216,7 @@ function initApp() {
     let posReconCurrentPage = 1;
     let posReconSortColumn = 'date';
     let posReconSortOrder = 'desc';
+    let inventorySearchVal = '';
 
     // Excel Import Wizard State
     let excelUploadedWorkbook = null;
@@ -2209,7 +2210,7 @@ function initApp() {
         const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
         const storeInv = inventory.filter(i => i.store === targetStore);
 
-        // Calculate metrics
+        // Calculate metrics based on ALL items for this store
         const totalSKUs = storeInv.length;
         const itemsAvailable = storeInv.filter(i => i.stock > 0).length;
         const itemsOutOfStock = storeInv.filter(i => i.stock === 0).length;
@@ -2239,20 +2240,169 @@ function initApp() {
             `;
         }
 
-        // Header and actions
-        // Both roles see Bulk Import; only Branch Managers see Add Stock
-        const bulkImportButtonHTML = `<button class="saas-btn saas-btn-secondary" onclick="openModal('modalBulkImport')" style="margin-right:8px;">Bulk Import</button>`;
-        const addStockButtonHTML = currentRole === "bm" ? 
-            `<button class="saas-btn saas-btn-primary" onclick="openModal('modalAddInventory')">Add Stock</button>` : '';
-        const headerActionsHTML = bulkImportButtonHTML + addStockButtonHTML;
+        const subList = document.getElementById("sub-inventory-list");
+        if (!subList) return;
 
         const isMobile = window.innerWidth < 768;
 
-        // Table rows
+        const hasSkeleton = document.getElementById("inventorySearchInput") !== null;
+        if (!hasSkeleton) {
+            // Render structural skeleton
+            subList.innerHTML = `
+                <!-- Branch switcher placeholder -->
+                <div id="inventoryStoreSwitcherPlaceholder"></div>
+
+                <!-- Inventory dashboard metrics -->
+                <div class="kpi-grid" id="inventoryKpiGrid">
+                    <!-- Dynamic metrics populated below -->
+                </div>
+
+                <!-- Premium Search Bar & Sorting Label -->
+                <div style="background:var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 20px; margin-bottom: 20px; display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap: wrap;">
+                    <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:280px;">
+                        <i data-lucide="search" style="width:18px; height:18px; color:var(--text-tertiary);"></i>
+                        <input type="text" id="inventorySearchInput" placeholder="Search items by name or category..." style="flex:1; background:transparent; border:none; color:#ffffff; font-weight:600; outline:none; font-size:0.85rem;" value="${inventorySearchVal || ''}">
+                        <button id="btnClearInventorySearch" style="background:none; border:none; color:var(--text-tertiary); cursor:pointer; font-size:0.75rem; font-weight:700; display:none;">Clear</button>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; font-size:0.75rem; color:var(--text-tertiary); font-weight:700; background:rgba(16, 185, 129, 0.08); padding:6px 12px; border-radius:6px; border:1px solid rgba(16, 185, 129, 0.15);">
+                        <i data-lucide="arrow-down-narrow-wide" style="width:14px; height:14px; color:#10b981;"></i>
+                        <span>Auto-Sorted: <strong style="color:#10b981;">Out of Stock at top</strong></span>
+                    </div>
+                </div>
+
+                <div class="saas-table-container" id="inventoryTableContainer" style="display: ${isMobile ? 'none' : 'block'};">
+                    <table class="saas-table" id="inventoryTable">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Category</th>
+                                <th>Current Stock</th>
+                                <th>Unit</th>
+                                <th>Reorder Level</th>
+                                <th>Unit Cost</th>
+                                <th>Total Value</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="inventoryCardsContainer" style="display: ${isMobile ? 'flex' : 'none'}; flex-direction: column; gap: 12px; margin-top: 16px;">
+                    <!-- Dynamic cards -->
+                </div>
+            `;
+
+            // Bind search input events
+            const searchInput = document.getElementById("inventorySearchInput");
+            if (searchInput) {
+                searchInput.addEventListener("input", (e) => {
+                    inventorySearchVal = e.target.value;
+                    renderInventoryListOnly();
+                });
+            }
+
+            // Bind owner store switcher
+            if (currentRole === "owner") {
+                const selectEl = document.getElementById("ownerInventoryStoreSelect");
+                if (selectEl) {
+                    selectEl.addEventListener("change", () => {
+                        ownerInventoryStore = selectEl.value;
+                        renderInventoryScreen();
+                    });
+                }
+            }
+        }
+
+        // Render switcher inside placeholder
+        const switcherPlaceholder = document.getElementById("inventoryStoreSwitcherPlaceholder");
+        if (switcherPlaceholder) {
+            switcherPlaceholder.innerHTML = selectHeaderHTML;
+        }
+
+        // Render/update KPI cards
+        const kpiGrid = document.getElementById("inventoryKpiGrid");
+        if (kpiGrid) {
+            kpiGrid.innerHTML = `
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span>Total SKUs</span>
+                        <i data-lucide="package"></i>
+                    </div>
+                    <div class="kpi-value">${totalSKUs}</div>
+                    <div class="kpi-meta">Distinct items</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span>Items Available</span>
+                        <i data-lucide="check-circle" style="color:var(--success);"></i>
+                    </div>
+                    <div class="kpi-value">${itemsAvailable}</div>
+                    <div class="kpi-meta">Stock > 0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span>Out of Stock</span>
+                        <i data-lucide="alert-triangle" style="color:var(--danger);"></i>
+                    </div>
+                    <div class="kpi-value" style="color:${itemsOutOfStock > 0 ? 'var(--danger)' : 'inherit'};">${itemsOutOfStock}</div>
+                    <div class="kpi-meta">Requires attention</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span>Total Value</span>
+                        <i data-lucide="indian-rupee"></i>
+                    </div>
+                    <div class="kpi-value">₹${totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    <div class="kpi-meta">At cost price</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span>Reorder Value</span>
+                        <i data-lucide="trending-up"></i>
+                    </div>
+                    <div class="kpi-value">₹${reorderValue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    <div class="kpi-meta">To restore min level</div>
+                </div>
+            `;
+        }
+
+        // Set role-based visibility of action buttons
+        const btnAddStock = document.getElementById("btnCreateInventoryTop");
+        if (btnAddStock) {
+            btnAddStock.style.display = currentRole === "bm" ? "inline-flex" : "none";
+        }
+
+        // Now render the filtered list items
+        renderInventoryListOnly();
+    }
+
+    // Helper to only render rows and cards based on search filter
+    function renderInventoryListOnly() {
+        const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
+        const storeInv = inventory.filter(i => {
+            if (i.store !== targetStore) return false;
+            if (!inventorySearchVal) return true;
+            const search = inventorySearchVal.toLowerCase();
+            return (i.label || "").toLowerCase().includes(search) || (i.category || "").toLowerCase().includes(search);
+        });
+
+        // Sort: Out of Stock (stock === 0) at the very top, then sorted by stock level ascending
+        storeInv.sort((a, b) => {
+            const stockA = a.stock || 0;
+            const stockB = b.stock || 0;
+            return stockA - stockB;
+        });
+
+        const isMobile = window.innerWidth < 768;
         let rowsHTML = "";
         let cardsHTML = "";
+
         storeInv.forEach(item => {
-            // Status badge
             let statusBadge = "";
             if ((item.stock || 0) === 0) {
                 statusBadge = `<span class="pill-badge pill-badge-danger">OUT OF STOCK</span>`;
@@ -2262,7 +2412,6 @@ function initApp() {
                 statusBadge = `<span class="pill-badge pill-badge-success">OK</span>`;
             }
 
-            // Action buttons: Reorder + Edit (for BM)
             let actionsHTML = `
                 <button class="saas-btn" style="padding: 4px 12px; font-size:0.75rem; border:1px solid var(--antique-brass, #d4af37); color:var(--antique-brass, #d4af37); background:none; cursor:pointer;" onclick="window.addInventoryItemToPO('${item.id}')">
                     Reorder
@@ -2334,106 +2483,27 @@ function initApp() {
             }
         }
 
-        // Set role-based visibility of action buttons
-        const btnAddStock = document.getElementById("btnCreateInventoryTop");
-        if (btnAddStock) {
-            btnAddStock.style.display = currentRole === "bm" ? "inline-flex" : "none";
-        }
-        
-        // Render branch switcher dropdown into its placeholder
-        const switcherPlaceholder = document.getElementById("inventoryStoreSwitcherPlaceholder");
-        if (switcherPlaceholder) {
-            switcherPlaceholder.innerHTML = selectHeaderHTML;
-        }
+        const tbody = document.getElementById("inventoryTableBody");
+        if (tbody) tbody.innerHTML = rowsHTML;
 
-        // Render KPI metrics and inventory tables inside the sub-inventory-list div
-        const subList = document.getElementById("sub-inventory-list");
-        if (subList) {
-            subList.innerHTML = `
-                <!-- Inventory dashboard metrics -->
-                <div class="kpi-grid">
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <span>Total SKUs</span>
-                            <i data-lucide="package"></i>
-                        </div>
-                        <div class="kpi-value">${totalSKUs}</div>
-                        <div class="kpi-meta">Distinct items</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <span>Items Available</span>
-                            <i data-lucide="check-circle" style="color:var(--success);"></i>
-                        </div>
-                        <div class="kpi-value">${itemsAvailable}</div>
-                        <div class="kpi-meta">Stock > 0</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <span>Out of Stock</span>
-                            <i data-lucide="alert-triangle" style="color:var(--danger);"></i>
-                        </div>
-                        <div class="kpi-value" style="color:${itemsOutOfStock > 0 ? 'var(--danger)' : 'inherit'};">${itemsOutOfStock}</div>
-                        <div class="kpi-meta">Requires attention</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <span>Total Value</span>
-                            <i data-lucide="indian-rupee"></i>
-                        </div>
-                        <div class="kpi-value">₹${totalValue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                        <div class="kpi-meta">At cost price</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <span>Reorder Value</span>
-                            <i data-lucide="trending-up"></i>
-                        </div>
-                        <div class="kpi-value">₹${reorderValue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                        <div class="kpi-meta">To restore min level</div>
-                    </div>
-                </div>
+        const cardsContainer = document.getElementById("inventoryCardsContainer");
+        if (cardsContainer) cardsContainer.innerHTML = cardsHTML;
 
-                <div class="saas-table-container" style="display: ${isMobile ? 'none' : 'block'};">
-                    <table class="saas-table" id="inventoryTable">
-                        <thead>
-                            <tr>
-                                <th>Item Name</th>
-                                <th>Category</th>
-                                <th>Current Stock</th>
-                                <th>Unit</th>
-                                <th>Reorder Level</th>
-                                <th>Unit Cost</th>
-                                <th>Total Value</th>
-                                <th>Expiry Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventoryTableBody">
-                            ${rowsHTML}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div id="inventoryCardsContainer" style="display: ${isMobile ? 'flex' : 'none'}; flex-direction: column; gap: 12px; margin-top: 16px;">
-                    ${cardsHTML}
-                </div>
-            `;
-        }
-
-        if (window.lucide) window.lucide.createIcons();
-
-        // Bind event for owner switcher
-        if (currentRole === "owner") {
-            const selectEl = document.getElementById("ownerInventoryStoreSelect");
-            if (selectEl) {
-                selectEl.addEventListener("change", () => {
-                    ownerInventoryStore = selectEl.value;
-                    renderInventoryScreen();
+        const clearBtn = document.getElementById("btnClearInventorySearch");
+        if (clearBtn) {
+            clearBtn.style.display = inventorySearchVal ? "inline-block" : "none";
+            if (!clearBtn.dataset.listenerBound) {
+                clearBtn.dataset.listenerBound = "true";
+                clearBtn.addEventListener("click", () => {
+                    inventorySearchVal = "";
+                    const inputEl = document.getElementById("inventorySearchInput");
+                    if (inputEl) inputEl.value = "";
+                    renderInventoryListOnly();
                 });
             }
         }
+
+        if (window.lucide) window.lucide.createIcons();
     }
 
     // BM Edit inventory prompt (modal based)
