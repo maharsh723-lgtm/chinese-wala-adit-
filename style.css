@@ -3833,7 +3833,6 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
     border-color: var(--pos-beige);
 }
 
-/* Premium POS Cart Panel container */
 .pos-cart-panel {
     background: #ffffff;
     border-radius: 20px;
@@ -3843,7 +3842,8 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
     flex-direction: column;
     overflow: hidden;
     flex: 1;
-    min-height: 180px; /* Reduced to ensure it can shrink on smaller viewports */
+    max-height: 340px; /* Prevent cart from growing infinitely and pushing other panels offscreen */
+    min-height: 160px; /* Ensure a clean minimum height */
 }
 
 /* Integrated Cart Footer */
