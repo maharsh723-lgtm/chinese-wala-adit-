@@ -2194,24 +2194,28 @@ app.post('/api/pos/requisitions/send-confirmation-sms', authenticateToken, async
 });
 
 app.post('/api/pos/requisitions', authenticateToken, (req, res) => {
-  const { id, branchName, managerName, subtotal, gst, grandTotal, paymentMethod, expectedDeliveryDate, notes, items } = req.body;
+  const { id, branchName, managerName, subtotal, gst, grandTotal, paymentMethod, expectedDeliveryDate, notes, items, supplierId, internalRemarks } = req.body;
   try {
+    const finalId = id || `PO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    
     db.prepare(`
-      INSERT INTO purchase_orders (id, date, branchName, managerName, subtotal, gst, grandTotal, paymentMethod, paymentStatus, orderStatus, expectedDeliveryDate, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO purchase_orders (id, date, branchName, managerName, subtotal, gst, grandTotal, paymentMethod, paymentStatus, orderStatus, expectedDeliveryDate, notes, supplierId, internalRemarks)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      id,
+      finalId,
       new Date().toISOString().split('T')[0],
       branchName,
       managerName,
       subtotal,
       gst,
       grandTotal,
-      paymentMethod,
-      'Waiting for Payment',
-      paymentMethod === 'Cash Approval' ? 'Order Placed' : 'Payment Pending',
+      paymentMethod || 'UPI',
+      'Pending',
+      'Draft', // Starts as Draft
       expectedDeliveryDate,
-      notes || ''
+      notes || '',
+      supplierId || null,
+      internalRemarks || ''
     );
 
     const insertItem = db.prepare(`
@@ -2220,28 +2224,27 @@ app.post('/api/pos/requisitions', authenticateToken, (req, res) => {
     `);
     items.forEach((item, idx) => {
       insertItem.run(
-        `${id}-item-${idx}`,
-        id,
+        `${finalId}-item-${idx}`,
+        finalId,
         item.productId,
         item.productName,
         item.quantity,
         item.rate,
         item.amount,
-        item.gst,
-        item.total
+        item.gst || 0,
+        item.total || item.amount
       );
     });
 
-    const initialStatus = paymentMethod === 'Cash Approval' ? 'Order Placed' : 'Payment Pending';
     db.prepare(`
       INSERT INTO order_tracking (id, orderId, status, timestamp, notes)
       VALUES (?, ?, ?, ?, ?)
     `).run(
       `track-${Date.now()}`,
-      id,
-      initialStatus,
+      finalId,
+      'Draft',
       new Date().toISOString(),
-      'Purchase Order initialized.'
+      'Purchase Order initialized as Draft.'
     );
 
     db.prepare(`
@@ -2249,7 +2252,7 @@ app.post('/api/pos/requisitions', authenticateToken, (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?)
     `).run(
       `notif-${Date.now()}`,
-      `New PO ${id} Created`,
+      `New PO ${finalId} Created`,
       `Stock requisition created by ${branchName} Branch manager.`,
       new Date().toISOString(),
       'admin',
@@ -2259,7 +2262,7 @@ app.post('/api/pos/requisitions', authenticateToken, (req, res) => {
     const io = req.app.get('io');
     if (io) io.emit('requisition_update');
 
-    res.json({ success: true, orderId: id });
+    res.json({ success: true, orderId: finalId });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -2377,6 +2380,32 @@ app.post('/api/pos/requisitions/:id/status', authenticateToken, (req, res) => {
       });
     }
 
+    // Trigger WhatsApp messaging templates depending on status
+    try {
+      let supplier = null;
+      if (order.supplierId) {
+        supplier = db.prepare('SELECT * FROM suppliers WHERE id = ?').get(order.supplierId);
+      }
+      if (!supplier) {
+        supplier = {
+          name: 'Anand Verma (GM Supplies)',
+          contactPerson: 'Anand Verma',
+          mobileNumber: '+91 99786 73137',
+          whatsappNumber: '+91 99786 73137'
+        };
+      }
+      const whatsappService = require('./Messaging Integration/whatsappService.cjs');
+      if (status === 'Approved') {
+        whatsappService.sendPurchaseOrder(order, supplier);
+      } else if (status === 'Sent') {
+        whatsappService.sendReminder(order, supplier);
+      } else if (status === 'Delivered') {
+        whatsappService.sendDeliveryReminder(order, supplier);
+      }
+    } catch (wsErr) {
+      console.warn('Failed to send placeholder WhatsApp notification:', wsErr);
+    }
+
     db.prepare(`
       INSERT INTO notifications (id, title, message, timestamp, role, store)
       VALUES (?, ?, ?, ?, ?, ?)
@@ -2391,9 +2420,571 @@ app.post('/api/pos/requisitions/:id/status', authenticateToken, (req, res) => {
 
     const io = req.app.get('io');
     if (io) io.emit('requisition_update');
+    if (io) io.emit('whatsapp_log_update');
 
     res.json({ success: true });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// === Enterprise Procurement Endpoints ===
+
+// 1. Get WhatsApp Logs
+app.get('/api/whatsapp/logs', authenticateToken, (req, res) => {
+  try {
+    const logs = db.prepare('SELECT * FROM whatsapp_messages ORDER BY timestamp DESC').all();
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. Trigger Manual WhatsApp Simulation (for demo/testing)
+app.post('/api/pos/requisitions/:id/whatsapp-trigger', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { type } = req.body; // 'purchase_order', 'reminder', 'delivery_reminder', 'payment_reminder'
+  try {
+    const po = db.prepare('SELECT * FROM purchase_orders WHERE id = ?').get(id);
+    if (!po) return res.status(404).json({ error: 'Purchase order not found' });
+    
+    let supplier = null;
+    if (po.supplierId) {
+      supplier = db.prepare('SELECT * FROM suppliers WHERE id = ?').get(po.supplierId);
+    }
+    if (!supplier) {
+      supplier = { name: 'Default Supplier', contactPerson: 'Anand Verma', mobileNumber: '+91 99786 73137', whatsappNumber: '+91 99786 73137' };
+    }
+
+    const whatsappService = require('./Messaging Integration/whatsappService.cjs');
+    let result = null;
+    if (type === 'purchase_order') {
+      result = await whatsappService.sendPurchaseOrder(po, supplier);
+    } else if (type === 'reminder') {
+      result = await whatsappService.sendReminder(po, supplier);
+    } else if (type === 'delivery_reminder') {
+      result = await whatsappService.sendDeliveryReminder(po, supplier);
+    } else if (type === 'payment_reminder') {
+      result = await whatsappService.sendPaymentReminder(po, supplier);
+    } else {
+      return res.status(400).json({ error: 'Invalid message type' });
+    }
+
+    const io = req.app.get('io');
+    if (io) io.emit('whatsapp_log_update');
+
+    res.json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Suppliers list
+app.get('/api/suppliers', authenticateToken, (req, res) => {
+  try {
+    const suppliers = db.prepare('SELECT * FROM suppliers').all();
+    
+    // Calculate performance metrics for each supplier dynamically
+    const result = suppliers.map(sup => {
+      const pos = db.prepare('SELECT * FROM purchase_orders WHERE supplierId = ?').all(sup.id);
+      const completedPos = pos.filter(o => o.orderStatus === 'Completed' || o.orderStatus === 'Inventory Updated');
+      const totalOrders = pos.length;
+      
+      // Calculate average delivery days
+      let totalDeliveryDays = 0;
+      let lateDeliveries = 0;
+      let completedCount = 0;
+      
+      completedPos.forEach(po => {
+        const tracking = db.prepare('SELECT * FROM order_tracking WHERE orderId = ? ORDER BY timestamp ASC').all(po.id);
+        const sentLog = tracking.find(t => t.status === 'Sent' || t.status === 'Order Placed');
+        const deliveredLog = tracking.find(t => t.status === 'Delivered' || t.status === 'Completed' || t.status === 'Inventory Updated');
+        
+        if (sentLog && deliveredLog) {
+          const sentDate = new Date(sentLog.timestamp);
+          const delDate = new Date(deliveredLog.timestamp);
+          const diffTime = Math.abs(delDate - sentDate);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          totalDeliveryDays += diffDays;
+          completedCount++;
+          
+          if (diffDays > (sup.deliveryDays || 3)) {
+            lateDeliveries++;
+          }
+        }
+      });
+      
+      const avgDeliveryDays = completedCount > 0 ? parseFloat((totalDeliveryDays / completedCount).toFixed(1)) : sup.deliveryDays;
+      
+      // Calculate acceptance rate
+      const acceptedCount = pos.filter(o => o.orderStatus !== 'Draft' && o.orderStatus !== 'Review' && o.orderStatus !== 'Cancelled' && o.orderStatus !== 'Rejected').length;
+      const sentCount = pos.filter(o => o.orderStatus !== 'Draft' && o.orderStatus !== 'Review').length;
+      const orderAcceptanceRate = sentCount > 0 ? Math.round((acceptedCount / sentCount) * 100) : 100;
+      
+      const procurementValue = pos.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
+      const lastOrder = db.prepare('SELECT date FROM purchase_orders WHERE supplierId = ? ORDER BY date DESC LIMIT 1').get(sup.id);
+      
+      return {
+        ...sup,
+        metrics: {
+          totalOrders,
+          avgDeliveryDays,
+          lateDeliveries,
+          orderAcceptanceRate,
+          procurementValue,
+          lastOrderDate: lastOrder ? lastOrder.date : 'N/A'
+        }
+      };
+    });
+    
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. Create Supplier
+app.post('/api/suppliers', authenticateToken, (req, res) => {
+  const { name, contactPerson, mobileNumber, whatsappNumber, email, gstNumber, address, paymentTerms, deliveryDays, notes, status, isPreferred } = req.body;
+  try {
+    const id = `SUP-${Math.floor(100 + Math.random() * 900)}`;
+    db.prepare(`
+      INSERT INTO suppliers (id, name, contactPerson, mobileNumber, whatsappNumber, email, gstNumber, address, paymentTerms, deliveryDays, notes, status, isPreferred)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id,
+      name,
+      contactPerson || '',
+      mobileNumber || '',
+      whatsappNumber || '',
+      email || '',
+      gstNumber || '',
+      address || '',
+      paymentTerms || 'COD',
+      deliveryDays ? parseInt(deliveryDays) : 3,
+      notes || '',
+      status || 'Active',
+      isPreferred ? 1 : 0
+    );
+    res.json({ success: true, supplierId: id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 5. Update Supplier
+app.put('/api/suppliers/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { name, contactPerson, mobileNumber, whatsappNumber, email, gstNumber, address, paymentTerms, deliveryDays, notes, status, isPreferred } = req.body;
+  try {
+    db.prepare(`
+      UPDATE suppliers
+      SET name = ?, contactPerson = ?, mobileNumber = ?, whatsappNumber = ?, email = ?, gstNumber = ?, address = ?, paymentTerms = ?, deliveryDays = ?, notes = ?, status = ?, isPreferred = ?
+      WHERE id = ?
+    `).run(
+      name,
+      contactPerson || '',
+      mobileNumber || '',
+      whatsappNumber || '',
+      email || '',
+      gstNumber || '',
+      address || '',
+      paymentTerms || 'COD',
+      deliveryDays ? parseInt(deliveryDays) : 3,
+      notes || '',
+      status || 'Active',
+      isPreferred ? 1 : 0,
+      id
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 6. Delete Supplier
+app.delete('/api/suppliers/:id', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  try {
+    db.prepare('DELETE FROM suppliers WHERE id = ?').run(id);
+    db.prepare('DELETE FROM inventory_item_suppliers WHERE supplierId = ?').run(id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 7. Get inventory items with mapped suppliers
+app.get('/api/inventory/items', authenticateToken, (req, res) => {
+  try {
+    const store = req.query.store || 'VESU';
+    const items = db.prepare('SELECT id, label, unit, unitCost, reorder, stock, store FROM inventory WHERE store = ?').all(store);
+    
+    const result = items.map(item => {
+      const mappings = db.prepare(`
+        SELECT iis.*, s.name as supplierName, s.isPreferred
+        FROM inventory_item_suppliers iis
+        JOIN suppliers s ON iis.supplierId = s.id
+        WHERE iis.itemId = ?
+      `).all(item.id);
+      return { ...item, suppliers: mappings };
+    });
+    
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 8. Map suppliers to inventory item
+app.post('/api/inventory/items/suppliers', authenticateToken, (req, res) => {
+  const { itemId, suppliers } = req.body;
+  try {
+    db.transaction(() => {
+      db.prepare('DELETE FROM inventory_item_suppliers WHERE itemId = ?').run(itemId);
+      const insert = db.prepare(`
+        INSERT INTO inventory_item_suppliers (itemId, supplierId, isDefault, unitCost)
+        VALUES (?, ?, ?, ?)
+      `);
+      suppliers.forEach(sup => {
+        insert.run(itemId, sup.supplierId, sup.isDefault ? 1 : 0, parseFloat(sup.unitCost));
+      });
+    })();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 9. Dashboard statistics
+app.get('/api/procurement/dashboard', authenticateToken, (req, res) => {
+  try {
+    const store = req.query.store || 'VESU';
+    
+    const totalSuppliers = db.prepare('SELECT COUNT(*) as count FROM suppliers').get().count;
+    
+    const pendingPOs = db.prepare(`
+      SELECT COUNT(*) as count FROM purchase_orders 
+      WHERE branchName = ? AND orderStatus NOT IN ('Completed', 'Inventory Updated', 'Rejected', 'Cancelled')
+    `).get(store).count;
+    
+    const waitingApproval = db.prepare(`
+      SELECT COUNT(*) as count FROM purchase_orders 
+      WHERE branchName = ? AND orderStatus IN ('Draft', 'Review', 'Payment Pending')
+    `).get(store).count;
+    
+    const sentOrders = db.prepare(`
+      SELECT COUNT(*) as count FROM purchase_orders 
+      WHERE branchName = ? AND orderStatus IN ('Sent', 'Accepted', 'Approved')
+    `).get(store).count;
+    
+    const deliveredOrders = db.prepare(`
+      SELECT COUNT(*) as count FROM purchase_orders 
+      WHERE branchName = ? AND orderStatus IN ('Delivered', 'Completed')
+    `).get(store).count;
+    
+    const totalValRow = db.prepare(`
+      SELECT SUM(grandTotal) as total FROM purchase_orders 
+      WHERE branchName = ? AND orderStatus != 'Cancelled'
+    `).get(store);
+    const totalProcurementValue = totalValRow ? (totalValRow.total || 0) : 0;
+    
+    // Average delivery days
+    const trackingRows = db.prepare(`
+      SELECT t1.orderId, t1.timestamp as sentTime, t2.timestamp as deliveredTime
+      FROM order_tracking t1
+      JOIN order_tracking t2 ON t1.orderId = t2.orderId
+      JOIN purchase_orders po ON t1.orderId = po.id
+      WHERE po.branchName = ?
+        AND (t1.status = 'Sent' OR t1.status = 'Order Placed')
+        AND (t2.status = 'Delivered' OR t2.status = 'Completed' OR t2.status = 'Inventory Updated')
+    `).all(store);
+    
+    let totalDeliveryDays = 0;
+    let completedCount = 0;
+    trackingRows.forEach(row => {
+      const sent = new Date(row.sentTime);
+      const del = new Date(row.deliveredTime);
+      const diffTime = Math.abs(del - sent);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      totalDeliveryDays += diffDays;
+      completedCount++;
+    });
+    const avgDeliveryTime = completedCount > 0 ? parseFloat((totalDeliveryDays / completedCount).toFixed(1)) : 2.5;
+    
+    // Alerts
+    const stockAlerts = db.prepare(`
+      SELECT COUNT(*) as count FROM inventory 
+      WHERE store = ? AND stock <= reorder AND stock > 0 AND reorder > 0
+    `).get(store).count;
+    
+    const criticalAlerts = db.prepare(`
+      SELECT COUNT(*) as count FROM inventory 
+      WHERE store = ? AND stock = 0 AND reorder > 0
+    `).get(store).count;
+    
+    res.json({
+      totalSuppliers,
+      pendingPOs,
+      ordersWaitingApproval: waitingApproval,
+      ordersSent: sentOrders,
+      ordersDelivered: deliveredOrders,
+      totalProcurementValue,
+      avgDeliveryTime,
+      stockAlerts,
+      criticalInventoryAlerts: criticalAlerts
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 10. Procurement reports
+app.get('/api/procurement/reports', authenticateToken, (req, res) => {
+  try {
+    const store = req.query.store || 'VESU';
+    
+    // Monthly purchases (last 6 months)
+    const monthlyPurchases = db.prepare(`
+      SELECT strftime('%Y-%m', date) as month, SUM(grandTotal) as total, COUNT(*) as count
+      FROM purchase_orders
+      WHERE branchName = ? AND orderStatus != 'Cancelled'
+      GROUP BY month
+      ORDER BY month DESC
+      LIMIT 6
+    `).all(store);
+    
+    // Supplier performance summary
+    const suppliers = db.prepare('SELECT id, name, deliveryDays FROM suppliers').all();
+    const supplierPerformance = suppliers.map(sup => {
+      const pos = db.prepare('SELECT * FROM purchase_orders WHERE supplierId = ? AND branchName = ?').all(sup.id, store);
+      const totalOrders = pos.length;
+      const totalSpend = pos.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
+      
+      let lateCount = 0;
+      let completedCount = 0;
+      pos.forEach(po => {
+        if (po.orderStatus === 'Completed' || po.orderStatus === 'Inventory Updated' || po.orderStatus === 'Delivered') {
+          const tracking = db.prepare('SELECT * FROM order_tracking WHERE orderId = ? ORDER BY timestamp ASC').all(po.id);
+          const sentLog = tracking.find(t => t.status === 'Sent' || t.status === 'Order Placed');
+          const delLog = tracking.find(t => t.status === 'Delivered' || t.status === 'Completed' || t.status === 'Inventory Updated');
+          if (sentLog && delLog) {
+            const diffDays = Math.ceil(Math.abs(new Date(delLog.timestamp) - new Date(sentLog.timestamp)) / (1000 * 60 * 60 * 24));
+            if (diffDays > sup.deliveryDays) lateCount++;
+            completedCount++;
+          }
+        }
+      });
+      
+      const lateDeliveries = lateCount;
+      const onTimeRate = completedCount > 0 ? Math.round(((completedCount - lateCount) / completedCount) * 100) : 100;
+      
+      return {
+        supplierId: sup.id,
+        supplierName: sup.name,
+        totalOrders,
+        totalSpend,
+        lateDeliveries,
+        onTimeRate
+      };
+    });
+    
+    // Most purchased items
+    const mostPurchasedItems = db.prepare(`
+      SELECT poi.productName, SUM(poi.quantity) as totalQty, SUM(poi.total) as totalSpend
+      FROM purchase_order_items poi
+      JOIN purchase_orders po ON poi.orderId = po.id
+      WHERE po.branchName = ? AND po.orderStatus != 'Cancelled'
+      GROUP BY poi.productName
+      ORDER BY totalSpend DESC
+      LIMIT 5
+    `).all(store);
+    
+    // Outstanding orders
+    const outstandingOrders = db.prepare(`
+      SELECT po.id, po.date, po.grandTotal, po.orderStatus, s.name as supplierName
+      FROM purchase_orders po
+      LEFT JOIN suppliers s ON po.supplierId = s.id
+      WHERE po.branchName = ? AND po.orderStatus NOT IN ('Completed', 'Inventory Updated', 'Cancelled', 'Rejected')
+      ORDER BY po.date ASC
+    `).all(store);
+    
+    // Purchase History
+    const history = db.prepare(`
+      SELECT po.*, s.name as supplierName
+      FROM purchase_orders po
+      LEFT JOIN suppliers s ON po.supplierId = s.id
+      WHERE po.branchName = ?
+      ORDER BY po.date DESC
+      LIMIT 15
+    `).all(store);
+    
+    res.json({
+      monthlyPurchases,
+      supplierPerformance,
+      mostPurchasedItems,
+      outstandingOrders,
+      purchaseHistory: history
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Helper: Fetch QR code image from public API as Buffer
+async function getQrCodeBuffer(dataText) {
+  try {
+    const res = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(dataText)}`);
+    if (res.ok) {
+      const arrayBuffer = await res.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    }
+  } catch (e) {
+    console.warn("Failed to fetch QR code image:", e);
+  }
+  return null;
+}
+
+// 11. PDF generator for Purchase Orders
+app.get('/api/pos/requisitions/:id/pdf', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const po = db.prepare('SELECT * FROM purchase_orders WHERE id = ?').get(id);
+    if (!po) return res.status(404).json({ error: 'Purchase Order not found' });
+    
+    const items = db.prepare('SELECT * FROM purchase_order_items WHERE orderId = ?').all(id);
+    
+    let supplier = null;
+    if (po.supplierId) {
+      supplier = db.prepare('SELECT * FROM suppliers WHERE id = ?').get(po.supplierId);
+    }
+    if (!supplier) {
+      supplier = {
+        name: 'Anand Verma (GM Supplies)',
+        contactPerson: 'Anand Verma',
+        mobileNumber: '+91 99786 73137',
+        email: 'supplies@badikatori.com',
+        gstNumber: '24AAACB1234F1Z5',
+        address: 'Vesu, Surat, Gujarat',
+        paymentTerms: 'Net 30'
+      };
+    }
+    
+    // Create the PDF
+    const doc = new PDFDocument({ margin: 50 });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="PO_${po.id}.pdf"`);
+    doc.pipe(res);
+    
+    // Stylized Espresso/Gold branding header
+    doc.fillColor('#5C4033').fontSize(24).font('Helvetica-Bold').text('BADI KATORI', 50, 50);
+    doc.fontSize(8).fillColor('#8E8480').text('LUXURY CHAAT OPERATIONS - PURCHASE ORDER', 50, 78);
+    
+    // Gold separator line
+    doc.strokeColor('#C29F68').lineWidth(1.5).moveTo(50, 95).lineTo(550, 95).stroke();
+    
+    // PO Details (Meta data)
+    doc.fillColor('#2E231F').fontSize(10).font('Helvetica-Bold').text('PO Number: ', 50, 115, { continued: true })
+       .font('Helvetica').text(po.id);
+    doc.font('Helvetica-Bold').text('Date: ', 50, 130, { continued: true })
+       .font('Helvetica').text(po.date);
+    doc.font('Helvetica-Bold').text('Expected Delivery: ', 50, 145, { continued: true })
+       .font('Helvetica').text(po.expectedDeliveryDate || 'N/A');
+    doc.font('Helvetica-Bold').text('Delivery Location: ', 50, 160, { continued: true })
+       .font('Helvetica').text(`${po.branchName} Store`);
+       
+    // Supplier Information
+    doc.rect(300, 110, 250, 70).fillColor('#FAF6F0').fill();
+    doc.fillColor('#2E231F').fontSize(9).font('Helvetica-Bold').text('SUPPLIER:', 310, 118);
+    doc.font('Helvetica').text(`Name: ${supplier.name}`, 310, 130);
+    doc.text(`Contact: ${supplier.contactPerson} (${supplier.mobileNumber})`, 310, 142);
+    doc.text(`GST: ${supplier.gstNumber || 'N/A'}`, 310, 154);
+    doc.text(`Terms: ${supplier.paymentTerms || 'COD'}`, 310, 166);
+    
+    // Items table header
+    let y = 210;
+    doc.rect(50, y, 500, 20).fillColor('#2E231F').fill();
+    doc.fillColor('#FFFFFF').fontSize(9).font('Helvetica-Bold')
+       .text('Item Name', 60, y + 5)
+       .text('Qty', 280, y + 5, { width: 40, align: 'right' })
+       .text('Unit', 330, y + 5)
+       .text('Unit Cost', 380, y + 5, { width: 70, align: 'right' })
+       .text('Total Cost', 470, y + 5, { width: 70, align: 'right' });
+       
+    y += 20;
+    
+    // Render item rows
+    doc.fillColor('#2E231F').font('Helvetica');
+    items.forEach((item, idx) => {
+      // Alternating row background
+      if (idx % 2 === 1) {
+        doc.rect(50, y, 500, 20).fillColor('#FAF6F0').fill();
+      }
+      doc.fillColor('#2E231F').fontSize(9)
+         .text(item.productName, 60, y + 5)
+         .text(item.quantity.toString(), 280, y + 5, { width: 40, align: 'right' })
+         .text(item.unit || 'units', 330, y + 5)
+         .text(`Rs ${item.rate.toFixed(2)}`, 380, y + 5, { width: 70, align: 'right' })
+         .text(`Rs ${item.amount.toFixed(2)}`, 470, y + 5, { width: 70, align: 'right' });
+      y += 20;
+    });
+    
+    // Totals Section
+    doc.strokeColor('#ddd').lineWidth(0.5).moveTo(50, y).lineTo(550, y).stroke();
+    y += 10;
+    
+    doc.fillColor('#2E231F').fontSize(9).font('Helvetica-Bold')
+       .text('Subtotal:', 380, y, { width: 70, align: 'right' })
+       .font('Helvetica').text(`Rs ${po.subtotal.toFixed(2)}`, 470, y, { width: 70, align: 'right' });
+    y += 15;
+    
+    doc.font('Helvetica-Bold')
+       .text('GST (18%):', 380, y, { width: 70, align: 'right' })
+       .font('Helvetica').text(`Rs ${po.gst.toFixed(2)}`, 470, y, { width: 70, align: 'right' });
+    y += 15;
+    
+    doc.rect(380, y - 3, 170, 20).fillColor('#5C4033').fill();
+    doc.fillColor('#FFFFFF').font('Helvetica-Bold')
+       .text('Total:', 380, y + 2, { width: 70, align: 'right' })
+       .text(`Rs ${po.grandTotal.toFixed(2)}`, 470, y + 2, { width: 70, align: 'right' });
+    
+    y += 30;
+    
+    // QR Code and Remarks section
+    doc.fillColor('#2E231F').fontSize(10).font('Helvetica-Bold').text('Notes & Instructions:', 50, y);
+    doc.font('Helvetica').fontSize(8).text(po.notes || 'No special delivery instructions.', 50, y + 15, { width: 250 });
+    
+    if (po.internalRemarks) {
+      doc.font('Helvetica-Bold').text('Internal Remarks:', 50, y + 45);
+      doc.font('Helvetica').text(po.internalRemarks, 50, y + 58, { width: 250 });
+    }
+    
+    // Embed PO QR Code
+    const qrDataStr = JSON.stringify({
+      poId: po.id,
+      supplierId: po.supplierId || 'SUP-001',
+      date: po.date,
+      total: po.grandTotal,
+      itemsCount: items.length
+    });
+    
+    const qrBuffer = await getQrCodeBuffer(qrDataStr);
+    if (qrBuffer) {
+      doc.image(qrBuffer, 380, y, { width: 100, height: 100 });
+      doc.fontSize(7).fillColor('#8E8480').text('Scan to verify PO authenticity', 370, y + 105, { width: 120, align: 'center' });
+    } else {
+      // Draw placeholder box if offline
+      doc.strokeColor('#C29F68').lineWidth(1).rect(380, y, 100, 100).stroke();
+      doc.fontSize(8).fillColor('#8E8480').text('QR CODE\n(Offline Mode)', 380, y + 35, { width: 100, align: 'center' });
+    }
+    
+    // Footer page number
+    doc.fontSize(8).fillColor('#8E8480').text(`PO: ${po.id} | Generated on: ${new Date().toLocaleDateString()}`, 50, 740, { align: 'left' });
+    doc.text('Page 1 of 1', 50, 740, { align: 'right' });
+    
+    doc.end();
+  } catch (err) {
+    console.error('Error generating PO PDF:', err);
     res.status(500).json({ error: err.message });
   }
 });

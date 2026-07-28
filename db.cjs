@@ -379,6 +379,55 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS suppliers (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    contactPerson TEXT,
+    mobileNumber TEXT,
+    whatsappNumber TEXT,
+    email TEXT,
+    gstNumber TEXT,
+    address TEXT,
+    paymentTerms TEXT,
+    deliveryDays INTEGER,
+    notes TEXT,
+    status TEXT DEFAULT 'Active',
+    isPreferred INTEGER DEFAULT 0
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS inventory_item_suppliers (
+    itemId TEXT,
+    supplierId TEXT,
+    isDefault INTEGER DEFAULT 0,
+    unitCost REAL,
+    PRIMARY KEY (itemId, supplierId),
+    FOREIGN KEY (itemId) REFERENCES inventory(id) ON DELETE CASCADE,
+    FOREIGN KEY (supplierId) REFERENCES suppliers(id) ON DELETE CASCADE
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS whatsapp_messages (
+    id TEXT PRIMARY KEY,
+    poId TEXT,
+    type TEXT,
+    recipientNumber TEXT,
+    messageContent TEXT,
+    status TEXT DEFAULT 'Pending Integration',
+    timestamp TEXT,
+    FOREIGN KEY (poId) REFERENCES purchase_orders(id) ON DELETE SET NULL
+  )
+`);
+
+// Safe ALTER TABLE updates for purchase_orders
+try { db.exec("ALTER TABLE purchase_orders ADD COLUMN supplierId TEXT"); } catch(e){}
+try { db.exec("ALTER TABLE purchase_orders ADD COLUMN internalRemarks TEXT"); } catch(e){}
+try { db.exec("ALTER TABLE purchase_orders ADD COLUMN qrCodeData TEXT"); } catch(e){}
+
+
 
 
 // Check if database is already seeded by checking employees count
@@ -806,6 +855,57 @@ for (const branch of branches) {
       stock
     );
   });
+}
+
+// Seed Suppliers and map them to items if count is 0
+try {
+  const supplierCount = db.prepare("SELECT COUNT(*) as count FROM suppliers").get().count;
+  if (supplierCount === 0) {
+    console.log('Seeding suppliers...');
+    db.prepare(`
+      INSERT INTO suppliers (id, name, contactPerson, mobileNumber, whatsappNumber, email, gstNumber, address, paymentTerms, deliveryDays, notes, status, isPreferred)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run('SUP-001', 'Anand Verma (GM Supplies)', 'Anand Verma', '+91 99786 73137', '+91 99786 73137', 'supplies@badikatori.com', '24AAACB1234F1Z5', 'Vesu, Surat, Gujarat', 'Net 30', 3, 'Default brand partner for all frozen items.', 'Active', 1);
+
+    db.prepare(`
+      INSERT INTO suppliers (id, name, contactPerson, mobileNumber, whatsappNumber, email, gstNumber, address, paymentTerms, deliveryDays, notes, status, isPreferred)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run('SUP-002', 'Surat Fresh Foods', 'Amit Patel', '+91 98765 43210', '+91 98765 43210', 'orders@suratfresh.com', '24BBBCD5678G1Z0', 'Adajan, Surat, Gujarat', 'COD', 1, 'Local fresh produce supplier.', 'Active', 0);
+
+    db.prepare(`
+      INSERT INTO suppliers (id, name, contactPerson, mobileNumber, whatsappNumber, email, gstNumber, address, paymentTerms, deliveryDays, notes, status, isPreferred)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run('SUP-003', 'Quality Groceries Ltd', 'Vikram Shah', '+91 98765 12345', '+91 98765 12345', 'contact@qualitygroceries.in', '24CCCCD9012H1Z1', 'Ring Road, Surat, Gujarat', 'Net 15', 2, 'Dry goods and packaging distributor.', 'Active', 0);
+
+    // Map default suppliers to inventory items
+    const items = db.prepare("SELECT id, label FROM inventory").all();
+    const insertMapping = db.prepare(`
+      INSERT OR IGNORE INTO inventory_item_suppliers (itemId, supplierId, isDefault, unitCost)
+      VALUES (?, ?, ?, ?)
+    `);
+    
+    items.forEach(item => {
+      const label = item.label.toLowerCase();
+      // Fresh vegetables/produce to SUP-002 (Surat Fresh Foods)
+      if (label.includes('lettuce') || label.includes('beet') || label.includes('carrot') || label.includes('onion') || label.includes('tomato') || label.includes('chilli') || label.includes('lemon') || label.includes('potato') || label.includes('dhania')) {
+        insertMapping.run(item.id, 'SUP-002', 1, 15.00);
+        insertMapping.run(item.id, 'SUP-003', 0, 18.00); // alternative
+      }
+      // Packaging / cutlery to SUP-003
+      else if (label.includes('spoon') || label.includes('dish') || label.includes('bowl') || label.includes('tissue') || label.includes('paper') || label.includes('plastic')) {
+        insertMapping.run(item.id, 'SUP-003', 1, 2.50);
+        insertMapping.run(item.id, 'SUP-001', 0, 3.00); // alternative
+      }
+      // Everything else (frozen patties, cheese, buns, chaat ingredients) to SUP-001 (Anand Verma)
+      else {
+        insertMapping.run(item.id, 'SUP-001', 1, 45.00);
+        insertMapping.run(item.id, 'SUP-002', 0, 48.00); // alternative
+      }
+    });
+    console.log('Seeded suppliers and item-supplier mappings successfully.');
+  }
+} catch (err) {
+  console.error('Failed to seed suppliers:', err);
 }
 
 // Seed Wastage
