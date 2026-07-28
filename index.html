@@ -6827,6 +6827,33 @@
                     <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Mobile Number</label>
                     <input type="text" id="newCustomerPhone" placeholder="Enter mobile number" class="pos-input" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
                 </div>
+                <div>
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Dietary & Allergies</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: #fff;">
+                            <input type="checkbox" id="newCustomerVeg" style="accent-color: #c29f68;"> Vegetarian
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: #fff;">
+                            <input type="checkbox" id="newCustomerJain" style="accent-color: #c29f68;"> Jain
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: #fff;">
+                            <input type="checkbox" id="newCustomerNut" style="accent-color: #c29f68;"> Nut Allergy
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; cursor: pointer; color: #fff;">
+                            <input type="checkbox" id="newCustomerGluten" style="accent-color: #c29f68;"> Gluten Free
+                        </label>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Fav Food</label>
+                        <input type="text" id="newCustomerFavFood" placeholder="e.g. Samosa" class="pos-input" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 8px 10px; outline: none; font-size: 0.78rem;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Fav Drink</label>
+                        <input type="text" id="newCustomerFavDrink" placeholder="e.g. Coffee" class="pos-input" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 8px 10px; outline: none; font-size: 0.78rem;">
+                    </div>
+                </div>
             </div>
             <div class="modal-footer" style="border-top: 1px solid rgba(194, 159, 104, 0.2); padding-top: 14px; display: flex; gap: 12px;">
                 <button type="button" class="saas-btn saas-btn-secondary" onclick="document.getElementById('modalPOSCreateCustomer').style.display='none'" style="flex: 1; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: #fff; font-weight: 700;">Cancel</button>

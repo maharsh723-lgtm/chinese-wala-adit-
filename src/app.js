@@ -8735,6 +8735,13 @@ function initApp() {
                     return;
                 }
                 
+                const veg = document.getElementById("newCustomerVeg")?.checked || false;
+                const jain = document.getElementById("newCustomerJain")?.checked || false;
+                const nut = document.getElementById("newCustomerNut")?.checked || false;
+                const gluten = document.getElementById("newCustomerGluten")?.checked || false;
+                const favFood = document.getElementById("newCustomerFavFood")?.value.trim() || 'N/A';
+                const favDrink = document.getElementById("newCustomerFavDrink")?.value.trim() || 'N/A';
+
                 try {
                     const response = await fetch(`${API_BASE}/api/pos/customers`, {
                         method: 'POST',
@@ -8748,15 +8755,52 @@ function initApp() {
                     if (!response.ok) throw new Error("API failed");
                     const newCust = await response.json();
                     
-                    posCustomers.push(newCust);
-                    posSelectedCustomer = newCust.id;
-                    
+                    // Save guest profile preferences
+                    try {
+                        await fetch(`${API_BASE}/api/pos/customers/${newCust.id}/guest-profile`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`
+                            },
+                            body: JSON.stringify({
+                                preferences: {
+                                    favFood,
+                                    favDrink,
+                                    favCategory: 'General',
+                                    favTable: 'N/A',
+                                    paymentMethod: 'N/A',
+                                    seating: 'Indoor'
+                                },
+                                specialRequirements: {
+                                    vegetarian: veg,
+                                    jain: jain,
+                                    nutAllergy: nut,
+                                    glutenFree: gluten
+                                },
+                                notes: ''
+                            })
+                        });
+                    } catch (errPref) {
+                        console.error("Failed to save guest profile preferences:", errPref);
+                    }
+
+                    // Reset form fields
                     document.getElementById("newCustomerName").value = '';
                     document.getElementById("newCustomerPhone").value = '';
+                    if (document.getElementById("newCustomerVeg")) document.getElementById("newCustomerVeg").checked = false;
+                    if (document.getElementById("newCustomerJain")) document.getElementById("newCustomerJain").checked = false;
+                    if (document.getElementById("newCustomerNut")) document.getElementById("newCustomerNut").checked = false;
+                    if (document.getElementById("newCustomerGluten")) document.getElementById("newCustomerGluten").checked = false;
+                    if (document.getElementById("newCustomerFavFood")) document.getElementById("newCustomerFavFood").value = '';
+                    if (document.getElementById("newCustomerFavDrink")) document.getElementById("newCustomerFavDrink").value = '';
+                    
                     document.getElementById("modalPOSCreateCustomer").style.display = "none";
                     
+                    await syncStateFromServer();
+                    posSelectedCustomer = newCust.id;
                     renderCustomerDropdown();
-                    showToast("Customer profile created successfully!");
+                    showToast("Customer profile created successfully with preferences!");
                 } catch (err) {
                     console.error("Failed to create customer:", err);
                     alert("Error saving customer. Server might be offline.");
