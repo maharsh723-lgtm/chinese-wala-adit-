@@ -8115,6 +8115,72 @@ function initApp() {
         if (phoneDisplay) {
             phoneDisplay.textContent = activeCust && activeCust.phone ? `📞 ${activeCust.phone}` : '📞 No phone number';
         }
+
+        // Render preferences and notes
+        const prefsDisplay = document.getElementById("posCustomerPrefsDisplay");
+        const pillsContainer = document.getElementById("posCustomerAllergiesPills");
+        const notesContainer = document.getElementById("posCustomerNotesText");
+
+        if (prefsDisplay && pillsContainer && notesContainer) {
+            if (activeCust && activeCust.id !== 'cust-1') {
+                let specialRequirements = {};
+                try {
+                    specialRequirements = activeCust.specialRequirements
+                        ? (typeof activeCust.specialRequirements === 'string' ? JSON.parse(activeCust.specialRequirements) : activeCust.specialRequirements)
+                        : {};
+                } catch(e) {}
+
+                let preferences = {};
+                try {
+                    preferences = activeCust.preferences
+                        ? (typeof activeCust.preferences === 'string' ? JSON.parse(activeCust.preferences) : activeCust.preferences)
+                        : {};
+                } catch(e) {}
+
+                const activeBadges = [];
+                if (specialRequirements.vegetarian) activeBadges.push(`<span class="pill-badge pill-badge-success" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">Veg</span>`);
+                if (specialRequirements.jain) activeBadges.push(`<span class="pill-badge pill-badge-warning" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">Jain</span>`);
+                if (specialRequirements.vegan) activeBadges.push(`<span class="pill-badge pill-badge-info" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">Vegan</span>`);
+                if (specialRequirements.eggless) activeBadges.push(`<span class="pill-badge pill-badge-warning" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">Eggless</span>`);
+                if (specialRequirements.noOnion) activeBadges.push(`<span class="pill-badge pill-badge-danger" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">No Onion</span>`);
+                if (specialRequirements.noGarlic) activeBadges.push(`<span class="pill-badge pill-badge-danger" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">No Garlic</span>`);
+                if (specialRequirements.nutAllergy) activeBadges.push(`<span class="pill-badge pill-badge-danger" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">Nut Allergy</span>`);
+                if (specialRequirements.glutenFree) activeBadges.push(`<span class="pill-badge pill-badge-danger" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">Gluten Free</span>`);
+
+                let favsText = '';
+                if (preferences.favFood && preferences.favFood !== 'N/A') {
+                    favsText += `🍕 Fav: ${preferences.favFood}`;
+                }
+                if (preferences.favDrink && preferences.favDrink !== 'N/A') {
+                    if (favsText) favsText += ' | ';
+                    favsText += `🥤 Drink: ${preferences.favDrink}`;
+                }
+
+                const notesText = activeCust.notes ? activeCust.notes.trim() : '';
+
+                let notesHTML = '';
+                if (favsText) {
+                    notesHTML += `<div style="margin-bottom: 2px; color: var(--pos-espresso); font-weight: 700; font-size: 0.72rem;">${favsText}</div>`;
+                }
+                if (notesText) {
+                    notesHTML += `<div style="color: var(--text-secondary); font-style: italic; font-size: 0.7rem;">📝 Notes: ${notesText}</div>`;
+                }
+
+                if (activeBadges.length > 0 || favsText || notesText) {
+                    prefsDisplay.style.display = "flex";
+                    pillsContainer.innerHTML = activeBadges.join('');
+                    notesContainer.innerHTML = notesHTML;
+                } else {
+                    prefsDisplay.style.display = "none";
+                    pillsContainer.innerHTML = '';
+                    notesContainer.innerHTML = '';
+                }
+            } else {
+                prefsDisplay.style.display = "none";
+                pillsContainer.innerHTML = '';
+                notesContainer.innerHTML = '';
+            }
+        }
     }
 
     function renderTableDropdown() {
