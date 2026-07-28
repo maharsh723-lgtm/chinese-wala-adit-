@@ -6520,88 +6520,89 @@
     </div>
 
     <!-- Modal 4: Add Employee -->
-    <div class="modal-overlay" id="modalAddEmployee">
-        <div class="modal-content" style="max-width: 480px;">
-            <div class="modal-header">
-                <h3>Add New Employee</h3>
-                <div class="modal-close" onclick="closeModal('modalAddEmployee')">
+    <div class="modal-overlay" id="modalAddEmployee" style="z-index: 10000; display: none;">
+        <div class="modal-content" style="max-width: 480px; width: 95%; background: rgba(21, 19, 18, 0.95); border: 1px solid #c29f68; box-shadow: 0 8px 32px rgba(194, 159, 104, 0.2); backdrop-filter: blur(10px); color: #fff;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(194, 159, 104, 0.2); padding-bottom: 12px;">
+                <h3 style="color: #c29f68; display: flex; align-items: center; gap: 8px;"><i data-lucide="user-plus"></i> Add New Employee</h3>
+                <div class="modal-close" onclick="closeModal('modalAddEmployee')" style="color: #fff; cursor: pointer;">
                     <i data-lucide="x" style="width: 20px; height: 20px;"></i>
                 </div>
             </div>
-            <form id="formAddEmployee">
-                <div class="saas-form-group">
-                    <label class="saas-form-label">Full Name</label>
-                    <input type="text" class="saas-form-input" placeholder="e.g. Ramesh Kumar" required id="empNameInput">
+            <form id="formAddEmployee" style="margin-top: 16px; display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Full Name</label>
+                    <input type="text" class="pos-input" placeholder="e.g. Ramesh Kumar" required id="empNameInput" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
                 </div>
-                <div class="saas-form-group">
-                    <label class="saas-form-label">Mobile Number</label>
-                    <input type="tel" class="saas-form-input" placeholder="e.g. 9876543210" pattern="[0-9]{10}" required id="empMobileInput">
+                <div>
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Mobile Number</label>
+                    <input type="tel" class="pos-input" placeholder="e.g. 9876543210" pattern="[0-9]{10}" required id="empMobileInput" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
                 </div>
-                <div class="form-row-grid" style="gap:16px;">
-                    <div class="saas-form-group">
-                        <label class="saas-form-label">Designation</label>
-                        <select class="saas-form-select" id="empRoleSelect">
-                            <option value="Crew Member">Crew Member</option>
-                            <option value="Kitchen Staff">Kitchen Staff</option>
-                            <option value="Shift Manager">Shift Manager</option>
-                            <option value="Store Manager">Store Manager</option>
-                            <option value="Area Manager">Area Manager</option>
-                            <option value="Head Office Admin">Head Office Admin</option>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Designation</label>
+                        <select id="empRoleSelect" style="width:100%; box-sizing: border-box; background: rgba(21, 19, 18, 0.95); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px; outline: none; font-weight: 600;">
+                            <option value="Crew Member" style="background:#151312; color:#fff;">Crew Member</option>
+                            <option value="Kitchen Staff" style="background:#151312; color:#fff;">Kitchen Staff</option>
+                            <option value="Shift Manager" style="background:#151312; color:#fff;">Shift Manager</option>
+                            <option value="Store Manager" style="background:#151312; color:#fff;">Store Manager</option>
+                            <option value="Area Manager" style="background:#151312; color:#fff;">Area Manager</option>
+                            <option value="Head Office Admin" style="background:#151312; color:#fff;">Head Office Admin</option>
                         </select>
                     </div>
-                    <div class="saas-form-group">
-                        <label class="saas-form-label">Store Assignment</label>
-                        <select class="saas-form-select" id="empStoreSelect">
-                            <option value="VESU">BK VESU</option>
-                            <option value="ADAJAN">BK ADAJAN</option>
-                            <option value="CT LIGHT">BK CT LIGHT</option>
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Store Assignment</label>
+                        <select id="empStoreSelect" style="width:100%; box-sizing: border-box; background: rgba(21, 19, 18, 0.95); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px; outline: none; font-weight: 600;">
+                            <option value="VESU" style="background:#151312; color:#fff;">BK VESU</option>
+                            <option value="ADAJAN" style="background:#151312; color:#fff;">BK ADAJAN</option>
+                            <option value="CT LIGHT" style="background:#151312; color:#fff;">BK CT LIGHT</option>
                         </select>
                     </div>
                 </div>
-                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px;">Add Employee</button>
+                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px; background: #c29f68; color: #000; font-weight: 800; border: none; padding: 10px;">Add Employee</button>
             </form>
         </div>
     </div>
 
     <!-- Modal 5: Log Manual Attendance -->
-    <div class="modal-overlay" id="modalManualAttendance">
-        <div class="modal-content" style="max-width: 480px;">
-            <div class="modal-header">
-                <h3>Log Manual Attendance Shift</h3>
-                <div class="modal-close" onclick="closeModal('modalManualAttendance')">
+    <div class="modal-overlay" id="modalManualAttendance" style="z-index: 10000; display: none;">
+        <div class="modal-content" style="max-width: 480px; width: 95%; background: rgba(21, 19, 18, 0.95); border: 1px solid #c29f68; box-shadow: 0 8px 32px rgba(194, 159, 104, 0.2); backdrop-filter: blur(10px); color: #fff;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(194, 159, 104, 0.2); padding-bottom: 12px;">
+                <h3 style="color: #c29f68; display: flex; align-items: center; gap: 8px;"><i data-lucide="users"></i> Log Manual Attendance Shift</h3>
+                <div class="modal-close" onclick="closeModal('modalManualAttendance')" style="color: #fff; cursor: pointer;">
                     <i data-lucide="x" style="width: 20px; height: 20px;"></i>
                 </div>
             </div>
-            <form id="formManualAttendance">
-                <div class="saas-form-group">
-                    <label class="saas-form-label">Employee</label>
-                    <select class="saas-form-select" id="manualAttendanceEmpSelect" required>
+            <form id="formManualAttendance" style="margin-top: 16px; display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Employee</label>
+                    <input type="text" id="manualAttendanceSearch" placeholder="Type to search employee..." style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600; margin-bottom: 8px;">
+                    <select id="manualAttendanceEmpSelect" required style="width:100%; box-sizing: border-box; background: rgba(21, 19, 18, 0.95); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px; outline: none; font-weight: 600;">
                         <!-- Populated dynamically -->
                     </select>
                 </div>
-                <div class="saas-form-group">
-                    <label class="saas-form-label">Date</label>
-                    <input type="date" class="saas-form-input" id="manualAttendanceDate" required>
+                <div>
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Date</label>
+                    <input type="date" class="pos-input" id="manualAttendanceDate" required style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
                 </div>
-                <div class="form-row-grid" style="gap:16px;">
-                    <div class="saas-form-group">
-                        <label class="saas-form-label">Punch In Time</label>
-                        <input type="time" class="saas-form-input" id="manualAttendanceInTime" required value="09:00">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Punch In Time</label>
+                        <input type="time" class="pos-input" id="manualAttendanceInTime" required value="09:00" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
                     </div>
-                    <div class="saas-form-group">
-                        <label class="saas-form-label">Punch Out Time</label>
-                        <input type="time" class="saas-form-input" id="manualAttendanceOutTime" required value="17:00">
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Punch Out Time</label>
+                        <input type="time" class="pos-input" id="manualAttendanceOutTime" required value="17:00" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
                     </div>
                 </div>
-                <div class="saas-form-group">
-                    <label class="saas-form-label">Status</label>
-                    <select class="saas-form-select" id="manualAttendanceStatus">
-                        <option value="Normal">Normal Shift</option>
-                        <option value="Late">Late Entry</option>
-                        <option value="Overtime">Overtime</option>
+                <div>
+                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Status</label>
+                    <select id="manualAttendanceStatus" style="width:100%; box-sizing: border-box; background: rgba(21, 19, 18, 0.95); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px; outline: none; font-weight: 600;">
+                        <option value="Normal" style="background:#151312; color:#fff;">Normal Shift</option>
+                        <option value="Late" style="background:#151312; color:#fff;">Late Entry</option>
+                        <option value="Overtime" style="background:#151312; color:#fff;">Overtime</option>
                     </select>
                 </div>
-                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px;">Record Shift Log</button>
+                <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px; background: #c29f68; color: #000; font-weight: 800; border: none; padding: 10px;">Record Shift Log</button>
             </form>
         </div>
     </div>

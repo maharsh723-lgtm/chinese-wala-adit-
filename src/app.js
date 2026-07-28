@@ -2102,6 +2102,28 @@ function initApp() {
     }
 
     window.openManualAttendanceModal = function() {
+        const searchInput = document.getElementById("manualAttendanceSearch");
+        if (searchInput) {
+            searchInput.value = "";
+            if (!searchInput.dataset.listenerBound) {
+                searchInput.dataset.listenerBound = "true";
+                searchInput.addEventListener("input", (e) => {
+                    const query = e.target.value.toLowerCase().trim();
+                    const selectEl = document.getElementById("manualAttendanceEmpSelect");
+                    if (selectEl) {
+                        Array.from(selectEl.options).forEach(opt => {
+                            const txt = opt.textContent.toLowerCase();
+                            if (txt.includes(query)) {
+                                opt.style.display = "";
+                            } else {
+                                opt.style.display = "none";
+                            }
+                        });
+                    }
+                });
+            }
+        }
+
         const selectEl = document.getElementById("manualAttendanceEmpSelect");
         if (selectEl) {
             selectEl.innerHTML = "";
