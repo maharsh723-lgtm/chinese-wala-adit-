@@ -6533,9 +6533,15 @@
                     <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Full Name</label>
                     <input type="text" class="pos-input" placeholder="e.g. Ramesh Kumar" required id="empNameInput" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
                 </div>
-                <div>
-                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Mobile Number</label>
-                    <input type="tel" class="pos-input" placeholder="e.g. 9876543210" pattern="[0-9]{10}" required id="empMobileInput" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Mobile Number</label>
+                        <input type="tel" class="pos-input" placeholder="e.g. 9876543210" pattern="[0-9]{10}" required id="empMobileInput" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Monthly Salary (₹)</label>
+                        <input type="number" class="pos-input" placeholder="e.g. 25000" required id="empSalaryInput" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
+                    </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div>
@@ -6591,13 +6597,19 @@
                         <input type="time" class="pos-input" id="manualAttendanceOutTime" required value="17:00" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
                     </div>
                 </div>
-                <div>
-                    <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Status</label>
-                    <select id="manualAttendanceStatus" style="width:100%; box-sizing: border-box; background: rgba(21, 19, 18, 0.95); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px; outline: none; font-weight: 600;">
-                        <option value="Normal" style="background:#151312; color:#fff;">Normal Shift</option>
-                        <option value="Late" style="background:#151312; color:#fff;">Late Entry</option>
-                        <option value="Overtime" style="background:#151312; color:#fff;">Overtime</option>
-                    </select>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Shift Pay / Salary (₹)</label>
+                        <input type="number" id="manualAttendanceSalary" required placeholder="e.g. 800" style="width:100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px 12px; outline: none; font-weight: 600;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Status</label>
+                        <select id="manualAttendanceStatus" style="width:100%; box-sizing: border-box; background: rgba(21, 19, 18, 0.95); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px; outline: none; font-weight: 600;">
+                            <option value="Normal" style="background:#151312; color:#fff;">Normal Shift</option>
+                            <option value="Late" style="background:#151312; color:#fff;">Late Entry</option>
+                            <option value="Overtime" style="background:#151312; color:#fff;">Overtime</option>
+                        </select>
+                    </div>
                 </div>
                 <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px; background: #c29f68; color: #000; font-weight: 800; border: none; padding: 10px;">Record Shift Log</button>
             </form>

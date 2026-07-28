@@ -165,7 +165,7 @@ function initApp() {
     let posOrderItems = [];
     let posAuditLogs = [];
     let posStockMovement = [];
-    let posNextToken = parseInt(localStorage.getItem("pos_next_token") || "1");
+    let posNextToken = parseInt(localStorage.getItem("pos_next_token") || "0");
     let topSellingByStore = {};
     
     // POS Cart State
@@ -1764,11 +1764,12 @@ function initApp() {
                 const lastPunch = emp.activePunch ? emp.activePunch.time : "--:--";
                 const lastOut = (!isClockedIn && emp.history.length > 0) ? emp.history[0].punchOut : "--:--";
 
-                staffRowsHTML += `
+                 staffRowsHTML += `
                     <tr>
                         <td style="font-weight:700;">${emp.id}</td>
                         <td>${emp.name}</td>
                         <td>${emp.role}</td>
+                        <td>₹${Number(emp.salary || 0).toLocaleString('en-IN')}</td>
                         <td>${statusHTML}</td>
                         <td>${lastPunch}</td>
                         <td>${lastOut}</td>
@@ -1787,7 +1788,7 @@ function initApp() {
             storeStaff.forEach(emp => {
                 emp.history.forEach(h => {
                     if (h.date === todayStr) {
-                        todayLogs.push({ name: emp.name, role: emp.role, ...h });
+                        todayLogs.push({ name: emp.name, role: emp.role, salary: emp.salary, ...h });
                     }
                 });
             });
@@ -1799,13 +1800,14 @@ function initApp() {
                         <td>${log.punchIn}</td>
                         <td>${log.punchOut}</td>
                         <td>${log.hours} hrs</td>
+                        <td>₹${Number(log.salary || 0).toLocaleString('en-IN')}</td>
                         <td><span class="pill-badge pill-badge-success">${log.status}</span></td>
                     </tr>
                 `;
             });
 
             if (todayLogs.length === 0) {
-                shiftLogsHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-tertiary); padding: 12px 0;">No shifts logged today.</td></tr>`;
+                shiftLogsHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-tertiary); padding: 12px 0;">No shifts logged today.</td></tr>`;
             }
 
             container.innerHTML = `
@@ -1842,6 +1844,7 @@ function initApp() {
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Designation</th>
+                                <th>Monthly Salary</th>
                                 <th>Status</th>
                                 <th>Punch In Time</th>
                                 <th>Punch Out Time</th>
@@ -1863,6 +1866,7 @@ function initApp() {
                                 <th>Punch In</th>
                                 <th>Punch Out</th>
                                 <th>Duration</th>
+                                <th>Shift Pay</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -1907,6 +1911,7 @@ function initApp() {
                             <td style="font-weight:700;">${emp.id}</td>
                             <td>${emp.name}</td>
                             <td>${emp.role}</td>
+                            <td>₹${Number(emp.salary || 0).toLocaleString('en-IN')}</td>
                             <td>${loginTime}</td>
                             <td>${logoutTime}</td>
                             <td>${statusHTML}</td>
@@ -1916,7 +1921,7 @@ function initApp() {
                 });
 
                 if (selectedBranchStaff.length === 0) {
-                    staffRowsHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-tertiary); padding: 12px 0;">No staff assigned to this branch.</td></tr>`;
+                    staffRowsHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-tertiary); padding: 12px 0;">No staff assigned to this branch.</td></tr>`;
                 }
 
                 container.innerHTML = `
@@ -1943,6 +1948,7 @@ function initApp() {
                                     <th>Employee ID</th>
                                     <th>Employee Name</th>
                                     <th>Designation</th>
+                                    <th>Monthly Salary</th>
                                     <th>Login Time</th>
                                     <th>Logout Time</th>
                                     <th>Attendance Status</th>
@@ -2006,6 +2012,7 @@ function initApp() {
                                 <td>${log.punchIn}</td>
                                 <td>${log.punchOut}</td>
                                 <td>${log.hours} hrs</td>
+                                <td>₹${Number(log.salary || 0).toLocaleString('en-IN')}</td>
                                 <td><span class="pill-badge pill-badge-success">${log.status}</span></td>
                                 <td>${log.device || "Android Terminal"}</td>
                                 <td>${log.location || targetEmp.store}</td>
@@ -2018,7 +2025,7 @@ function initApp() {
                 }
 
                 if (historyRowsHTML === "") {
-                    historyRowsHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-tertiary); padding: 12px 0;">No attendance records found for this employee in the selected month.</td></tr>`;
+                    historyRowsHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-tertiary); padding: 12px 0;">No attendance records found for this employee in the selected month.</td></tr>`;
                 }
 
                 container.innerHTML = `
@@ -2070,6 +2077,7 @@ function initApp() {
                                     <th>Punch In</th>
                                     <th>Punch Out</th>
                                     <th>Duration</th>
+                                    <th>Shift Pay</th>
                                     <th>Status</th>
                                     <th>Punch Source</th>
                                     <th>Store Location</th>
@@ -2109,6 +2117,10 @@ function initApp() {
         const dateInput = document.getElementById("manualAttendanceDate");
         if (dateInput) {
             dateInput.value = getTodayDateStr();
+        }
+        const salInput = document.getElementById("manualAttendanceSalary");
+        if (salInput) {
+            salInput.value = "";
         }
         openModal("modalManualAttendance");
     };
@@ -2170,6 +2182,7 @@ function initApp() {
             punchOut: timeStr,
             hours: hoursLogged.toString(),
             status: "Normal",
+            salary: emp.salary ? Math.round((emp.salary / 30) * (parseFloat(hoursLogged) / 8)) : 0,
             device: "Store Manager Console",
             location: `${currentStore} store`
         });
@@ -5087,6 +5100,39 @@ function initApp() {
     // === MANUAL ATTENDANCE FORM SUBMISSION ===
     const manualAttendanceForm = document.getElementById("formManualAttendance");
     if (manualAttendanceForm) {
+        // Auto-calculate suggested daily salary based on employee monthly salary & hours
+        const updateManualAttendanceSuggestedSalary = () => {
+            const empInput = document.getElementById("manualAttendanceEmpInput");
+            const salInput = document.getElementById("manualAttendanceSalary");
+            const inTimeRaw = document.getElementById("manualAttendanceInTime").value;
+            const outTimeRaw = document.getElementById("manualAttendanceOutTime").value;
+            if (!empInput || !salInput) return;
+
+            const typedInput = empInput.value.trim().toLowerCase();
+            if (!typedInput) return;
+
+            const matchedEmp = Object.values(employees).find(e => 
+                e.name.toLowerCase() === typedInput || 
+                e.id.toLowerCase() === typedInput
+            );
+
+            if (matchedEmp && matchedEmp.salary && inTimeRaw && outTimeRaw) {
+                const [inH, inM] = inTimeRaw.split(':').map(Number);
+                const [outH, outM] = outTimeRaw.split(':').map(Number);
+                const diffMinutes = (outH * 60 + outM) - (inH * 60 + inM);
+                const hours = Math.max(0, (diffMinutes / 60));
+                // Pro-rate salary: (Monthly Salary / 30) * (Hours Worked / 8)
+                salInput.value = Math.round((matchedEmp.salary / 30) * (hours / 8));
+            }
+        };
+
+        const empInput = document.getElementById("manualAttendanceEmpInput");
+        const inTimeInput = document.getElementById("manualAttendanceInTime");
+        const outTimeInput = document.getElementById("manualAttendanceOutTime");
+        if (empInput) empInput.addEventListener("input", updateManualAttendanceSuggestedSalary);
+        if (inTimeInput) inTimeInput.addEventListener("change", updateManualAttendanceSuggestedSalary);
+        if (outTimeInput) outTimeInput.addEventListener("change", updateManualAttendanceSuggestedSalary);
+
         manualAttendanceForm.addEventListener("submit", async (e) => {
             e.preventDefault();
             const typedInput = document.getElementById("manualAttendanceEmpInput").value.trim();
@@ -5110,6 +5156,7 @@ function initApp() {
             const inTimeRaw = document.getElementById("manualAttendanceInTime").value;
             const outTimeRaw = document.getElementById("manualAttendanceOutTime").value;
             const status = document.getElementById("manualAttendanceStatus").value;
+            const salary = parseFloat(document.getElementById("manualAttendanceSalary").value) || 0;
 
             // Format times as "hh:mm AM/PM"
             const formatTime12h = (time24) => {
@@ -5139,6 +5186,7 @@ function initApp() {
                          punchOut,
                          hours,
                          status,
+                         salary,
                          device: "Manager Console (Manual Entry)",
                          location: `${currentStore} store`
                      })
@@ -5174,6 +5222,7 @@ function initApp() {
             const mobile = document.getElementById("empMobileInput").value;
             const designation = document.getElementById("empRoleSelect").value;
             const store = document.getElementById("empStoreSelect").value;
+            const salary = parseFloat(document.getElementById("empSalaryInput").value) || 0;
             
             let roleKey = "staff";
             if (designation === "Kitchen Staff") roleKey = "kitchen";
@@ -5195,7 +5244,8 @@ function initApp() {
                         status: "Active",
                         store,
                         activePunch: null,
-                        history: []
+                        history: [],
+                        salary
                     })
                 });
                 if (res.ok) {
@@ -9444,7 +9494,7 @@ function initApp() {
         if (prevTokenBtn && !prevTokenBtn.dataset.listenerBound) {
             prevTokenBtn.dataset.listenerBound = "true";
             prevTokenBtn.addEventListener("click", () => {
-                posNextToken = posNextToken <= 1 ? 100 : posNextToken - 1;
+                posNextToken = posNextToken <= 0 ? 99 : posNextToken - 1;
                 localStorage.setItem("pos_next_token", posNextToken.toString());
                 syncTokenUI();
             });
@@ -9454,7 +9504,7 @@ function initApp() {
         if (resetTokenBtn && !resetTokenBtn.dataset.listenerBound) {
             resetTokenBtn.dataset.listenerBound = "true";
             resetTokenBtn.addEventListener("click", () => {
-                posNextToken = 1;
+                posNextToken = 0;
                 localStorage.setItem("pos_next_token", posNextToken.toString());
                 syncTokenUI();
             });
@@ -9464,7 +9514,7 @@ function initApp() {
         if (nextTokenBtn && !nextTokenBtn.dataset.listenerBound) {
             nextTokenBtn.dataset.listenerBound = "true";
             nextTokenBtn.addEventListener("click", () => {
-                posNextToken = posNextToken >= 100 ? 1 : posNextToken + 1;
+                posNextToken = posNextToken >= 99 ? 0 : posNextToken + 1;
                 localStorage.setItem("pos_next_token", posNextToken.toString());
                 syncTokenUI();
             });
@@ -9696,7 +9746,7 @@ function initApp() {
     }
 
     function incrementToken() {
-        posNextToken = posNextToken >= 100 ? 1 : posNextToken + 1;
+        posNextToken = posNextToken >= 99 ? 0 : posNextToken + 1;
         localStorage.setItem("pos_next_token", posNextToken.toString());
         syncTokenUI();
     }

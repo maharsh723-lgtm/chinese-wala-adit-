@@ -272,7 +272,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
 // API: Employees
 app.post('/api/employees', (req, res) => {
   try {
-    const { id, name, mobile, role, shiftStart, roleKey, password, status, store, activePunch, history } = req.body;
+    const { id, name, mobile, role, shiftStart, roleKey, password, status, store, activePunch, history, salary } = req.body;
     
     // Check mobile uniqueness
     const checkMobile = db.prepare('SELECT COUNT(*) as count FROM employees WHERE mobile = ?').get(mobile);
@@ -281,8 +281,8 @@ app.post('/api/employees', (req, res) => {
     }
 
     db.prepare(`
-      INSERT INTO employees (id, name, role, mobile, shiftStart, roleKey, password, status, store, activePunch, history)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO employees (id, name, role, mobile, shiftStart, roleKey, password, status, store, activePunch, history, salary)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       name,
@@ -294,7 +294,8 @@ app.post('/api/employees', (req, res) => {
       status || 'Active',
       store || 'VESU',
       activePunch ? JSON.stringify(activePunch) : null,
-      JSON.stringify(history || [])
+      JSON.stringify(history || []),
+      salary || 0
     );
     res.json({ success: true });
   } catch (err) {
@@ -355,7 +356,7 @@ app.post('/api/employees/punch-out', (req, res) => {
 app.post('/api/employees/:id/attendance-log', (req, res) => {
   try {
     const { id } = req.params;
-    const { date, punchIn, punchOut, hours, status, device, location } = req.body;
+    const { date, punchIn, punchOut, hours, status, device, location, salary } = req.body;
     
     const row = db.prepare('SELECT history FROM employees WHERE id = ?').get(id);
     if (!row) {
@@ -369,6 +370,7 @@ app.post('/api/employees/:id/attendance-log', (req, res) => {
       punchOut,
       hours: hours.toString(),
       status: status || 'Normal',
+      salary: parseFloat(salary) || 0,
       device: device || 'Manual Entry',
       location: location || 'Branch Store'
     });

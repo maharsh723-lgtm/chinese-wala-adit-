@@ -53,9 +53,11 @@ db.exec(`
     status TEXT,
     store TEXT,
     activePunch TEXT, -- JSON string
-    history TEXT -- JSON string
+    history TEXT, -- JSON string
+    salary REAL DEFAULT 0
   )
 `);
+try { db.exec("ALTER TABLE employees ADD COLUMN salary REAL DEFAULT 0;"); } catch(e) {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS leave_requests (
@@ -397,8 +399,8 @@ if (!isSeeded) {
 // Seed Employees
 console.log('Seeding employees...');
 const insertEmp = db.prepare(`
-  INSERT INTO employees (id, name, role, mobile, shiftStart, roleKey, password, status, store, activePunch, history)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO employees (id, name, role, mobile, shiftStart, roleKey, password, status, store, activePunch, history, salary)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const seededEmployees = [
@@ -414,7 +416,8 @@ const seededEmployees = [
     status: "Active",
     store: "VESU",
     activePunch: null,
-    history: []
+    history: [],
+    salary: 35000
   },
   // ADAJAN
   {
@@ -428,7 +431,8 @@ const seededEmployees = [
     status: "Active",
     store: "ADAJAN",
     activePunch: null,
-    history: []
+    history: [],
+    salary: 38000
   },
   // CT LIGHT
   {
@@ -442,7 +446,8 @@ const seededEmployees = [
     status: "Active",
     store: "CT LIGHT",
     activePunch: null,
-    history: []
+    history: [],
+    salary: 40000
   },
   // Owner (Global representation)
   {
@@ -456,7 +461,8 @@ const seededEmployees = [
     status: "Active",
     store: "All",
     activePunch: null,
-    history: []
+    history: [],
+    salary: 0
   }
 ];
 
@@ -472,7 +478,8 @@ for (const emp of seededEmployees) {
     emp.status,
     emp.store,
     emp.activePunch ? JSON.stringify(emp.activePunch) : null,
-    JSON.stringify(emp.history)
+    JSON.stringify(emp.history),
+    emp.salary || 0
   );
 }
 
@@ -1163,9 +1170,7 @@ const insertPosCustomer = db.prepare(`
   VALUES (?, ?, ?, ?)
 `);
 const seededPosCustomers = [
-  { id: "cust-1", name: "Guest Customer", phone: "9999999999", loyaltyPoints: 0 },
-  { id: "cust-2", name: "Rajesh Patel", phone: "9876543210", loyaltyPoints: 120 },
-  { id: "cust-3", name: "Anita Mehta", phone: "9123456789", loyaltyPoints: 45 }
+  { id: "cust-1", name: "Guest Customer", phone: "9999999999", loyaltyPoints: 0 }
 ];
 for (const c of seededPosCustomers) {
   insertPosCustomer.run(c.id, c.name, c.phone, c.loyaltyPoints);
