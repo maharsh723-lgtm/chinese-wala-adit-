@@ -2111,4 +2111,32 @@ try {
   console.error("Critical error in fallback inventory seeding:", err);
 }
 
+// Migration: Update all POS products images to high-quality Unsplash photos matching their categories/names
+try {
+  const updates = [
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop' WHERE category IN ('Paani Puri', 'Chaat', 'Cold Chaat', 'Jain')" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?q=80&w=300&auto=format&fit=crop' WHERE category IN ('Tikki', 'Ragda')" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop' WHERE category = 'Samosa' OR name LIKE '%Samosa%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop' WHERE category = 'Kachori' OR name LIKE '%Kachori%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1626132647523-66f5bf380027?q=80&w=300&auto=format&fit=crop' WHERE category = 'Chhole' OR name LIKE '%Bhatura%' OR name LIKE '%Chhole%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop' WHERE category = 'Pav' OR name LIKE '%Pav%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1612927601601-6638404737ce?q=80&w=300&auto=format&fit=crop' WHERE category = 'Maggie' OR name LIKE '%Maggie%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop' WHERE category = 'B.T.B' OR name LIKE '%Sandwich%' OR name LIKE '%Toast%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop' WHERE category = 'Burgers' OR name LIKE '%Burger%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop' WHERE category IN ('Prontha', 'Kulcha') OR name LIKE '%Paratha%' OR name LIKE '%Kulcha%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1587314168485-3236d6710814?q=80&w=300&auto=format&fit=crop' WHERE category = 'Desserts' OR name LIKE '%Kulfi%' OR name LIKE '%Jamun%' OR name LIKE '%Rabdi%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop' WHERE category IN ('Indian Coolers', 'Frappe', 'Milkshakes', 'Cheese Cake Shakes', 'Lassi') OR name LIKE '%Lassi%' OR name LIKE '%Milkshake%' OR name LIKE '%Cooler%' OR name LIKE '%Coffee%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=300&auto=format&fit=crop' WHERE category IN ('Hot Coffee Mix', 'Hot Tea') OR name LIKE '%Tea%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop' WHERE category = 'Apu-Shtik' OR name LIKE '%Fries%' OR name LIKE '%Sticks%' OR name LIKE '%Pops%'" },
+    { query: "UPDATE pos_products SET image = 'https://images.unsplash.com/photo-1548839130-3fd9e274f88e?q=80&w=300&auto=format&fit=crop' WHERE name LIKE '%Water%'" }
+  ];
+
+  for (const update of updates) {
+    db.prepare(update.query).run();
+  }
+  console.log("Successfully updated all POS products images with high-quality Unsplash URLs.");
+} catch (err) {
+  console.error("Error updating POS product images:", err);
+}
+
 module.exports = { db, dbReady };
