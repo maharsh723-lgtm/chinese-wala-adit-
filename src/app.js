@@ -2102,38 +2102,9 @@ function initApp() {
     }
 
     window.openManualAttendanceModal = function() {
-        const searchInput = document.getElementById("manualAttendanceSearch");
-        if (searchInput) {
-            searchInput.value = "";
-            if (!searchInput.dataset.listenerBound) {
-                searchInput.dataset.listenerBound = "true";
-                searchInput.addEventListener("input", (e) => {
-                    const query = e.target.value.toLowerCase().trim();
-                    const selectEl = document.getElementById("manualAttendanceEmpSelect");
-                    if (selectEl) {
-                        Array.from(selectEl.options).forEach(opt => {
-                            const txt = opt.textContent.toLowerCase();
-                            if (txt.includes(query)) {
-                                opt.style.display = "";
-                            } else {
-                                opt.style.display = "none";
-                            }
-                        });
-                    }
-                });
-            }
-        }
-
-        const selectEl = document.getElementById("manualAttendanceEmpSelect");
-        if (selectEl) {
-            selectEl.innerHTML = "";
-            const storeStaff = Object.values(employees).filter(e => e.store === currentStore && e.roleKey !== "sm");
-            storeStaff.forEach(emp => {
-                const opt = document.createElement("option");
-                opt.value = emp.id;
-                opt.textContent = `${emp.name} (${emp.role})`;
-                selectEl.appendChild(opt);
-            });
+        const empInput = document.getElementById("manualAttendanceEmpInput");
+        if (empInput) {
+            empInput.value = "";
         }
         const dateInput = document.getElementById("manualAttendanceDate");
         if (dateInput) {
@@ -5118,7 +5089,23 @@ function initApp() {
     if (manualAttendanceForm) {
         manualAttendanceForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const empId = document.getElementById("manualAttendanceEmpSelect").value;
+            const typedInput = document.getElementById("manualAttendanceEmpInput").value.trim();
+            if (!typedInput) {
+                alert("Please enter employee name or ID!");
+                return;
+            }
+            
+            // Find the employee by name or ID (case-insensitively)
+            const matchedEmp = Object.values(employees).find(e => 
+                e.name.toLowerCase() === typedInput.toLowerCase() || 
+                e.id.toLowerCase() === typedInput.toLowerCase()
+            );
+            
+            if (!matchedEmp) {
+                alert(`Employee "${typedInput}" not found. Please check spelling or add them as a new employee first!`);
+                return;
+            }
+            const empId = matchedEmp.id;
             const date = document.getElementById("manualAttendanceDate").value;
             const inTimeRaw = document.getElementById("manualAttendanceInTime").value;
             const outTimeRaw = document.getElementById("manualAttendanceOutTime").value;
