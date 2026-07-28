@@ -8737,10 +8737,15 @@ function initApp() {
                 
                 const veg = document.getElementById("newCustomerVeg")?.checked || false;
                 const jain = document.getElementById("newCustomerJain")?.checked || false;
+                const vegan = document.getElementById("newCustomerVegan")?.checked || false;
+                const eggless = document.getElementById("newCustomerEggless")?.checked || false;
+                const noOnion = document.getElementById("newCustomerNoOnion")?.checked || false;
+                const noGarlic = document.getElementById("newCustomerNoGarlic")?.checked || false;
                 const nut = document.getElementById("newCustomerNut")?.checked || false;
                 const gluten = document.getElementById("newCustomerGluten")?.checked || false;
                 const favFood = document.getElementById("newCustomerFavFood")?.value.trim() || 'N/A';
                 const favDrink = document.getElementById("newCustomerFavDrink")?.value.trim() || 'N/A';
+                const notes = document.getElementById("newCustomerNotes")?.value.trim() || '';
 
                 try {
                     const response = await fetch(`${API_BASE}/api/pos/customers`, {
@@ -8775,10 +8780,14 @@ function initApp() {
                                 specialRequirements: {
                                     vegetarian: veg,
                                     jain: jain,
+                                    vegan: vegan,
+                                    eggless: eggless,
+                                    noOnion: noOnion,
+                                    noGarlic: noGarlic,
                                     nutAllergy: nut,
                                     glutenFree: gluten
                                 },
-                                notes: ''
+                                notes: notes
                             })
                         });
                     } catch (errPref) {
@@ -8790,10 +8799,15 @@ function initApp() {
                     document.getElementById("newCustomerPhone").value = '';
                     if (document.getElementById("newCustomerVeg")) document.getElementById("newCustomerVeg").checked = false;
                     if (document.getElementById("newCustomerJain")) document.getElementById("newCustomerJain").checked = false;
+                    if (document.getElementById("newCustomerVegan")) document.getElementById("newCustomerVegan").checked = false;
+                    if (document.getElementById("newCustomerEggless")) document.getElementById("newCustomerEggless").checked = false;
+                    if (document.getElementById("newCustomerNoOnion")) document.getElementById("newCustomerNoOnion").checked = false;
+                    if (document.getElementById("newCustomerNoGarlic")) document.getElementById("newCustomerNoGarlic").checked = false;
                     if (document.getElementById("newCustomerNut")) document.getElementById("newCustomerNut").checked = false;
                     if (document.getElementById("newCustomerGluten")) document.getElementById("newCustomerGluten").checked = false;
                     if (document.getElementById("newCustomerFavFood")) document.getElementById("newCustomerFavFood").value = '';
                     if (document.getElementById("newCustomerFavDrink")) document.getElementById("newCustomerFavDrink").value = '';
+                    if (document.getElementById("newCustomerNotes")) document.getElementById("newCustomerNotes").value = '';
                     
                     document.getElementById("modalPOSCreateCustomer").style.display = "none";
                     
