@@ -934,10 +934,7 @@ const insertChecklist = db.prepare(`
 `);
 const todayStr = getOffsetDateStr(0);
 for (const branch of branches) {
-  // Mumbai starts with 20% checked, Delhi and Bangalore start empty
-  const progress = branch === 'VESU' ? 20 : 0;
-  const items = branch === 'VESU' ? [0] : [];
-  insertChecklist.run(`opening-${branch}-${todayStr}`, 'opening', branch, todayStr, progress, 0, JSON.stringify(items));
+  insertChecklist.run(`opening-${branch}-${todayStr}`, 'opening', branch, todayStr, 0, 0, JSON.stringify([]));
   insertChecklist.run(`closing-${branch}-${todayStr}`, 'closing', branch, todayStr, 0, 0, JSON.stringify([]));
 }
 
@@ -1012,9 +1009,9 @@ const seededProductSales = [
   { id: "ps-ctlight-8", store: "CT LIGHT", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 44, revenue: 3960, image: "🍨" }
 ];
 
-for (const sale of seededProductSales) {
-  insertProductSale.run(sale.id, sale.store, getOffsetDateStr(0), sale.recipeId, sale.itemName, sale.category, sale.qty, sale.revenue, sale.image);
-}
+// for (const sale of seededProductSales) {
+//   insertProductSale.run(sale.id, sale.store, getOffsetDateStr(0), sale.recipeId, sale.itemName, sale.category, sale.qty, sale.revenue, sale.image);
+// }
 
 // === Seed POS Tables ===
 console.log('Seeding POS Products...');
