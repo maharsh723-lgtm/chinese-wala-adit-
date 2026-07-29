@@ -119,7 +119,7 @@ app.get('/api/config', (req, res) => {
   res.json({
     supplierPhone: process.env.SUPPLIER_PHONE || '+91 99786 73137',
     supplierEmail: process.env.SUPPLIER_EMAIL || 'supplies@badikatori.com',
-    supplierName: process.env.SUPPLIER_NAME || 'Anand Verma (GM Supplies)'
+    supplierName: process.env.SUPPLIER_NAME || 'GM Supplies'
   });
 });
 
@@ -2388,8 +2388,8 @@ app.post('/api/pos/requisitions/:id/status', authenticateToken, (req, res) => {
       }
       if (!supplier) {
         supplier = {
-          name: 'Anand Verma (GM Supplies)',
-          contactPerson: 'Anand Verma',
+          name: 'GM Supplies',
+          contactPerson: 'Supplier Rep',
           mobileNumber: '+91 99786 73137',
           whatsappNumber: '+91 99786 73137'
         };
@@ -2453,7 +2453,7 @@ app.post('/api/pos/requisitions/:id/whatsapp-trigger', authenticateToken, async 
       supplier = db.prepare('SELECT * FROM suppliers WHERE id = ?').get(po.supplierId);
     }
     if (!supplier) {
-      supplier = { name: 'Default Supplier', contactPerson: 'Anand Verma', mobileNumber: '+91 99786 73137', whatsappNumber: '+91 99786 73137' };
+      supplier = { name: 'Default Supplier', contactPerson: 'Supplier Rep', mobileNumber: '+91 99786 73137', whatsappNumber: '+91 99786 73137' };
     }
 
     const whatsappService = require('./Messaging Integration/whatsappService.cjs');
@@ -2860,8 +2860,8 @@ app.get('/api/pos/requisitions/:id/pdf', authenticateToken, async (req, res) => 
     }
     if (!supplier) {
       supplier = {
-        name: 'Anand Verma (GM Supplies)',
-        contactPerson: 'Anand Verma',
+        name: 'GM Supplies',
+        contactPerson: 'Supplier Rep',
         mobileNumber: '+91 99786 73137',
         email: 'supplies@badikatori.com',
         gstNumber: '24AAACB1234F1Z5',

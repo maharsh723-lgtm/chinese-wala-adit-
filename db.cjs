@@ -457,7 +457,7 @@ const seededEmployees = [
   // VESU
   {
     id: "EMP104",
-    name: "Rahul Sharma",
+    name: "Manager VESU",
     role: "Branch Manager",
     mobile: "9876543213",
     shiftStart: "09:00",
@@ -472,7 +472,7 @@ const seededEmployees = [
   // ADAJAN
   {
     id: "EMP105",
-    name: "Priya Patel",
+    name: "Manager ADAJAN",
     role: "Branch Manager",
     mobile: "9876543214",
     shiftStart: "09:00",
@@ -487,7 +487,7 @@ const seededEmployees = [
   // CT LIGHT
   {
     id: "EMP103",
-    name: "Bob Miller",
+    name: "Manager CT LIGHT",
     role: "Branch Manager",
     mobile: "9876543212",
     shiftStart: "14:00",
@@ -502,7 +502,7 @@ const seededEmployees = [
   // Owner (Global representation)
   {
     id: "OWNER101",
-    name: "Franchise Partner",
+    name: "Franchise Owner",
     role: "Owner",
     mobile: "9999999999",
     shiftStart: "09:00",
@@ -537,7 +537,7 @@ for (const emp of seededEmployees) {
 console.log('Seeding leave requests...');
 db.prepare(`
   INSERT INTO leave_requests (id, empId, name, store, date, reason, status)
-  VALUES ('lv-1', '1', 'John Doe', 'VESU', ?, 'Medical Checkup', 'PENDING')
+  VALUES ('lv-1', '1', 'Crew Member 1', 'VESU', ?, 'Medical Checkup', 'PENDING')
 `).run(getOffsetDateStr(1));
 
 
@@ -916,16 +916,16 @@ const insertWastage = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
-insertWastage.run('w-1', 'VESU', 'Raw Chicken Patties (Whopper)', 2, 'Box', 'Expired', getOffsetDateStr(0), 900.00, '🍔', 'Rahul Sharma');
-insertWastage.run('w-2', 'ADAJAN', 'Whopper Sesame Buns', 12, 'Piece', 'Spillage', getOffsetDateStr(0), 186.00, '🍞', 'Priya Patel');
-insertWastage.run('w-3', 'CT LIGHT', 'Cheddar Cheese Slices', 50, 'Piece', 'Expired', getOffsetDateStr(1), 425.00, '🧀', 'Bob Miller');
-insertWastage.run('w-4', 'VESU', 'Whopper Sesame Buns', 40, 'Piece', 'Burnt', getOffsetDateStr(2), 620.00, '🍞', 'Rahul Sharma');
-insertWastage.run('w-5', 'ADAJAN', 'Raw Chicken Patties (Whopper)', 1, 'Box', 'Preparation Error', getOffsetDateStr(3), 450.00, '🍔', 'Priya Patel');
-insertWastage.run('w-6', 'CT LIGHT', 'Whopper Sesame Buns', 15, 'Piece', 'Spillage', getOffsetDateStr(4), 232.50, '🍞', 'Bob Miller');
-insertWastage.run('w-7', 'VESU', 'Cheddar Cheese Slices', 30, 'Piece', 'Customer Return', getOffsetDateStr(5), 255.00, '🧀', 'Rahul Sharma');
-insertWastage.run('w-8', 'VESU', 'Paneer cubes', 500, 'gm', 'Spillage', getOffsetDateStr(0), 140.00, '🧀', 'Rahul Sharma');
-insertWastage.run('w-9', 'ADAJAN', 'Basmati Rice', 1000, 'gm', 'Pest Damage', getOffsetDateStr(0), 70.00, '🌾', 'Priya Patel');
-insertWastage.run('w-10', 'CT LIGHT', 'Chicken chunks', 1500, 'gm', 'Spoiled', getOffsetDateStr(0), 525.00, '🍗', 'Bob Miller');
+insertWastage.run('w-1', 'VESU', 'Raw Chicken Patties (Whopper)', 2, 'Box', 'Expired', getOffsetDateStr(0), 900.00, '🍔', 'Manager VESU');
+insertWastage.run('w-2', 'ADAJAN', 'Whopper Sesame Buns', 12, 'Piece', 'Spillage', getOffsetDateStr(0), 186.00, '🍞', 'Manager ADAJAN');
+insertWastage.run('w-3', 'CT LIGHT', 'Cheddar Cheese Slices', 50, 'Piece', 'Expired', getOffsetDateStr(1), 425.00, '🧀', 'Manager CT LIGHT');
+insertWastage.run('w-4', 'VESU', 'Whopper Sesame Buns', 40, 'Piece', 'Burnt', getOffsetDateStr(2), 620.00, '🍞', 'Manager VESU');
+insertWastage.run('w-5', 'ADAJAN', 'Raw Chicken Patties (Whopper)', 1, 'Box', 'Preparation Error', getOffsetDateStr(3), 450.00, '🍔', 'Manager ADAJAN');
+insertWastage.run('w-6', 'CT LIGHT', 'Whopper Sesame Buns', 15, 'Piece', 'Spillage', getOffsetDateStr(4), 232.50, '🍞', 'Manager CT LIGHT');
+insertWastage.run('w-7', 'VESU', 'Cheddar Cheese Slices', 30, 'Piece', 'Customer Return', getOffsetDateStr(5), 255.00, '🧀', 'Manager VESU');
+insertWastage.run('w-8', 'VESU', 'Paneer cubes', 500, 'gm', 'Spillage', getOffsetDateStr(0), 140.00, '🧀', 'Manager VESU');
+insertWastage.run('w-9', 'ADAJAN', 'Basmati Rice', 1000, 'gm', 'Pest Damage', getOffsetDateStr(0), 70.00, '🌾', 'Manager ADAJAN');
+insertWastage.run('w-10', 'CT LIGHT', 'Chicken chunks', 1500, 'gm', 'Spoiled', getOffsetDateStr(0), 525.00, '🍗', 'Manager CT LIGHT');
 
 // Seed Checklists for today for all 3 branches
 console.log('Seeding checklists for all 3 branches...');
@@ -947,10 +947,10 @@ const insertEod = db.prepare(`
 `);
 // Seed Delhi and Bangalore historical EOD for yesterday
 const yesterdayStr = getOffsetDateStr(1);
-insertEod.run(`eod-ADAJAN-${yesterdayStr}`, 'ADAJAN', yesterdayStr, 185000, 24000, 45000, 110000, 30000, 850, 'Priya Patel', `${yesterdayStr} 10:15 PM`);
-insertEod.run(`eod-CT LIGHT-${yesterdayStr}`, 'CT LIGHT', yesterdayStr, 165000, 18000, 35000, 95000, 35000, 780, 'Bob Miller', `${yesterdayStr} 09:45 PM`);
+insertEod.run(`eod-ADAJAN-${yesterdayStr}`, 'ADAJAN', yesterdayStr, 185000, 24000, 45000, 110000, 30000, 850, 'Manager ADAJAN', `${yesterdayStr} 10:15 PM`);
+insertEod.run(`eod-CT LIGHT-${yesterdayStr}`, 'CT LIGHT', yesterdayStr, 165000, 18000, 35000, 95000, 35000, 780, 'Manager CT LIGHT', `${yesterdayStr} 09:45 PM`);
 // Seed Mumbai for yesterday
-insertEod.run(`eod-VESU-${yesterdayStr}`, 'VESU', yesterdayStr, 210000, 31000, 50000, 120000, 40000, 1020, 'Rahul Sharma', `${yesterdayStr} 10:30 PM`);
+insertEod.run(`eod-VESU-${yesterdayStr}`, 'VESU', yesterdayStr, 210000, 31000, 50000, 120000, 40000, 1020, 'Manager VESU', `${yesterdayStr} 10:30 PM`);
 
 // Seed Recipes
 console.log('Seeding recipes...');
