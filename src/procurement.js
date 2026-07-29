@@ -1249,7 +1249,7 @@
     document.getElementById(modalId)?.remove();
 
     const sup = suppliersList.find(s => s.id === po.supplierId);
-    const supplierInfo = sup || { name: po.supplierName || 'Default Supplier', contactPerson: 'Supplier Rep', mobileNumber: '+91 99786 73137', email: 'supplies@badikatori.com', gstNumber: '24AAACB1234F1Z5', address: 'Vesu, Surat', paymentTerms: 'Net 30' };
+    const supplierInfo = sup || { name: po.supplierName || 'Default Supplier', contactPerson: 'Anand Verma', mobileNumber: '+91 99786 73137', email: 'supplies@badikatori.com', gstNumber: '24AAACB1234F1Z5', address: 'Vesu, Surat', paymentTerms: 'Net 30' };
 
     const div = document.createElement('div');
     div.id = modalId;

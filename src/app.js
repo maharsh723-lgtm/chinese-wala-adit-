@@ -130,7 +130,7 @@ function initApp() {
             window.bk_config = {
                 supplierPhone: '+91 99786 73137',
                 supplierEmail: 'supplies@badikatori.com',
-                supplierName: 'GM Supplies'
+                supplierName: 'Anand Verma (GM Supplies)'
             };
         });
 
@@ -314,13 +314,13 @@ function initApp() {
     }
 
     const defaultEmployees = {
-        "1": { id: "1", name: "Crew Member 1", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP102": { id: "EMP102", name: "Kitchen Staff 1", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "password123", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP103": { id: "EMP103", name: "Manager CT LIGHT", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "CT LIGHT", activePunch: null, history: [] },
-        "EMP104": { id: "EMP104", name: "Manager VESU", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP105": { id: "EMP105", name: "Manager ADAJAN", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "ADAJAN", activePunch: null, history: [] },
-        "OWNER101": { id: "OWNER101", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "bkoperation/89*", status: "Active", store: "All", activePunch: null, history: [] },
-        "bk2022": { id: "bk2022", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "bkoperation/89*", status: "Active", store: "All", activePunch: null, history: [] },
+        "1": { id: "1", name: "John Doe", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "EMP102": { id: "EMP102", name: "Alice Smith", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "password123", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "EMP103": { id: "EMP103", name: "Bob Miller", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "CT LIGHT", activePunch: null, history: [] },
+        "EMP104": { id: "EMP104", name: "Rahul Sharma", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "EMP105": { id: "EMP105", name: "Priya Patel", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "ADAJAN", activePunch: null, history: [] },
+        "OWNER101": { id: "OWNER101", name: "Franchise Partner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "bkoperation/89*", status: "Active", store: "All", activePunch: null, history: [] },
+        "bk2022": { id: "bk2022", name: "Franchise Partner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "bkoperation/89*", status: "Active", store: "All", activePunch: null, history: [] },
         "manager/123": { id: "manager/123", name: "Store Manager", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "VESU", activePunch: null, history: [] }
     };
 
@@ -6509,9 +6509,9 @@ function initApp() {
         // Generate 30 days of mock reconciliation records
         const list = [];
         const managers = {
-            'VESU': 'Manager VESU',
-            'ADAJAN': 'Manager ADAJAN',
-            'CT LIGHT': 'Manager CT LIGHT'
+            'VESU': 'Rahul Sharma',
+            'ADAJAN': 'Priya Patel',
+            'CT LIGHT': 'Bob Miller'
         };
 
         const today = new Date();
@@ -6553,7 +6553,7 @@ function initApp() {
                     id: `${store}-${dateStr}`,
                     date: dateStr,
                     store: store,
-                    auditedBy: managers[store] || 'Manager VESU',
+                    auditedBy: managers[store] || 'Rahul Sharma',
                     totalSales: totalSales,
                     cashSales: cashSales,
                     upiSales: upiSales,
@@ -9578,7 +9578,7 @@ function initApp() {
         // Sync active Cashier Name
         const statusCashier = document.getElementById("statusCashierName");
         if (statusCashier) {
-            const activeUser = currentUser || { name: 'Store Manager' };
+            const activeUser = currentUser || { name: 'Priya Patel' };
             statusCashier.textContent = activeUser.name;
         }
 

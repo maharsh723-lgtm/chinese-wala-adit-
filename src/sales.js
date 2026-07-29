@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     items: "1x Paneer Tikka, 1x Garlic Naan",
                     reason: "Quality issue - too spicy",
                     refundAmount: 380,
-                    refundedBy: "Manager VESU",
+                    refundedBy: "Rahul Sharma",
                     status: "Refunded",
                     store: "VESU"
                 },
@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     items: "2x Mango Lassi",
                     reason: "Spilled during delivery",
                     refundAmount: 240,
-                    refundedBy: "Manager ADAJAN",
+                    refundedBy: "Sneha Patel",
                     status: "Refunded",
                     store: "ADAJAN"
                 }
