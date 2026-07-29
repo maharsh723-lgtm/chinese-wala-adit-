@@ -45,7 +45,7 @@ function initApp() {
             loginSubmitBtn.disabled = true;
             
             try {
-                const response = await originalFetch("/api/auth/login", {
+                const response = await originalFetch(`${API_BASE}/api/auth/login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id: username, password: password })
@@ -118,8 +118,8 @@ function initApp() {
         }
     });
 
-    // Fetch configuration dynamically from backend environment config
-    fetch('/api/config')
+    const configApiBase = window.location.protocol.startsWith('file') ? 'http://localhost:3000' : (window.location.port && window.location.port !== '3000' ? `${window.location.protocol}//${window.location.hostname}:3000` : '');
+    fetch(`${configApiBase}/api/config`)
         .then(res => res.json())
         .then(config => {
             window.bk_config = config;

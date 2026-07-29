@@ -461,7 +461,7 @@ const seededEmployees = [
     mobile: "9876543213",
     shiftStart: "09:00",
     roleKey: "sm",
-    password: "managerbk/09#",
+    password: "password123",
     status: "Active",
     store: "VESU",
     activePunch: null,
@@ -476,12 +476,12 @@ const seededEmployees = [
     mobile: "9876543214",
     shiftStart: "09:00",
     roleKey: "sm",
-    password: "managerbk/09#",
+    password: "password123",
     status: "Active",
     store: "ADAJAN",
     activePunch: null,
     history: [],
-    salary: 35000
+    salary: 38000
   },
   // CT LIGHT
   {
@@ -491,7 +491,7 @@ const seededEmployees = [
     mobile: "9876543212",
     shiftStart: "14:00",
     roleKey: "sm",
-    password: "managerbk/09#",
+    password: "password123",
     status: "Active",
     store: "CT LIGHT",
     activePunch: null,
@@ -506,7 +506,7 @@ const seededEmployees = [
     mobile: "9999999999",
     shiftStart: "09:00",
     roleKey: "owner",
-    password: "bkoperation/89*",
+    password: "ownerpassword",
     status: "Active",
     store: "All",
     activePunch: null,
