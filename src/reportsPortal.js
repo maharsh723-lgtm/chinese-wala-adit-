@@ -2,9 +2,10 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     // 1. Core API Config
+    // Absolute base URL if opened via file:// protocol or other ports
     let API_BASE = '';
     if (window.location.protocol.startsWith('file')) {
-        API_BASE = window.location.origin;
+        API_BASE = 'http://localhost:3000';
     } else if (window.location.port && window.location.port !== '3000') {
         API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
     }
