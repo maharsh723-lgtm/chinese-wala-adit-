@@ -7444,3 +7444,105 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+/* Bright Mode / Light theme corrections for Reports, Item Sales, and Guest Intelligence */
+body:not(.dark-theme) #screen-reports-portal,
+body:not(.dark-theme) #screen-item-sales-analytics,
+body:not(.dark-theme) #screen-guest-intelligence {
+    --bg-card: #FAF6F0;
+    --border: rgba(46, 35, 31, 0.12);
+}
+
+body:not(.dark-theme) .reports-portal-container {
+    background: #ffffff !important;
+    box-shadow: var(--shadow-md) !important;
+}
+
+body:not(.dark-theme) .reports-kpi-card {
+    background: #fbf9f6 !important;
+    border: 1px solid rgba(46, 35, 31, 0.08) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+body:not(.dark-theme) .reports-kpi-card:hover {
+    background: #FAF6F0 !important;
+    border-color: var(--antique-brass) !important;
+}
+
+body:not(.dark-theme) .reports-kpi-value {
+    color: var(--text-primary) !important;
+}
+
+body:not(.dark-theme) .reports-ai-input {
+    background: #FAF6F0 !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+}
+
+body:not(.dark-theme) .reports-ai-input::placeholder {
+    color: var(--text-tertiary) !important;
+}
+
+body:not(.dark-theme) .reports-portal-sidebar {
+    border-right: 1px solid rgba(46, 35, 31, 0.08) !important;
+}
+
+body:not(.dark-theme) #reportPortalSearch {
+    background: #FAF6F0 !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+}
+
+body:not(.dark-theme) #reportPortalSearch::placeholder {
+    color: var(--text-tertiary) !important;
+}
+
+/* Force override inline white text colors inside these three screens in light mode */
+body:not(.dark-theme) #screen-reports-portal [style*="color:#fff" i],
+body:not(.dark-theme) #screen-reports-portal [style*="color: #fff" i],
+body:not(.dark-theme) #screen-reports-portal [style*="color:white" i],
+body:not(.dark-theme) #screen-item-sales-analytics [style*="color:#fff" i],
+body:not(.dark-theme) #screen-item-sales-analytics [style*="color: #fff" i],
+body:not(.dark-theme) #screen-item-sales-analytics [style*="color:white" i],
+body:not(.dark-theme) #screen-guest-intelligence [style*="color:#fff" i],
+body:not(.dark-theme) #screen-guest-intelligence [style*="color: #fff" i],
+body:not(.dark-theme) #screen-guest-intelligence [style*="color:white" i] {
+    color: var(--text-primary) !important;
+}
+
+/* Re-style dynamic report containers/sections for light mode */
+body:not(.dark-theme) #screen-reports-portal div[style*="background:rgba(255,255,255,0.02)" i],
+body:not(.dark-theme) #screen-item-sales-analytics div[style*="background:rgba(255,255,255,0.02)" i],
+body:not(.dark-theme) #screen-guest-intelligence div[style*="background:rgba(255,255,255,0.02)" i] {
+    background: #fbf9f6 !important;
+}
+
+body:not(.dark-theme) #screen-reports-portal strong[style*="color:#fff" i],
+body:not(.dark-theme) #screen-reports-portal strong[style*="color: #fff" i],
+body:not(.dark-theme) #screen-item-sales-analytics strong[style*="color:#fff" i],
+body:not(.dark-theme) #screen-item-sales-analytics strong[style*="color: #fff" i],
+body:not(.dark-theme) #screen-guest-intelligence strong[style*="color:#fff" i],
+body:not(.dark-theme) #screen-guest-intelligence strong[style*="color: #fff" i] {
+    color: var(--text-primary) !important;
+}
+
+body:not(.dark-theme) #screen-reports-portal h2[style*="color:#fff" i],
+body:not(.dark-theme) #screen-reports-portal h3[style*="color:#fff" i],
+body:not(.dark-theme) #screen-item-sales-analytics h2[style*="color:#fff" i],
+body:not(.dark-theme) #screen-item-sales-analytics h3[style*="color:#fff" i],
+body:not(.dark-theme) #screen-guest-intelligence h2[style*="color:#fff" i],
+body:not(.dark-theme) #screen-guest-intelligence h3[style*="color:#fff" i] {
+    color: var(--text-heading) !important;
+}
+
+body:not(.dark-theme) #screen-reports-portal select[style*="color:#fff" i],
+body:not(.dark-theme) #screen-item-sales-analytics select[style*="color:#fff" i],
+body:not(.dark-theme) #screen-guest-intelligence select[style*="color:#fff" i],
+body:not(.dark-theme) #screen-reports-portal select[style*="color: #fff" i],
+body:not(.dark-theme) #screen-item-sales-analytics select[style*="color: #fff" i],
+body:not(.dark-theme) #screen-guest-intelligence select[style*="color: #fff" i] {
+    color: var(--text-primary) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--border) !important;
+}
+
