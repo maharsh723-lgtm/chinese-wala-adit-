@@ -1459,15 +1459,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     if (btnPrint) btnPrint.addEventListener("click", () => window.print());
 
-    // Start Load
-    loadData();
+    // Expose reload function to the parent app
+    window.refreshReportsPortal = loadData;
+
+    // Start Load only if authenticated
+    if (localStorage.getItem("bk_jwt_token")) {
+        loadData();
+    }
 
     // Listen to real-time events via Socket.IO
     if (typeof io !== "undefined") {
         const socket = io(API_BASE || window.location.origin);
         socket.on("order_placed", () => {
             console.log("Real-time order detected, refreshing Reports...");
-            loadData();
+            if (localStorage.getItem("bk_jwt_token")) {
+                loadData();
+            }
         });
     }
 });

@@ -956,19 +956,28 @@ document.addEventListener("DOMContentLoaded", () => {
         if (typeof lucide !== "undefined") lucide.createIcons();
     }
 
-    // Start Load
-    loadData();
+    // Expose reload function to parent app
+    window.refreshGuestIntelligence = loadData;
+
+    // Start Load only if authenticated
+    if (localStorage.getItem("bk_jwt_token")) {
+        loadData();
+    }
 
     // Listen to real-time events via Socket.IO
     if (typeof io !== "undefined") {
         const socket = io(API_BASE || window.location.origin);
         socket.on("order_placed", () => {
             console.log("Real-time checkout event, refreshing Guest Intelligence state...");
-            loadData();
+            if (localStorage.getItem("bk_jwt_token")) {
+                loadData();
+            }
         });
         socket.on("customer_created", () => {
             console.log("Customer profile created, reloading list...");
-            loadData();
+            if (localStorage.getItem("bk_jwt_token")) {
+                loadData();
+            }
         });
     }
 });

@@ -514,11 +514,11 @@ body.dark-theme .header-btn {
 /* Screen Wrapper */
 .app-screen {
     display: none;
-    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .app-screen.active {
     display: block;
+    opacity: 1 !important;
 }
 
 @keyframes fadeIn {

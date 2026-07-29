@@ -533,6 +533,11 @@ function initApp() {
             case 'closing-checklist': renderChecklistScreen('closing'); break;
             case 'attendance-system': renderAttendanceScreen(); break;
             case 'inventory-overview': renderInventoryScreen(); break;
+            case 'procurement-module':
+                if (typeof window.renderProcurementScreen === "function") {
+                    window.renderProcurementScreen();
+                }
+                break;
             case 'auto-procurement': renderProcurementScreen(); break;
             case 'ai-procurement': renderAiProcurementScreen(); break;
             case 'wastage-management': renderWastageScreen(); break;
@@ -543,6 +548,21 @@ function initApp() {
             case 'billing': renderBillingScreen(); break;
             case 'cash-reconciliation': renderCashReconciliationScreen(); break;
             case 'excel-import': renderExcelImportScreen(); break;
+            case 'reports-portal':
+                if (typeof window.refreshReportsPortal === "function") {
+                    window.refreshReportsPortal();
+                }
+                break;
+            case 'guest-intelligence':
+                if (typeof window.refreshGuestIntelligence === "function") {
+                    window.refreshGuestIntelligence();
+                }
+                break;
+            case 'item-sales-analytics':
+                if (typeof window.refreshItemSalesAnalytics === "function") {
+                    window.refreshItemSalesAnalytics();
+                }
+                break;
 
             case 'kitchen-kds': renderKitchenKdsScreen(); break;
         }
@@ -5813,7 +5833,7 @@ function initApp() {
         const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
 
         try {
-            const token = localStorage.getItem("bk_token");
+            const token = localStorage.getItem("bk_jwt_token");
             const res = await fetch(`${API_BASE}/api/inventory/batch-update`, {
                 method: 'POST',
                 headers: {
@@ -10296,7 +10316,7 @@ function initApp() {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem("bk_token")}`
+                        'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}`
                     },
                     body: JSON.stringify({ platform, store: currentStore })
                 });
@@ -10347,7 +10367,7 @@ function initApp() {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem("bk_token")}`,
+                        'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}`,
                         'x-store-name': currentStore
                     },
                     body: JSON.stringify({ status: newStatus })
@@ -10639,7 +10659,7 @@ function initApp() {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem("bk_token")}`,
+                    'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}`,
                     'x-store-name': currentStore
                 },
                 body: JSON.stringify({ status: newStatus })
@@ -12492,6 +12512,9 @@ function initApp() {
     initRequisitionsModule();
     initProcurementModule();
     initDeliveryAndKDSModule();
+    if (typeof window.initProcurementModule === "function") {
+        window.initProcurementModule();
+    }
 
     // === INITIAL STARTUP SYNC ===
     // Always clear tokens on startup to force login screen
@@ -13492,7 +13515,7 @@ function initApp() {
 
                     // Trigger backend SMS to 9978673137
                     try {
-                        const token = localStorage.getItem("bk_token");
+                        const token = localStorage.getItem("bk_jwt_token");
                         fetch(`${window.bk_state.API_BASE}/api/pos/requisitions/send-confirmation-sms`, {
                             method: "POST",
                             headers: {
@@ -13828,9 +13851,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 window.fetchAndRenderPnL = async function() {
     try {
-        const res = await fetch('http://localhost:5174/api/pl/live-summary?branch=VESU&dateFilter=month', {
+        const apiBase = (window.bk_state && window.bk_state.API_BASE) || '';
+        const token = localStorage.getItem("bk_jwt_token") || "";
+        const res = await fetch(`${apiBase}/api/pl/live-summary?branch=VESU&dateFilter=month`, {
             headers: {
-                'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+                'Authorization': 'Bearer ' + token
             }
         });
         const data = await res.json();

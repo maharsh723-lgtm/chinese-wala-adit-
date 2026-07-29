@@ -16,6 +16,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let apBills = [];
     let plAdjustments = [];
     let liveStateData = null; // Stored backend api data (orders, purchases, wastage)
+    const targetScreens = [
+        'cash-book', 'bank-book', 'journal-entries', 'trial-balance',
+        'pl-automation', 'accounts-receivable', 'accounts-payable'
+    ];
 
     // Helper: Get active store and role based on local storage cache
     function getCurrentRoleAndStore() {
@@ -1228,36 +1232,60 @@ document.addEventListener("DOMContentLoaded", () => {
     const defaultDates = getDefaultDateRange();
     
     // Cash Book dates
-    document.getElementById("cashBookStartDate").value = defaultDates.start;
-    document.getElementById("cashBookEndDate").value = defaultDates.end;
-    document.getElementById("cashBookStartDate").addEventListener("change", () => renderCashBook());
-    document.getElementById("cashBookEndDate").addEventListener("change", () => renderCashBook());
+    const cashBookStartDate = document.getElementById("cashBookStartDate");
+    const cashBookEndDate = document.getElementById("cashBookEndDate");
+    if (cashBookStartDate && cashBookEndDate) {
+        cashBookStartDate.value = defaultDates.start;
+        cashBookEndDate.value = defaultDates.end;
+        cashBookStartDate.addEventListener("change", () => renderCashBook());
+        cashBookEndDate.addEventListener("change", () => renderCashBook());
+    }
 
     // Bank Book dates & selector
-    document.getElementById("bankBookStartDate").value = defaultDates.start;
-    document.getElementById("bankBookEndDate").value = defaultDates.end;
-    document.getElementById("bankAccountSelect").addEventListener("change", () => renderBankBook());
-    document.getElementById("bankBookStartDate").addEventListener("change", () => renderBankBook());
-    document.getElementById("bankBookEndDate").addEventListener("change", () => renderBankBook());
+    const bankBookStartDate = document.getElementById("bankBookStartDate");
+    const bankBookEndDate = document.getElementById("bankBookEndDate");
+    const bankAccountSelect = document.getElementById("bankAccountSelect");
+    if (bankBookStartDate && bankBookEndDate && bankAccountSelect) {
+        bankBookStartDate.value = defaultDates.start;
+        bankBookEndDate.value = defaultDates.end;
+        bankAccountSelect.addEventListener("change", () => renderBankBook());
+        bankBookStartDate.addEventListener("change", () => renderBankBook());
+        bankBookEndDate.addEventListener("change", () => renderBankBook());
+    }
 
     // Journal entries search & dates
-    document.getElementById("journalSearch").addEventListener("input", () => renderJournalEntries());
-    document.getElementById("journalFilterDate").addEventListener("change", () => renderJournalEntries());
+    const journalSearch = document.getElementById("journalSearch");
+    const journalFilterDate = document.getElementById("journalFilterDate");
+    if (journalSearch && journalFilterDate) {
+        journalSearch.addEventListener("input", () => renderJournalEntries());
+        journalFilterDate.addEventListener("change", () => renderJournalEntries());
+    }
 
     // Trial Balance date
-    document.getElementById("trialBalanceDate").value = new Date().toISOString().split('T')[0];
-    document.getElementById("trialBalanceDate").addEventListener("change", () => renderTrialBalance());
+    const trialBalanceDate = document.getElementById("trialBalanceDate");
+    if (trialBalanceDate) {
+        trialBalanceDate.value = new Date().toISOString().split('T')[0];
+        trialBalanceDate.addEventListener("change", () => renderTrialBalance());
+    }
 
     // Balance sheet date
-    document.getElementById("balanceSheetDate").value = new Date().toISOString().split('T')[0];
-    document.getElementById("balanceSheetDate").addEventListener("change", () => renderBalanceSheet());
+    const balanceSheetDate = document.getElementById("balanceSheetDate");
+    if (balanceSheetDate) {
+        balanceSheetDate.value = new Date().toISOString().split('T')[0];
+        balanceSheetDate.addEventListener("change", () => renderBalanceSheet());
+    }
 
     // P&L selectors
-    document.getElementById("plStartDate").value = defaultDates.start;
-    document.getElementById("plEndDate").value = defaultDates.end;
-    document.getElementById("plPeriodSelect").addEventListener("change", () => renderPLAutomation());
-    document.getElementById("plStartDate").addEventListener("change", () => renderPLAutomation());
-    document.getElementById("plEndDate").addEventListener("change", () => renderPLAutomation());
+    const plStartDate = document.getElementById("plStartDate");
+    const plEndDate = document.getElementById("plEndDate");
+    const plPeriodSelect = document.getElementById("plPeriodSelect");
+    if (plStartDate && plEndDate && plPeriodSelect) {
+        plStartDate.value = defaultDates.start;
+        plEndDate.value = defaultDates.end;
+        plPeriodSelect.addEventListener("change", () => renderPLAutomation());
+        plStartDate.addEventListener("change", () => renderPLAutomation());
+        plEndDate.addEventListener("change", () => renderPLAutomation());
+    }
 
     // Submit Cash Entry Form
     document.getElementById("formAddCashEntry").addEventListener("submit", (e) => {
@@ -1576,10 +1604,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 7. ROUTING / SIDEBAR HANDLER AND BOOTSTRAP
-    const targetScreens = [
-        'cash-book', 'bank-book', 'journal-entries', 'trial-balance',
-        'pl-automation', 'accounts-receivable', 'accounts-payable'
-    ];
 
     document.querySelectorAll(".nav-item").forEach(item => {
         const target = item.getAttribute("data-target");

@@ -683,15 +683,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 100);
     }
 
-    // 7. Load initially
-    loadData();
+    // Expose reload function to parent app
+    window.refreshItemSalesAnalytics = loadData;
+
+    // Load initially only if authenticated
+    if (localStorage.getItem("bk_jwt_token")) {
+        loadData();
+    }
 
     // Sockets / Live integration: Listen for checkout completed
     if (typeof io !== "undefined") {
         const socket = io(API_BASE || window.location.origin);
         socket.on("order_placed", () => {
             console.log("Real-time checkout detected, updating Item Sales Analytics...");
-            loadData();
+            if (localStorage.getItem("bk_jwt_token")) {
+                loadData();
+            }
         });
     }
 });
