@@ -7,6 +7,7 @@ const { hashPassword } = require('./src/cryptoHelper.cjs');
 const dbFilename = process.env.DB_FILE || 'database.db';
 const dbPath = path.isAbsolute(dbFilename) ? dbFilename : path.join(__dirname, dbFilename);
 const db = new DatabaseSync(dbPath);
+db.exec("PRAGMA busy_timeout = 10000;");
 
 console.log(`Database initialized at: ${dbPath}`);
 
