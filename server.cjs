@@ -20,38 +20,21 @@ const ipRequestCounts = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const MAX_REQUESTS = 300; // Limit each IP to 300 requests per minute
 
-// Security: Failed Login Trackers
+// Security: Failed Login Trackers (Lockout disabled)
 const failedLogins = new Map();
 
 function bruteForceCheck(req, res, next) {
-  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  const now = Date.now();
-  if (failedLogins.has(ip)) {
-    const record = failedLogins.get(ip);
-    if (record.lockUntil && now < record.lockUntil) {
-      const waitMins = Math.ceil((record.lockUntil - now) / 60000);
-      return res.status(429).json({
-        error: `Too many failed login attempts. Locked out. Please wait ${waitMins} minutes.`
-      });
-    }
-  }
   next();
 }
 
 function registerFailedLogin(ip) {
-  const now = Date.now();
-  let record = failedLogins.get(ip) || { count: 0, lockUntil: null };
-  record.count += 1;
-  if (record.count >= 5) {
-    record.lockUntil = now + 15 * 60 * 1000; // 15 minutes lockout
-    record.count = 0;
-  }
-  failedLogins.set(ip, record);
+  // Lockout disabled
 }
 
 function clearFailedLogin(ip) {
-  failedLogins.delete(ip);
+  // Lockout disabled
 }
+
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
