@@ -449,6 +449,15 @@ function initApp() {
     async function syncStateFromServer(isInitial = false) {
         try {
             const response = await fetch(`${API_BASE}/api/state?_t=${Date.now()}`);
+            if (response.status === 401) {
+                console.warn("Session expired or token invalid. Redirecting to login.");
+                localStorage.removeItem("bk_jwt_token");
+                localStorage.removeItem("bk_logged_in_user");
+                localStorage.removeItem("bk_current_role_key");
+                const overlay = document.getElementById("login-overlay");
+                if (overlay) overlay.style.display = "flex";
+                return;
+            }
             if (!response.ok) throw new Error("HTTP error " + response.status);
             const data = await response.json();
             const stateJson = JSON.stringify(data);
