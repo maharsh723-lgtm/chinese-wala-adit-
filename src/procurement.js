@@ -198,15 +198,17 @@
     root.innerHTML = `
       <div class="proc-container">
         <!-- Dashboard Header -->
-        <div class="screen-header-layout">
-          <div class="screen-title-desc">
-            <h1 style="display:flex; align-items:center; gap:10px;">
-              <i data-lucide="shield-check" style="color:var(--antique-brass); width:28px; height:28px;"></i> Smart Procurement
-            </h1>
-            <p>Monitor stock levels, manage supplier relationships, audit workflows, and track logistics.</p>
+        <div class="proc-header">
+          <div>
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--text-primary); display:flex; align-items:center; gap:8px;">
+              <i data-lucide="shield-check" style="color:var(--antique-brass); width:24px; height:24px;"></i> Smart Enterprise Procurement
+            </h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">
+              Monitor stock levels, manage supplier relationships, audit workflows, and track logistics.
+            </p>
           </div>
-          <div class="screen-actions">
-            <button class="saas-btn saas-btn-secondary" id="btn-proc-refresh" style="display:flex; align-items:center; gap:6px;">
+          <div class="proc-header-actions">
+            <button class="proc-btn" id="btn-proc-refresh">
               <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Sync State
             </button>
           </div>
@@ -1316,7 +1318,7 @@
             <!-- Items -->
             <div>
               <div style="font-weight:700; color:var(--text-primary); margin-bottom:6px; text-transform:uppercase; font-size:0.7rem;">Order Items</div>
-              <table class="saas-table" style="font-size:0.75rem; background:var(--bg-card); border-radius:6px; border:1px solid var(--border);">
+              <table class="saas-table" style="font-size:0.75rem; background:#FFF; border-radius:6px; border:1px solid var(--border);">
                 <thead>
                   <tr style="background:var(--bg-app); font-weight:800;">
                     <th style="padding:6px 8px;">Item Name</th>
@@ -1364,7 +1366,7 @@
           <!-- Right: Control Panel & QR -->
           <div style="display:flex; flex-direction:column; gap:16px;">
             <!-- QR Box -->
-            <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:16px; text-align:center; display:flex; flex-direction:column; align-items:center;">
+             <div style="background:#FFF; border:1px solid var(--border); border-radius:8px; padding:16px; text-align:center; display:flex; flex-direction:column; align-items:center;">
               <div style="font-weight:800; font-size:0.8rem; color:var(--text-primary); margin-bottom:8px;">PO QR Verification Code</div>
               
               <!-- Secure QR Code -->
@@ -1718,9 +1720,9 @@
     style.id = styleId;
     style.innerHTML = `
       .proc-container {
-        padding: 0;
-        background: transparent;
-        min-height: auto;
+        padding: 24px;
+        background: radial-gradient(circle at top, #FAF6F0 0%, #FAF6F0 100%);
+        min-height: 80vh;
       }
       .proc-header {
         display: flex;
@@ -1762,7 +1764,7 @@
       }
       .proc-tab-btn:hover {
         color: var(--text-primary);
-        background: var(--bg-hover);
+        background: rgba(46,35,31,0.02);
       }
       .proc-tab-btn.active {
         color: var(--antique-brass);
@@ -1774,9 +1776,7 @@
         gap: 16px;
       }
       .proc-kpi-card {
-        background: rgba(255, 255, 255, 0.82);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: var(--radius-md);
         padding: 20px;
@@ -1784,16 +1784,7 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-      }
-      .proc-kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-        border-color: #C29F68;
-      }
-      body.dark-theme .proc-kpi-card {
-        background: rgba(46, 35, 31, 0.85);
-        border-color: rgba(255, 255, 255, 0.08);
+        transition: all 0.2s ease;
       }
       .kpi-header {
         font-size: 0.72rem;
@@ -1830,23 +1821,11 @@
         align-items: start;
       }
       .proc-glass-card {
-        background: rgba(255, 255, 255, 0.82);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: var(--radius-md);
         padding: 24px;
         box-shadow: var(--shadow-sm);
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-      }
-      .proc-glass-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-        border-color: #C29F68;
-      }
-      body.dark-theme .proc-glass-card {
-        background: rgba(46, 35, 31, 0.85);
-        border-color: rgba(255, 255, 255, 0.08);
       }
       .card-header {
         font-size: 0.95rem;
