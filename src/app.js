@@ -2208,6 +2208,7 @@ function initApp() {
 
         // Select store based on role
         const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
+        console.log("renderInventoryScreen called. Inventory count:", inventory.length, "Role:", currentRole, "Store:", currentStore, "TargetStore:", targetStore);
         const storeInv = inventory.filter(i => i.store === targetStore);
 
         // Calculate metrics based on ALL items for this store
@@ -2384,12 +2385,14 @@ function initApp() {
     // Helper to only render rows and cards based on search filter
     function renderInventoryListOnly() {
         const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
+        console.log("renderInventoryListOnly called. TargetStore:", targetStore);
         const storeInv = inventory.filter(i => {
             if (i.store !== targetStore) return false;
             if (!inventorySearchVal) return true;
             const search = inventorySearchVal.toLowerCase();
             return (i.label || "").toLowerCase().includes(search) || (i.category || "").toLowerCase().includes(search);
         });
+        console.log("renderInventoryListOnly filtered items count:", storeInv.length);
 
         // Sort: Out of Stock (stock === 0) at the very top, then sorted by stock level ascending
         storeInv.sort((a, b) => {
