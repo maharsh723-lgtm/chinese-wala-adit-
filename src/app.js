@@ -2404,7 +2404,11 @@ function initApp() {
         // Set role-based visibility of action buttons
         const btnAddStock = document.getElementById("btnCreateInventoryTop");
         if (btnAddStock) {
-            btnAddStock.style.display = currentRole === "bm" ? "inline-flex" : "none";
+            btnAddStock.style.display = (currentRole === "bm" || currentRole === "owner") ? "inline-flex" : "none";
+        }
+        const btnUploadInventoryExcel = document.getElementById("btnUploadInventoryExcel");
+        if (btnUploadInventoryExcel) {
+            btnUploadInventoryExcel.style.display = (currentRole === "bm" || currentRole === "owner") ? "inline-flex" : "none";
         }
 
         // Now render the filtered list items
@@ -2449,7 +2453,7 @@ function initApp() {
                     Reorder
                 </button>
             `;
-            if (currentRole === "bm") {
+            if (currentRole === "bm" || currentRole === "owner") {
                 actionsHTML += `
                     <button class="saas-btn saas-btn-secondary" style="padding: 4px 12px; font-size:0.75rem;" onclick="editInventoryPrompt('${item.id}')">Edit</button>
                 `;
@@ -5381,7 +5385,7 @@ function initApp() {
             
             const id = 'inv-' + Date.now();
             const status = stock < reorder ? 'LOW STOCK' : 'OK';
-            const store = currentStore;
+            const store = currentRole === "owner" ? ownerInventoryStore : currentStore;
 
             try {
                 const res = await fetch(`${API_BASE}/api/inventory`, {
@@ -5404,6 +5408,21 @@ function initApp() {
                 console.error(err);
                 alert("Failed to add inventory item.");
             }
+        });
+    }
+
+    // === BIND CLICK TO OPEN INVENTORY ADD & IMPORT MODALS ===
+    const btnCreateInventoryTop = document.getElementById("btnCreateInventoryTop");
+    if (btnCreateInventoryTop) {
+        btnCreateInventoryTop.addEventListener("click", () => {
+            openModal("modalAddInventory");
+        });
+    }
+
+    const btnUploadInventoryExcel = document.getElementById("btnUploadInventoryExcel");
+    if (btnUploadInventoryExcel) {
+        btnUploadInventoryExcel.addEventListener("click", () => {
+            openModal("modalBulkImport");
         });
     }
 
