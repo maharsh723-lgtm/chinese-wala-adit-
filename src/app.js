@@ -5571,7 +5571,21 @@ function initApp() {
             try {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
-                const sheetName = workbook.SheetNames[0];
+                const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
+                let sheetName = workbook.SheetNames[0];
+                const matchedStoreSheet = workbook.SheetNames.find(name => name.toLowerCase().includes(targetStore.toLowerCase()));
+                if (matchedStoreSheet) {
+                    sheetName = matchedStoreSheet;
+                } else {
+                    const fallbackSheet = workbook.SheetNames.find(name => 
+                        name.toLowerCase().includes('closing') || 
+                        name.toLowerCase().includes('stock') || 
+                        name.toLowerCase().includes('inventory')
+                    );
+                    if (fallbackSheet) {
+                        sheetName = fallbackSheet;
+                    }
+                }
                 const sheet = workbook.Sheets[sheetName];
                 const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
 
@@ -5589,6 +5603,11 @@ function initApp() {
                  for (let r = 0; r < Math.min(15, rows.length); r++) {
                      const rowCells = rows[r];
                      if (!rowCells || rowCells.length === 0) continue;
+                     
+                     // Skip banner/title rows that have only 1 non-empty cell
+                     const nonEmptyCount = rowCells.filter(c => c !== undefined && c !== null && String(c).trim() !== '').length;
+                     if (nonEmptyCount < 2) continue;
+
                      const tempHeaders = rowCells.map(h => String(h || '').trim().toLowerCase());
                      const idx = tempHeaders.findIndex(h => 
                          (h.includes('name') || h.includes('label') || h.includes('item') || h.includes('product') || h.includes('stock status')) && 
@@ -5626,8 +5645,7 @@ function initApp() {
                  }
 
                  const parsedUpdates = [];
-                 const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
-                 const storeInv = inventory.filter(i => i.store === targetStore);
+                 const targetStoreInventory = inventory.filter(i => i.store === targetStore);
 
                  // Helper functions for fallback category and unit based on item name
                  function getCategoryHelper(name) {
@@ -5657,13 +5675,38 @@ function initApp() {
                      if (!labelVal || val.startsWith('(') || val.endsWith(')') || val.includes('as on :') || val === 'jain' || val === 'status' || val === 'item details' || val === 'stock status' || val.includes('all item') || val.includes('total')) continue;
 
                      // Match with existing item
-                     const matchedItem = storeInv.find(item => item.label.toLowerCase() === labelVal.toLowerCase());
+                     const matchedItem = targetStoreInventory.find(item => item.label.toLowerCase() === labelVal.toLowerCase());
                      
                      const categoryVal = categoryIdx !== -1 && row[categoryIdx] !== undefined && String(row[categoryIdx]).trim() !== '' ? String(row[categoryIdx]).trim() : (matchedItem ? matchedItem.category : getCategoryHelper(labelVal));
                      const unitVal = unitIdx !== -1 && row[unitIdx] !== undefined && String(row[unitIdx]).trim() !== '' ? String(row[unitIdx]).trim() : (matchedItem ? matchedItem.unit : getUnitHelper(labelVal));
-                     const newStock = stockIdx !== -1 && row[stockIdx] !== undefined ? parseInt(row[stockIdx], 10) : (matchedItem ? matchedItem.stock : 0);
-                     const newReorder = reorderIdx !== -1 && row[reorderIdx] !== undefined ? parseInt(row[reorderIdx], 10) : (matchedItem ? matchedItem.reorder : 1000);
-                     const newCost = costIdx !== -1 && row[costIdx] !== undefined && row[costIdx] !== '' ? cleanFloat(row[costIdx]) : (matchedItem ? matchedItem.unitCost : 10.00);
+                     
+                     const stockVal = stockIdx !== -1 && row[stockIdx] !== undefined && row[stockIdx] !== null ? String(row[stockIdx]).trim() : '';
+                     let newStock;
+                     if (stockVal === '') {
+                         newStock = matchedItem ? matchedItem.stock : 0;
+                     } else {
+                         newStock = parseInt(stockVal, 10);
+                         if (isNaN(newStock)) newStock = matchedItem ? matchedItem.stock : 0;
+                     }
+
+                     const reorderVal = reorderIdx !== -1 && row[reorderIdx] !== undefined && row[reorderIdx] !== null ? String(row[reorderIdx]).trim() : '';
+                     let newReorder;
+                     if (reorderVal === '') {
+                         newReorder = matchedItem ? matchedItem.reorder : 10;
+                     } else {
+                         newReorder = parseInt(reorderVal, 10);
+                         if (isNaN(newReorder)) newReorder = matchedItem ? matchedItem.reorder : 10;
+                     }
+
+                     const costVal = costIdx !== -1 && row[costIdx] !== undefined && row[costIdx] !== null ? String(row[costIdx]).trim() : '';
+                     let newCost;
+                     if (costVal === '') {
+                         newCost = matchedItem ? matchedItem.unitCost : 10.00;
+                     } else {
+                         newCost = cleanFloat(costVal);
+                         if (isNaN(newCost)) newCost = matchedItem ? matchedItem.unitCost : 10.00;
+                     }
+
                      const newExpiry = expiryIdx !== -1 && row[expiryIdx] !== undefined ? String(row[expiryIdx]) : (matchedItem ? matchedItem.expiryDate : "2026-12-31");
 
                      if (isNaN(newStock) || isNaN(newReorder)) continue;
