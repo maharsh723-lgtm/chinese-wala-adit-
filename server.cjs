@@ -660,11 +660,11 @@ app.post('/api/inventory/batch-update', authenticateToken, (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    // Run in a single transaction
-    const executeBatch = db.transaction(() => {
-      let updatedCount = 0;
-      let insertedCount = 0;
+    let updatedCount = 0;
+    let insertedCount = 0;
 
+    db.exec('BEGIN TRANSACTION');
+    try {
       for (const item of updates) {
         const name = String(item.label).trim();
         const val = name.toLowerCase();
@@ -702,15 +702,17 @@ app.post('/api/inventory/batch-update', authenticateToken, (req, res) => {
           insertedCount++;
         }
       }
-      return { updatedCount, insertedCount };
-    });
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
 
-    const result = executeBatch();
     res.json({
       success: true,
-      message: `Batch update successful. Updated: ${result.updatedCount}, Added: ${result.insertedCount}`,
-      updated: result.updatedCount,
-      added: result.insertedCount
+      message: `Batch update successful. Updated: ${updatedCount}, Added: ${insertedCount}`,
+      updated: updatedCount,
+      added: insertedCount
     });
 
   } catch (err) {
@@ -2623,7 +2625,8 @@ app.get('/api/inventory/items', authenticateToken, (req, res) => {
 app.post('/api/inventory/items/suppliers', authenticateToken, (req, res) => {
   const { itemId, suppliers } = req.body;
   try {
-    db.transaction(() => {
+    db.exec('BEGIN TRANSACTION');
+    try {
       db.prepare('DELETE FROM inventory_item_suppliers WHERE itemId = ?').run(itemId);
       const insert = db.prepare(`
         INSERT INTO inventory_item_suppliers (itemId, supplierId, isDefault, unitCost)
@@ -2632,7 +2635,11 @@ app.post('/api/inventory/items/suppliers', authenticateToken, (req, res) => {
       suppliers.forEach(sup => {
         insert.run(itemId, sup.supplierId, sup.isDefault ? 1 : 0, parseFloat(sup.unitCost));
       });
-    })();
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
