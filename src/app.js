@@ -9367,34 +9367,7 @@ function initApp() {
             });
         }
 
-        const applyCouponBtn = document.getElementById("btnApplyCoupon");
-        if (applyCouponBtn && !applyCouponBtn.dataset.listenerBound) {
-            applyCouponBtn.dataset.listenerBound = "true";
-            applyCouponBtn.addEventListener("click", () => {
-                const code = document.getElementById("posCouponInput").value.trim().toUpperCase();
-                const msgDiv = document.getElementById("couponMessage");
-                if (!code) {
-                    posAppliedCoupon = null;
-                    msgDiv.style.display = "none";
-                    renderPosCartList();
-                    return;
-                }
-                
-                const findCp = posCoupons.find(c => c.code === code);
-                if (findCp) {
-                    posAppliedCoupon = findCp;
-                    msgDiv.style.display = "block";
-                    msgDiv.style.color = "var(--accent-green)";
-                    msgDiv.textContent = `Coupon ${code} applied successfully!`;
-                } else {
-                    posAppliedCoupon = null;
-                    msgDiv.style.display = "block";
-                    msgDiv.style.color = "var(--danger)";
-                    msgDiv.textContent = `Invalid coupon code!`;
-                }
-                renderPosCartList();
-            });
-        }
+        // Coupon logic removed
 
         const saveModsBtn = document.getElementById("btnSaveModifiers");
         if (saveModsBtn && !saveModsBtn.dataset.listenerBound) {
@@ -9447,12 +9420,6 @@ function initApp() {
                                     : posAppliedCoupon.discountValue;
                             }
                             const amount = Math.max(0, subtotal + tax + serviceCharge - discount);
-                            
-                            const upiURL = `upi://pay?pa=bad3137@axisbank&pn=Badi%20Katori&am=${amount.toFixed(2)}&cu=INR`;
-                            const qrImg = qrSection.querySelector("img");
-                            if (qrImg) {
-                                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiURL)}`;
-                            }
                             qrSection.style.display = 'block';
                         } else {
                             processPayment(method);
