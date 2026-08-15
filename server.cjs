@@ -4071,8 +4071,9 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
     }
 
     const isUpiPayment = (paymentMethod === 'UPI' || paymentMethod === 'UPI / QR' || paymentMethod === 'Bank Transfer / UPI QR');
-    const orderStatus = isUpiPayment ? 'Pending Verification' : 'Completed';
-    const payStatus = isUpiPayment ? 'Pending Verification' : 'Verified';
+    // POS orders are immediately considered Completed & Verified because the cashier manually confirms them on the spot.
+    const orderStatus = 'Completed'; 
+    const payStatus = 'Verified';
 
     // Insert order record
     db.prepare(`

@@ -9919,6 +9919,16 @@ function initApp() {
             };
             renderGSTInvoice(orderObj);
             
+            // Show the invoice modal
+            const invoiceModal = document.getElementById("modalPOSInvoice");
+            if (invoiceModal) {
+                invoiceModal.style.display = "flex";
+                // Automatically trigger print dialog to save clicks
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+            }
+            
             posCart = [];
             posAppliedCoupon = null;
             document.getElementById("posCouponInput").value = '';
@@ -9959,6 +9969,16 @@ function initApp() {
                 tokenNumber: posNextToken
             };
             renderGSTInvoice(orderObj);
+            
+            // Show the invoice modal
+            const invoiceModal = document.getElementById("modalPOSInvoice");
+            if (invoiceModal) {
+                invoiceModal.style.display = "flex";
+                // Automatically trigger print dialog to save clicks
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+            }
             
             posCart = [];
             posAppliedCoupon = null;
