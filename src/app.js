@@ -9426,30 +9426,13 @@ function initApp() {
                                 : posAppliedCoupon.discountValue;
                         }
 
-                        const qrModal = document.getElementById('modalPOSQRPayment');
-                        if (qrModal) {
-                            const amount = Math.max(0, subtotal + tax + serviceCharge - discount);
-                            const amtLabel = document.getElementById('posQRAmountDue');
-                            if (amtLabel) amtLabel.textContent = `₹${amount.toFixed(2)}`;
-                            qrModal.style.display = 'flex';
-                        } else {
-                            processPayment(method);
-                        }
+                        processPayment(method);
                     } else {
                         processPayment(method);
                     }
                 });
             }
         });
-
-        const confirmPOSUpiBtn = document.getElementById("btnConfirmPOSUpiPayment");
-        if (confirmPOSUpiBtn && !confirmPOSUpiBtn.dataset.listenerBound) {
-            confirmPOSUpiBtn.dataset.listenerBound = "true";
-            confirmPOSUpiBtn.addEventListener("click", () => {
-                document.getElementById('modalPOSQRPayment').style.display = 'none';
-                processPayment("UPI");
-            });
-        }
 
         const holdBtn = document.getElementById("btnHoldOrder");
         if (holdBtn && !holdBtn.dataset.listenerBound) {
@@ -10218,6 +10201,14 @@ function initApp() {
                     <span>Status: PAID</span>
                 </div>
                 
+                ${order.paymentMethod === 'UPI' || order.paymentMethod === 'UPI / QR' ? `
+                <div class="receipt-divider"></div>
+                <div style="text-align:center; margin-top: 10px;">
+                    <div style="font-size: 10px; font-weight: bold; margin-bottom: 4px;">SCAN TO PAY VIA UPI</div>
+                    <img src="upi_qr.jpg" alt="UPI QR" style="width: 140px; height: 140px; margin: 0 auto; display: block; filter: grayscale(100%);">
+                </div>
+                ` : ''}
+
                 <div class="receipt-divider"></div>
                 
                 <div style="text-align:center; font-size:10px; margin-top:8px;">
