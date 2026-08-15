@@ -8357,6 +8357,7 @@ function initApp() {
             socket.on('order_placed', (data) => {
                 showToast(`New order placed: ${data.kotNumber} (₹${data.grandTotal})`);
                 syncStateFromServer();
+                window.dispatchEvent(new CustomEvent('bk_order_placed', { detail: data }));
             });
             socket.on('table_update', () => {
                 syncStateFromServer();

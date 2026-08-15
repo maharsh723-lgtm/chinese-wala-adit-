@@ -994,7 +994,28 @@ function computePLReportData(user, query) {
     cogsRows.forEach(row => {
       cogsVal += parseFloat(row.qty || 0) * parseFloat(row.rawCost || 0);
     });
-  } catch (e) {}
+
+    // Also include COGS from POS Orders (Billing system)
+    let posCogsBranch = "";
+    let posCogsParams = [...queryParams];
+    if (activeBranch !== "All") {
+      posCogsBranch = "AND o.store = ?";
+      posCogsParams.push(activeBranch);
+    }
+    const posCogsRows = db.prepare(`
+      SELECT i.quantity, r.rawCost
+      FROM pos_order_items i
+      JOIN pos_orders o ON o.id = i.orderId
+      JOIN pos_products p ON p.id = i.productId
+      JOIN recipes r ON r.id = p.recipeId
+      WHERE o.date ${dateQuery.replace('date', '')} ${posCogsBranch}
+    `).all(...posCogsParams);
+    posCogsRows.forEach(row => {
+      cogsVal += parseFloat(row.quantity || 0) * parseFloat(row.rawCost || 0);
+    });
+  } catch (e) {
+    console.error("Failed to query COGS:", e);
+  }
 
   // Fallback: If cogsVal is 0, let's assume 32% food cost of Net Sales for realistic modeling
   if (cogsVal === 0) {

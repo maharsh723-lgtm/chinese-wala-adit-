@@ -539,4 +539,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 200);
         });
     });
+
+    // Listen for custom event from app.js to update P&L instantly on order placed
+    window.addEventListener('bk_order_placed', () => {
+        const activeItem = document.querySelector(".nav-item.active");
+        if (activeItem && activeItem.getAttribute("data-target") === 'pl-management-dashboard') {
+            refreshPLDashboard();
+        }
+    });
 });
