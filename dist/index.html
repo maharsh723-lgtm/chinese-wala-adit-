@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-  <script type="module" crossorigin src="./assets/index-CBLWAt5W.js"></script>
+  <script type="module" crossorigin src="./assets/index-wpL_WX4y.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-BXUuiEHc.css">
 </head>
 <body>
@@ -46,8 +46,9 @@
                 <label class="login-label" for="login-branch">Select Outlet</label>
                 <select id="login-branch" class="login-select">
                     <option value="bm-vesu">VESU Outlet</option>
-                    <option value="bm-adajan">ADAJAN Outlet</option>
-                    <option value="bm-ctlight">CT LIGHT Outlet</option>
+                    <option value="bm-lpsavani">LP SAVANI Outlet</option>
+                    <option value="bm-gauravpath">GAURAV PATH Outlet</option>
+                    <option value="bm-sudamachowk">SUDAMA CHOWK Outlet</option>
                 </select>
             </div>
             
@@ -456,14 +457,14 @@
                                 <span style="font-size:0.75rem; color:var(--text-tertiary);">SOP Compliance</span>
                             </div>
                             <div class="widget-body" style="display: flex; flex-direction: column; gap: 10px; font-size:0.8rem;">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>VESU Broiler Calibration</span>
-                                    <span style="color: var(--danger); font-weight:700;">OVERDUE</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>CT LIGHT Temp Log</span>
-                                    <span style="color: var(--warning); font-weight:700;">PENDING</span>
-                                </div>
+                                 <div style="display: flex; justify-content: space-between;">
+                                     <span>VESU Broiler Calibration</span>
+                                     <span style="color: var(--danger); font-weight:700;">OVERDUE</span>
+                                 </div>
+                                 <div style="display: flex; justify-content: space-between;">
+                                     <span>GAURAV PATH Temp Log</span>
+                                     <span style="color: var(--warning); font-weight:700;">PENDING</span>
+                                 </div>
                             </div>
                         </div>
 
@@ -501,11 +502,15 @@
                                     <span style="font-weight:700; color:var(--success);">98.4%</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between;">
-                                    <span>2. ADAJAN</span>
+                                    <span>2. LP SAVANI</span>
                                     <span style="font-weight:700; color:var(--success);">96.8%</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between;">
-                                    <span>3. CT LIGHT</span>
+                                    <span>3. GAURAV PATH</span>
+                                    <span style="font-weight:700; color:var(--success);">95.2%</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>4. SUDAMA CHOWK</span>
                                     <span style="font-weight:700; color:var(--warning);">89.1%</span>
                                 </div>
                             </div>
@@ -722,7 +727,7 @@
                                 <tr data-recurrence="weekly">
                                     <td style="font-weight: 700;">Cold storage audit log</td>
                                     <td>Store Manager</td>
-                                    <td>CT LIGHT</td>
+                                    <td>GAURAV PATH</td>
                                     <td><span class="pill-badge pill-badge-success">COMPLETED</span></td>
                                     <td><span style="font-weight:700;">100%</span></td>
                                     <td>Yesterday</td>
@@ -1138,6 +1143,29 @@
                     <!-- SUB-CONTAINER 1: STOCK LIST -->
                     <div id="sub-inventory-list">
                         <!-- Inventory dashboard metrics -->
+                        <div class="four-column-kpi-grid" style="margin-bottom: 16px;">
+                            <div class="widget-card" style="padding: 16px; border-left: 4px solid var(--primary-accent);">
+                                <div style="font-size:0.75rem; color:var(--text-tertiary); font-weight:700;">INVENTORY SYNC HEALTH</div>
+                                <div style="display:flex; justify-content:space-between; margin-top:12px;">
+                                    <div style="text-align:center;">
+                                        <div style="font-size:1.25rem; font-weight:800; color:var(--success);" id="syncHealthSynced">4,817</div>
+                                        <div style="font-size:0.65rem; color:var(--text-secondary);">Synced</div>
+                                    </div>
+                                    <div style="text-align:center;">
+                                        <div style="font-size:1.25rem; font-weight:800; color:var(--warning);" id="syncHealthPending">6</div>
+                                        <div style="font-size:0.65rem; color:var(--text-secondary);">Pending</div>
+                                    </div>
+                                    <div style="text-align:center;">
+                                        <div style="font-size:1.25rem; font-weight:800; color:var(--danger);" id="syncHealthFailed">3</div>
+                                        <div style="font-size:0.65rem; color:var(--text-secondary);">Failed</div>
+                                    </div>
+                                    <div style="text-align:center; cursor:pointer;" onclick="openMissingRecipeReport()" title="View orders with missing recipes">
+                                        <div style="font-size:1.25rem; font-weight:800; color:#9b59b6;" id="syncHealthMissing">4</div>
+                                        <div style="font-size:0.65rem; color:var(--text-secondary); text-decoration:underline;">No Recipe</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="four-column-kpi-grid" style="margin-bottom: 32px;">
                             <div class="widget-card" style="padding: 16px;">
                                 <div style="font-size:0.75rem; color:var(--text-tertiary); font-weight:700;">TOTAL STOCK VALUE</div>
@@ -1386,19 +1414,27 @@
                             </div>
                             <div class="kpi-card">
                                 <div class="kpi-header">
-                                    <span>ADAJAN Wastage</span>
+                                    <span>LP SAVANI Wastage</span>
                                     <i data-lucide="map-pin" style="color: var(--orange-primary); width:16px; height:16px;"></i>
                                 </div>
-                                <div class="kpi-value" id="kpi-owner-adajan-waste">₹0</div>
-                                <div class="kpi-meta">ADAJAN Branch</div>
+                                <div class="kpi-value" id="kpi-owner-lpsavani-waste">₹0</div>
+                                <div class="kpi-meta">LP SAVANI Branch</div>
                             </div>
                             <div class="kpi-card">
                                 <div class="kpi-header">
-                                    <span>CT LIGHT Wastage</span>
+                                    <span>GAURAV PATH Wastage</span>
                                     <i data-lucide="map-pin" style="color: var(--orange-primary); width:16px; height:16px;"></i>
                                 </div>
-                                <div class="kpi-value" id="kpi-owner-ctlight-waste">₹0</div>
-                                <div class="kpi-meta">CT LIGHT Branch</div>
+                                <div class="kpi-value" id="kpi-owner-gauravpath-waste">₹0</div>
+                                <div class="kpi-meta">GAURAV PATH Branch</div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-header">
+                                    <span>SUDAMA CHOWK Wastage</span>
+                                    <i data-lucide="map-pin" style="color: var(--orange-primary); width:16px; height:16px;"></i>
+                                </div>
+                                <div class="kpi-value" id="kpi-owner-sudamachowk-waste">₹0</div>
+                                <div class="kpi-meta">SUDAMA CHOWK Branch</div>
                             </div>
                         </div>
 
@@ -1437,8 +1473,9 @@
                                         <tr>
                                             <th style="width: 120px;">Date</th>
                                             <th>BK VESU</th>
-                                            <th>BK ADAJAN</th>
-                                            <th>BK CT LIGHT</th>
+                                            <th>BK LP SAVANI</th>
+                                            <th>BK GAURAV PATH</th>
+                                            <th>BK SUDAMA CHOWK</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1458,8 +1495,9 @@
                                     <label class="saas-form-label" for="wasteStoreSelect">Store Name</label>
                                     <select class="saas-form-select" id="wasteStoreSelect">
                                         <option value="VESU">BK VESU</option>
-                                        <option value="ADAJAN">BK ADAJAN</option>
-                                        <option value="CT LIGHT">BK CT LIGHT</option>
+                                        <option value="LP SAVANI">BK LP SAVANI</option>
+                                        <option value="GAURAV PATH">BK GAURAV PATH</option>
+                                        <option value="SUDAMA CHOWK">BK SUDAMA CHOWK</option>
                                     </select>
                                 </div>
                                 <div class="saas-form-group">
@@ -1591,8 +1629,9 @@
                                 <select class="saas-form-select" id="reconOutletSelect" style="width:100%;">
                                     <option value="ALL">All Outlets</option>
                                     <option value="VESU">VESU Store</option>
-                                    <option value="ADAJAN">ADAJAN Store</option>
-                                    <option value="CT LIGHT">CT LIGHT Store</option>
+                                    <option value="LP SAVANI">LP SAVANI Store</option>
+                                    <option value="GAURAV PATH">GAURAV PATH Store</option>
+                                    <option value="SUDAMA CHOWK">SUDAMA CHOWK Store</option>
                                 </select>
                             </div>
                             <div style="flex: 1; min-width: 200px;">
@@ -1920,8 +1959,9 @@
                                     <select id="reportsFilterOutlet" style="padding: 6px 12px; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.8rem; outline: none;">
                                         <option value="All">All Outlets</option>
                                         <option value="VESU">VESU</option>
-                                        <option value="ADAJAN">ADAJAN</option>
-                                        <option value="CT LIGHT">CT LIGHT</option>
+                                        <option value="LP SAVANI">LP SAVANI</option>
+                                        <option value="GAURAV PATH">GAURAV PATH</option>
+                                        <option value="SUDAMA CHOWK">SUDAMA CHOWK</option>
                                     </select>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -2122,8 +2162,9 @@
                             <select class="saas-form-select" id="productSalesStoreSelect" style="width: 200px;">
                                 <option value="All">All Branches</option>
                                 <option value="VESU">VESU</option>
-                                <option value="ADAJAN">ADAJAN</option>
-                                <option value="CT LIGHT">CT LIGHT</option>
+                                <option value="LP SAVANI">LP SAVANI</option>
+                                <option value="GAURAV PATH">GAURAV PATH</option>
+                                <option value="SUDAMA CHOWK">SUDAMA CHOWK</option>
                             </select>
                         </div>
                         <div style="display: flex; gap: 12px; align-items: center; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 16px;">
@@ -2335,8 +2376,9 @@
                                 <select id="reconFilterOutletSelect" class="recon-form-select">
                                     <option value="all">All Outlets</option>
                                     <option value="VESU">VESU</option>
-                                    <option value="ADAJAN">ADAJAN</option>
-                                    <option value="CT LIGHT">CT LIGHT</option>
+                                    <option value="LP SAVANI">LP SAVANI</option>
+                                    <option value="GAURAV PATH">GAURAV PATH</option>
+                                    <option value="SUDAMA CHOWK">SUDAMA CHOWK</option>
                                 </select>
                             </div>
                             <div class="filter-input-group">
@@ -4813,8 +4855,9 @@
                             <select id="plBranchSelect" class="saas-select" style="width:150px;">
                                 <option value="All">All Branches</option>
                                 <option value="VESU">VESU Branch</option>
-                                <option value="ADAJAN">ADAJAN Branch</option>
-                                <option value="CT LIGHT">CT LIGHT Branch</option>
+                                <option value="LP SAVANI">LP SAVANI Branch</option>
+                                <option value="GAURAV PATH">GAURAV PATH Branch</option>
+                                <option value="SUDAMA CHOWK">SUDAMA CHOWK Branch</option>
                             </select>
 
                             <!-- Exports dropdown -->
@@ -4908,8 +4951,8 @@
                         </div>
                     </div>
 
-                    <!-- Branch comparative cards (owner dashboard) -->
-                    <div id="plBranchComparisonCards" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; margin-bottom:24px;">
+                    <!-- Layout: Tables & Particulars -->
+                    <div id="plBranchComparisonCards" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:20px; margin-bottom:24px;">
                         <!-- Vesu Branch Card -->
                         <div class="widget-card" style="padding:16px;">
                             <h4 style="margin:0 0 10px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">VESU Branch</h4>
@@ -4920,24 +4963,34 @@
                                 <div style="display:flex; justify-content:space-between; color:var(--text-secondary);"><span>Monthly Profit:</span><span id="pl-card-vesu-monthly-profit">₹0.00</span></div>
                             </div>
                         </div>
-                        <!-- Adajan Branch Card -->
+                        <!-- LP Savani Branch Card -->
                         <div class="widget-card" style="padding:16px;">
-                            <h4 style="margin:0 0 10px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">ADAJAN Branch</h4>
+                            <h4 style="margin:0 0 10px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">LP SAVANI Branch</h4>
                             <div style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem;">
-                                <div style="display:flex; justify-content:space-between;"><span>Today's Sales:</span><strong id="pl-card-adajan-today-sales">₹0.00</strong></div>
-                                <div style="display:flex; justify-content:space-between;"><span>Today's Profit:</span><strong id="pl-card-adajan-today-profit">₹0.00</strong></div>
-                                <div style="display:flex; justify-content:space-between; margin-top:6px; color:var(--text-secondary);"><span>Monthly Sales:</span><span id="pl-card-adajan-monthly-sales">₹0.00</span></div>
-                                <div style="display:flex; justify-content:space-between; color:var(--text-secondary);"><span>Monthly Profit:</span><span id="pl-card-adajan-monthly-profit">₹0.00</span></div>
+                                <div style="display:flex; justify-content:space-between;"><span>Today's Sales:</span><strong id="pl-card-lpsavani-today-sales">₹0.00</strong></div>
+                                <div style="display:flex; justify-content:space-between;"><span>Today's Profit:</span><strong id="pl-card-lpsavani-today-profit">₹0.00</strong></div>
+                                <div style="display:flex; justify-content:space-between; margin-top:6px; color:var(--text-secondary);"><span>Monthly Sales:</span><span id="pl-card-lpsavani-monthly-sales">₹0.00</span></div>
+                                <div style="display:flex; justify-content:space-between; color:var(--text-secondary);"><span>Monthly Profit:</span><span id="pl-card-lpsavani-monthly-profit">₹0.00</span></div>
                             </div>
                         </div>
-                        <!-- CT Light Branch Card -->
+                        <!-- Gaurav Path Branch Card -->
                         <div class="widget-card" style="padding:16px;">
-                            <h4 style="margin:0 0 10px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">CT LIGHT Branch</h4>
+                            <h4 style="margin:0 0 10px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">GAURAV PATH Branch</h4>
                             <div style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem;">
-                                <div style="display:flex; justify-content:space-between;"><span>Today's Sales:</span><strong id="pl-card-ctlight-today-sales">₹0.00</strong></div>
-                                <div style="display:flex; justify-content:space-between;"><span>Today's Profit:</span><strong id="pl-card-ctlight-today-profit">₹0.00</strong></div>
-                                <div style="display:flex; justify-content:space-between; margin-top:6px; color:var(--text-secondary);"><span>Monthly Sales:</span><span id="pl-card-ctlight-monthly-sales">₹0.00</span></div>
-                                <div style="display:flex; justify-content:space-between; color:var(--text-secondary);"><span>Monthly Profit:</span><span id="pl-card-ctlight-monthly-profit">₹0.00</span></div>
+                                <div style="display:flex; justify-content:space-between;"><span>Today's Sales:</span><strong id="pl-card-gauravpath-today-sales">₹0.00</strong></div>
+                                <div style="display:flex; justify-content:space-between;"><span>Today's Profit:</span><strong id="pl-card-gauravpath-today-profit">₹0.00</strong></div>
+                                <div style="display:flex; justify-content:space-between; margin-top:6px; color:var(--text-secondary);"><span>Monthly Sales:</span><span id="pl-card-gauravpath-monthly-sales">₹0.00</span></div>
+                                <div style="display:flex; justify-content:space-between; color:var(--text-secondary);"><span>Monthly Profit:</span><span id="pl-card-gauravpath-monthly-profit">₹0.00</span></div>
+                            </div>
+                        </div>
+                        <!-- Sudama Chowk Branch Card -->
+                        <div class="widget-card" style="padding:16px;">
+                            <h4 style="margin:0 0 10px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">SUDAMA CHOWK Branch</h4>
+                            <div style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem;">
+                                <div style="display:flex; justify-content:space-between;"><span>Today's Sales:</span><strong id="pl-card-sudamachowk-today-sales">₹0.00</strong></div>
+                                <div style="display:flex; justify-content:space-between;"><span>Today's Profit:</span><strong id="pl-card-sudamachowk-today-profit">₹0.00</strong></div>
+                                <div style="display:flex; justify-content:space-between; margin-top:6px; color:var(--text-secondary);"><span>Monthly Sales:</span><span id="pl-card-sudamachowk-monthly-sales">₹0.00</span></div>
+                                <div style="display:flex; justify-content:space-between; color:var(--text-secondary);"><span>Monthly Profit:</span><span id="pl-card-sudamachowk-monthly-profit">₹0.00</span></div>
                             </div>
                         </div>
                     </div>
@@ -5535,7 +5588,7 @@
                     <span style="font-weight:500; font-size:0.7rem; color:var(--text-tertiary);">10 mins ago</span>
                 </div>
                 <div class="alert-item-body">
-                    Roster attendance not punched in by AM Shift staff members in CT LIGHT store.
+                    Roster attendance not punched in by AM Shift staff members in GAURAV PATH store.
                 </div>
                 <div class="alert-actions">
                     <button class="alert-action-btn resolve" onclick="resolveNotification('notif-2')">Resolve</button>
@@ -5565,7 +5618,7 @@
                     <span style="font-weight:500; font-size:0.7rem; color:var(--text-tertiary);">1 hr ago</span>
                 </div>
                 <div class="alert-item-body">
-                    Cheddar cheese batch in ADAJAN expires in 48 hours.
+                    Cheddar cheese batch in LP SAVANI expires in 48 hours.
                 </div>
                 <div class="alert-actions">
                     <button class="alert-action-btn resolve" onclick="resolveNotification('notif-4')">Resolve</button>
@@ -5788,6 +5841,67 @@
                 <button class="saas-btn saas-btn-secondary" id="btnPayModalCancel" style="width:100%; padding:8px;">
                     Cancel Payment
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Missing Recipe Report -->
+    <div class="modal-overlay" id="modalMissingRecipeReport">
+        <div class="modal-content" style="max-width: 700px; width: 90%;">
+            <div class="modal-header">
+                <h3>Missing Recipe Report</h3>
+                <div class="modal-close" onclick="closeModal('modalMissingRecipeReport')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                </div>
+            </div>
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 16px;">
+                    The following POS orders encountered errors during inventory deduction because one or more sold items do not have a recipe configured.
+                </div>
+                <div class="saas-table-container">
+                    <table class="saas-table" id="tableMissingRecipeOrders">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date/Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="missingRecipeOrdersBody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Inventory Ledger -->
+    <div class="modal-overlay" id="modalInventoryLedger">
+        <div class="modal-content" style="max-width: 800px; width: 95%;">
+            <div class="modal-header">
+                <h3>Inventory Ledger - <span id="ledgerItemName"></span></h3>
+                <div class="modal-close" onclick="closeModal('modalInventoryLedger')">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                </div>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div class="saas-table-container">
+                    <table class="saas-table" id="tableInventoryLedger">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Transaction Type</th>
+                                <th>Reason</th>
+                                <th>Quantity Change</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryLedgerBody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -6074,8 +6188,9 @@
                         <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Store Assignment</label>
                         <select id="empStoreSelect" style="width:100%; box-sizing: border-box; background: rgba(21, 19, 18, 0.95); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px; outline: none; font-weight: 600;">
                             <option value="VESU" style="background:#151312; color:#fff;">BK VESU</option>
-                            <option value="ADAJAN" style="background:#151312; color:#fff;">BK ADAJAN</option>
-                            <option value="CT LIGHT" style="background:#151312; color:#fff;">BK CT LIGHT</option>
+                            <option value="LP SAVANI" style="background:#151312; color:#fff;">BK LP SAVANI</option>
+                            <option value="GAURAV PATH" style="background:#151312; color:#fff;">BK GAURAV PATH</option>
+                            <option value="SUDAMA CHOWK" style="background:#151312; color:#fff;">BK SUDAMA CHOWK</option>
                         </select>
                     </div>
                 </div>
@@ -6461,13 +6576,7 @@
                         <span style="font-size: 0.7rem; font-weight: 500; opacity: 0.8;">Scan dynamic QR to complete</span>
                     </div>
                 </button>
-                <button type="button" class="saas-btn payment-select-option card" data-method="Card" style="display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 10px; font-weight: 700; width: 100%; border: 1px solid rgba(46, 35, 31, 0.15); background: rgba(46, 35, 31, 0.04); color: #2B241F; cursor: pointer; text-align: left; transition: all 0.2s;">
-                    <i data-lucide="credit-card" style="width: 20px; height: 20px;"></i>
-                    <div style="display: flex; flex-direction: column;">
-                        <span style="font-size: 0.9rem;">Settle with CREDIT / DEBIT CARD</span>
-                        <span style="font-size: 0.7rem; font-weight: 500; opacity: 0.8;">Process via card swipe terminal</span>
-                    </div>
-                </button>
+                <!-- Card option removed per user request -->
             </div>
             <div class="modal-footer" style="margin-top: 10px;">
                 <button type="button" class="saas-btn saas-btn-secondary" style="width: 100%;" onclick="document.getElementById('modalPOSSelectPayment').style.display='none'">Cancel</button>

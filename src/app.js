@@ -316,9 +316,10 @@ function initApp() {
     const defaultEmployees = {
         "1": { id: "1", name: "Crew Member 1", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
         "EMP102": { id: "EMP102", name: "Kitchen Staff 1", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "password123", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP103": { id: "EMP103", name: "Manager CT LIGHT", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "CT LIGHT", activePunch: null, history: [] },
+        "EMP103": { id: "EMP103", name: "Manager GAURAV PATH", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "GAURAV PATH", activePunch: null, history: [] },
         "EMP104": { id: "EMP104", name: "Manager VESU", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP105": { id: "EMP105", name: "Manager ADAJAN", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "ADAJAN", activePunch: null, history: [] },
+        "EMP105": { id: "EMP105", name: "Manager LP SAVANI", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "LP SAVANI", activePunch: null, history: [] },
+        "EMP106": { id: "EMP106", name: "Manager SUDAMA CHOWK", role: "Branch Manager", mobile: "9876543215", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "SUDAMA CHOWK", activePunch: null, history: [] },
         "OWNER101": { id: "OWNER101", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "bkoperation/89*", status: "Active", store: "All", activePunch: null, history: [] },
         "bk2022": { id: "bk2022", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "bkoperation/89*", status: "Active", store: "All", activePunch: null, history: [] },
         "manager/123": { id: "manager/123", name: "Store Manager", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "VESU", activePunch: null, history: [] }
@@ -628,7 +629,7 @@ function initApp() {
     const dashboardWelcomeTitle = document.getElementById("dashboardWelcomeTitle");
 
     function setRole(roleKey) {
-        const validRoles = ["owner", "bm-vesu", "bm-adajan", "bm-ctlight"];
+        const validRoles = ["owner", "bm-vesu", "bm-lpsavani", "bm-gauravpath", "bm-sudamachowk"];
         if (!validRoles.includes(roleKey)) {
             roleKey = "bm-vesu";
         }
@@ -649,12 +650,15 @@ function initApp() {
             if (roleKey === "bm-vesu") {
                 currentStore = "VESU";
                 currentUser = empList["EMP104"] || defaultEmployees["EMP104"];
-            } else if (roleKey === "bm-adajan") {
-                currentStore = "ADAJAN";
+            } else if (roleKey === "bm-lpsavani") {
+                currentStore = "LP SAVANI";
                 currentUser = empList["EMP105"] || defaultEmployees["EMP105"];
-            } else if (roleKey === "bm-ctlight") {
-                currentStore = "CT LIGHT";
+            } else if (roleKey === "bm-gauravpath") {
+                currentStore = "GAURAV PATH";
                 currentUser = empList["EMP103"] || defaultEmployees["EMP103"];
+            } else if (roleKey === "bm-sudamachowk") {
+                currentStore = "SUDAMA CHOWK";
+                currentUser = empList["EMP106"] || defaultEmployees["EMP106"];
             }
             if (currentRoleText) currentRoleText.textContent = `BM - ${currentStore.split(' ')[0]}`;
             if (headerUserName) headerUserName.textContent = currentUser.name;
@@ -956,7 +960,7 @@ function initApp() {
         const ctx = document.getElementById("ownerSalesComparisonChart");
         if (!ctx) return;
 
-        const labels = ["VESU", "ADAJAN", "CT LIGHT"];
+        const labels = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
         const todayStr = getTodayDateStr();
         const salesData = labels.map(lbl => {
             const storeOrders = posOrders.filter(o => o.store === lbl && o.date === todayStr && o.status !== 'Refunded');
@@ -1058,7 +1062,7 @@ function initApp() {
         if (!container) return;
         container.innerHTML = "";
 
-        const branches = ["VESU", "ADAJAN", "CT LIGHT"];
+        const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
         branches.forEach(branch => {
             const branchCol = document.createElement("div");
             branchCol.style.display = "flex";
@@ -1070,8 +1074,9 @@ function initApp() {
             branchCol.style.border = "1px solid var(--border)";
 
             let branchHeaderColor = "var(--pos-accent-green, #10b981)";
-            if (branch === "ADAJAN") branchHeaderColor = "var(--pos-accent-orange, #f97316)";
-            if (branch === "CT LIGHT") branchHeaderColor = "var(--pos-accent-blue, #3b82f6)";
+            if (branch === "LP SAVANI") branchHeaderColor = "var(--pos-accent-orange, #f97316)";
+            if (branch === "GAURAV PATH") branchHeaderColor = "var(--pos-accent-blue, #3b82f6)";
+            if (branch === "SUDAMA CHOWK") branchHeaderColor = "var(--pos-accent-red, #ef4444)";
 
             const branchHeader = `
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid ${branchHeaderColor}; padding-bottom: 6px; margin-bottom: 8px;">
@@ -1115,7 +1120,7 @@ function initApp() {
         container.innerHTML = "";
 
         const todayStr = getTodayDateStr();
-        const branches = ["VESU", "ADAJAN", "CT LIGHT"];
+        const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
 
         branches.forEach(branch => {
             const branchCls = checklists.filter(c => c.store === branch && c.date === todayStr);
@@ -1639,7 +1644,7 @@ function initApp() {
                 }
         } else {
             // Owner View
-            const branches = ["VESU", "ADAJAN", "CT LIGHT"];
+            const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
             let branchRowsHTML = "";
 
             branches.forEach(branch => {
@@ -1917,7 +1922,7 @@ function initApp() {
             `;
 
             if (ownerAttendanceTab === "daily") {
-                const branches = ["VESU", "ADAJAN", "CT LIGHT"];
+                const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
                 let storeOptionsHTML = "";
                 branches.forEach(branch => {
                     storeOptionsHTML += `<option value="${branch}" ${ownerAttendanceStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -2252,10 +2257,39 @@ function initApp() {
             return sum;
         }, 0);
 
+        // Update Inventory Sync Health KPI Widget
+        if (posOrders && posOrders.length > 0) {
+            const storeOrders = posOrders.filter(o => o.store === targetStore);
+            let synced = 0;
+            let pending = 0;
+            let failed = 0;
+            let missing = 0;
+
+            storeOrders.forEach(o => {
+                const s = o.inventorySyncStatus;
+                if (s === 'Synced') synced++;
+                else if (s === 'Failed') failed++;
+                else if (s === 'Partial/Missing Recipe') missing++;
+                else pending++;
+            });
+
+            const shSynced = document.getElementById("syncHealthSynced");
+            if (shSynced) shSynced.innerText = synced;
+
+            const shPending = document.getElementById("syncHealthPending");
+            if (shPending) shPending.innerText = pending;
+
+            const shFailed = document.getElementById("syncHealthFailed");
+            if (shFailed) shFailed.innerText = failed;
+
+            const shMissing = document.getElementById("syncHealthMissing");
+            if (shMissing) shMissing.innerText = missing;
+        }
+
         // Branch Switcher dropdown for owner
         let selectHeaderHTML = "";
         if (currentRole === "owner") {
-            const branches = ["VESU", "ADAJAN", "CT LIGHT"];
+            const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
             let storeOptionsHTML = "";
             branches.forEach(branch => {
                 storeOptionsHTML += `<option value="${branch}" ${ownerInventoryStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -2458,6 +2492,9 @@ function initApp() {
                     <button class="saas-btn saas-btn-secondary" style="padding: 4px 12px; font-size:0.75rem;" onclick="editInventoryPrompt('${item.id}')">Edit</button>
                 `;
             }
+            actionsHTML += `
+                <button class="saas-btn" style="padding: 4px 12px; font-size:0.75rem; background: var(--bg-hover); color: var(--text-primary); border: 1px solid var(--border);" onclick="openInventoryLedger('${item.id}', '${item.label.replace(/'/g, "\\'")}')">Ledger</button>
+            `;
 
             const itemCost = item.unitCost !== null && item.unitCost !== undefined ? `₹${parseFloat(item.unitCost).toFixed(2)}` : "₹0.00";
             const itemTotalValue = (item.stock && item.unitCost) ? `₹${(item.stock * item.unitCost).toFixed(2)}` : "₹0.00";
@@ -2945,10 +2982,11 @@ function initApp() {
                 
                 let totalFranchiseCost = 0;
                 let vesuCost = 0;
-                let adajanCost = 0;
-                let ctlightCost = 0;
+                let lpsavaniCost = 0;
+                let gauravpathCost = 0;
+                let sudamachowkCost = 0;
                 
-                const branchCosts = { "VESU": 0, "ADAJAN": 0, "CT LIGHT": 0 };
+                const branchCosts = { "VESU": 0, "LP SAVANI": 0, "GAURAV PATH": 0, "SUDAMA CHOWK": 0 };
                 const reasonCosts = {
                     "Expired": 0,
                     "Burnt": 0,
@@ -2965,8 +3003,9 @@ function initApp() {
                     
                     totalFranchiseCost += wCost;
                     if (w.store === "VESU") vesuCost += wCost;
-                    else if (w.store === "ADAJAN") adajanCost += wCost;
-                    else if (w.store === "CT LIGHT") ctlightCost += wCost;
+                    else if (w.store === "LP SAVANI") lpsavaniCost += wCost;
+                    else if (w.store === "GAURAV PATH") gauravpathCost += wCost;
+                    else if (w.store === "SUDAMA CHOWK") sudamachowkCost += wCost;
                     
                     if (branchCosts[w.store] !== undefined) {
                         branchCosts[w.store] += wCost;
@@ -2978,8 +3017,15 @@ function initApp() {
                 
                 document.getElementById("kpi-owner-total-waste").textContent = `₹${totalFranchiseCost.toLocaleString()}`;
                 document.getElementById("kpi-owner-vesu-waste").textContent = `₹${vesuCost.toLocaleString()}`;
-                document.getElementById("kpi-owner-adajan-waste").textContent = `₹${adajanCost.toLocaleString()}`;
-                document.getElementById("kpi-owner-ctlight-waste").textContent = `₹${ctlightCost.toLocaleString()}`;
+                if (document.getElementById("kpi-owner-lpsavani-waste")) {
+                    document.getElementById("kpi-owner-lpsavani-waste").textContent = `₹${lpsavaniCost.toLocaleString()}`;
+                }
+                if (document.getElementById("kpi-owner-gauravpath-waste")) {
+                    document.getElementById("kpi-owner-gauravpath-waste").textContent = `₹${gauravpathCost.toLocaleString()}`;
+                }
+                if (document.getElementById("kpi-owner-sudamachowk-waste")) {
+                    document.getElementById("kpi-owner-sudamachowk-waste").textContent = `₹${sudamachowkCost.toLocaleString()}`;
+                }
                 
                 // Render Branch Cost Bar Chart
                 const branchCtx = document.getElementById("ownerWasteBranchChart");
@@ -2988,10 +3034,10 @@ function initApp() {
                     chartOwnerWasteBranch = new Chart(branchCtx, {
                         type: 'bar',
                         data: {
-                            labels: ["VESU", "ADAJAN", "CT LIGHT"],
+                            labels: ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"],
                             datasets: [{
                                 label: 'Wastage Loss (₹)',
-                                data: [branchCosts["VESU"], branchCosts["ADAJAN"], branchCosts["CT LIGHT"]],
+                                data: [branchCosts["VESU"], branchCosts["LP SAVANI"], branchCosts["GAURAV PATH"], branchCosts["SUDAMA CHOWK"]],
                                 backgroundColor: ['#A64B2A', '#D7A86E', '#8E806A'],
                                 borderRadius: 6
                             }]
@@ -3408,8 +3454,9 @@ function initApp() {
                         totalMonthWasteFound = true;
                         
                         const vesuItems = dayWastage.filter(w => w.store === "VESU");
-                        const adajanItems = dayWastage.filter(w => w.store === "ADAJAN");
-                        const ctlightItems = dayWastage.filter(w => w.store === "CT LIGHT");
+                        const lpsavaniItems = dayWastage.filter(w => w.store === "LP SAVANI");
+                        const gauravpathItems = dayWastage.filter(w => w.store === "GAURAV PATH");
+                        const sudamachowkItems = dayWastage.filter(w => w.store === "SUDAMA CHOWK");
                         
                         const dateObj = new Date(year, month, d);
                         const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
@@ -3434,14 +3481,15 @@ function initApp() {
                         tr.innerHTML = `
                             <td style="font-weight: 700; vertical-align: top; color: var(--text-heading);">${formattedDate}</td>
                             <td style="vertical-align: top;">${formatItems(vesuItems)}</td>
-                            <td style="vertical-align: top;">${formatItems(adajanItems)}</td>
-                            <td style="vertical-align: top;">${formatItems(ctlightItems)}</td>
+                            <td style="vertical-align: top;">${formatItems(lpsavaniItems)}</td>
+                            <td style="vertical-align: top;">${formatItems(gauravpathItems)}</td>
+                            <td style="vertical-align: top;">${formatItems(sudamachowkItems)}</td>
                         `;
                         monthTbody.appendChild(tr);
                     }
                     
                     if (!totalMonthWasteFound) {
-                        monthTbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-tertiary); padding: 20px;">No wastage logged for the selected month.</td></tr>`;
+                        monthTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-tertiary); padding: 20px;">No wastage logged for the selected month.</td></tr>`;
                     }
                 }
             }
@@ -3723,7 +3771,7 @@ function initApp() {
                             return;
                         }
 
-                        const validBranches = ["VESU", "ADAJAN", "CT LIGHT"];
+                        const validBranches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
                         const recordsToSave = [];
                         const errors = [];
 
@@ -3734,10 +3782,12 @@ function initApp() {
                             let branch = "";
                             if (branchInput.includes("VESU")) {
                                 branch = "VESU";
-                            } else if (branchInput.includes("ADAJAN")) {
-                                branch = "ADAJAN";
-                            } else if (branchInput.includes("CT LIGHT") || branchInput.includes("CTLIGHT") || branchInput.includes("CITY LIGHT") || branchInput.includes("CITYLIGHT")) {
-                                branch = "CT LIGHT";
+                            } else if (branchInput.includes("LP SAVANI") || branchInput.includes("LPSAVANI") || branchInput.includes("SAVANI")) {
+                                branch = "LP SAVANI";
+                            } else if (branchInput.includes("GAURAV PATH") || branchInput.includes("GAURAVPATH") || branchInput.includes("GAURAV")) {
+                                branch = "GAURAV PATH";
+                            } else if (branchInput.includes("SUDAMA CHOWK") || branchInput.includes("SUDAMACHOWK") || branchInput.includes("SUDAMA") || branchInput.includes("CHOWK") || branchInput.includes("CHOK")) {
+                                branch = "SUDAMA CHOWK";
                             }
 
                             const itemName = (row["Menu Item"] || row["menu item"] || row.Item || row.item || row["Item Name"] || row["item name"] || "").toString().trim();
@@ -4041,7 +4091,7 @@ function initApp() {
 
         } else {
             // Owner view
-            const branches = ["VESU", "ADAJAN", "CT LIGHT"];
+            const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
             let storeOptionsHTML = "";
             branches.forEach(branch => {
                 storeOptionsHTML += `<option value="${branch}" ${ownerEodStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -5167,6 +5217,64 @@ function initApp() {
                 window.addRecipeIngredientRow("", "", "");
             }
         }
+    };
+
+    window.openInventoryLedger = function(itemId, itemName) {
+        document.getElementById("ledgerItemName").innerText = itemName;
+        const tbody = document.getElementById("inventoryLedgerBody");
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Loading ledger...</td></tr>`;
+        document.getElementById("modalInventoryLedger").style.display = "flex";
+
+        const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
+        fetch(`/api/inventory/${itemId}/ledger?store=${encodeURIComponent(targetStore)}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No ledger records found.</td></tr>`;
+            } else {
+                tbody.innerHTML = data.map(record => `
+                    <tr>
+                        <td style="white-space: nowrap;">${new Date(record.timestamp).toLocaleString()}</td>
+                        <td>${record.transactionType}</td>
+                        <td>${record.reason}</td>
+                        <td style="font-weight:700; color: ${record.qty < 0 ? 'var(--danger)' : 'var(--success)'}">
+                            ${record.qty > 0 ? '+' : ''}${record.qty} ${record.unit}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger);">Failed to load ledger</td></tr>`;
+        });
+    };
+
+    window.openMissingRecipeReport = function() {
+        const tbody = document.getElementById("missingRecipeOrdersBody");
+        if (!tbody) return;
+
+        const targetStore = currentRole === "owner" ? ownerInventoryStore : currentStore;
+        const missingOrders = posOrders.filter(o => o.store === targetStore && o.inventorySyncStatus === 'Partial/Missing Recipe');
+
+        if (missingOrders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No orders with missing recipes.</td></tr>`;
+        } else {
+            tbody.innerHTML = missingOrders.map(o => `
+                <tr>
+                    <td><strong>${o.id}</strong><br><span style="font-size:0.75rem; color:var(--text-tertiary);">${o.dToken || o.tableName || 'N/A'}</span></td>
+                    <td>${o.date} ${o.time}</td>
+                    <td><span style="font-size:0.75rem; padding:2px 6px; border-radius:4px; background:#9b59b6; color:white;">No Recipe</span></td>
+                    <td>
+                        <button class="saas-btn saas-btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="openOrderDetailsModal('${o.id}')">View Items</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById("modalMissingRecipeReport").style.display = "flex";
     };
 
     window.closeModal = function(modalId) {
@@ -6572,8 +6680,9 @@ function initApp() {
         const list = [];
         const managers = {
             'VESU': 'Manager VESU',
-            'ADAJAN': 'Manager ADAJAN',
-            'CT LIGHT': 'Manager CT LIGHT'
+            'LP SAVANI': 'Manager LP SAVANI',
+            'GAURAV PATH': 'Manager GAURAV PATH',
+            'SUDAMA CHOWK': 'Manager SUDAMA CHOWK'
         };
 
         const today = new Date();
@@ -6582,7 +6691,7 @@ function initApp() {
             d.setDate(today.getDate() - i);
             const dateStr = d.toISOString().split('T')[0];
 
-            ['VESU', 'ADAJAN', 'CT LIGHT'].forEach(store => {
+            ['VESU', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'].forEach(store => {
                 // Determine base sales and splits
                 const totalSales = Math.round(15000 + Math.random() * 25000);
                 const cashSales = Math.round(totalSales * (0.2 + Math.random() * 0.15));
@@ -9632,7 +9741,18 @@ function initApp() {
                     const method = opt.getAttribute("data-method");
                     const modal = document.getElementById("modalPOSSelectPayment");
                     if (modal) modal.style.display = "none";
-                    processPayment(method);
+                    
+                    if (method === 'UPI') {
+                        // Instead of immediately processing, trigger the sidebar UPI QR flow
+                        const sidebarUpiBtn = document.querySelector(".pay-btn.upi");
+                        if (sidebarUpiBtn) {
+                            sidebarUpiBtn.click();
+                        } else {
+                            processPayment(method);
+                        }
+                    } else {
+                        processPayment(method);
+                    }
                 });
             }
         });
@@ -10897,6 +11017,18 @@ function initApp() {
                     <div style="font-size:0.85rem; font-weight:normal;">Tax: ₹${order.tax}</div>
                     ${order.discount ? `<div style="font-size:0.85rem; font-weight:normal; color:var(--danger);">Discount: -₹${order.discount}</div>` : ''}
                     <div style="font-size:1.1rem; color:var(--orange-primary); margin-top:4px;">Grand Total: ₹${order.grandTotal}</div>
+                </div>
+                
+                <div style="margin-top:16px; padding-top:12px; border-top:2px dashed var(--border);">
+                    <h4 style="font-weight:700; margin-bottom:8px; display:flex; justify-content:space-between;">
+                        Inventory Consumption
+                        <span style="font-size:0.75rem; padding:2px 6px; border-radius:4px; background:${order.inventorySyncStatus === 'Synced' ? '#27ae60' : (order.inventorySyncStatus === 'Failed' ? '#e74c3c' : '#f39c12')}; color:white;">
+                            ${order.inventorySyncStatus || 'Pending'}
+                        </span>
+                    </h4>
+                    <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:8px;">
+                        This order automatically deducted ingredients from ${order.store} outlet based on configured recipes.
+                    </div>
                 </div>
             `;
         }
@@ -13749,7 +13881,7 @@ const trainingModules = [
         "id": "commitment",
         "title": "1.2 Our Commitment to Quality & Consistency",
         "desc": "The four pillars of culinary excellence and our pledge to customer trust.",
-        "content": "<p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Our Commitment to Quality & Consistency</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">At Badi Katori, our reputation is built on a single promise: The perfect taste, every single time. Whether a customer visits an outlet in Vesu, Adajan, or Varachha, they expect the same crunch, the same aroma, and the same premium experience. Consistency is not just a goal; it is the foundation of our brand.</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">To honor this commitment, we adhere to these Four Pillars of Excellence:</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Standardized Sourcing</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">We ensure that every outlet uses identical, high-quality ingredients. By centralizing the supply of our signature frozen items and proprietary spice blends, we eliminate the risk of taste variation. If it isn’t from the Badi Katori central supply, it isn't Badi Katori.</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Precision in Preparation (SOPs)</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Great food is a science. Our Standard Operating Procedures (SOPs) dictate exact frying temperatures, precise mixing ratios for beverages, and strict plating guidelines. Following these steps ensures that our signature quality is never left to \"guesswork.\"</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. The 1-Year Quality Shield</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">We utilize advanced freezing technology to ensure our products maintain a 1-year shelf life without compromising on freshness or nutritional value. This allows every franchise to serve food that tastes exactly as the founder intended—fresh, safe, and delicious.</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">4. Continuous Monitoring & Audits</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Quality is a journey, not a destination. Through regular audits, feedback from our Surat-based micro-influencer campaigns, and real-time data tracking via our POS systems, we constantly monitor performance. We provide the training and tools necessary to correct any deviations before they reach the customer’s plate.</p><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Our Pledge:</strong></p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">\"Quality is doing it right when no one is looking.\" We pledge to never take shortcuts, never compromise on ingredients, and always prioritize the customer’s trust above all else.</p>"
+        "content": "<p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Our Commitment to Quality & Consistency</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">At Badi Katori, our reputation is built on a single promise: The perfect taste, every single time. Whether a customer visits an outlet in Vesu, LP Savani, or Gaurav Path, they expect the same crunch, the same aroma, and the same premium experience. Consistency is not just a goal; it is the foundation of our brand.</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">To honor this commitment, we adhere to these Four Pillars of Excellence:</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Standardized Sourcing</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">We ensure that every outlet uses identical, high-quality ingredients. By centralizing the supply of our signature frozen items and proprietary spice blends, we eliminate the risk of taste variation. If it isn’t from the Badi Katori central supply, it isn't Badi Katori.</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Precision in Preparation (SOPs)</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Great food is a science. Our Standard Operating Procedures (SOPs) dictate exact frying temperatures, precise mixing ratios for beverages, and strict plating guidelines. Following these steps ensures that our signature quality is never left to \"guesswork.\"</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. The 1-Year Quality Shield</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">We utilize advanced freezing technology to ensure our products maintain a 1-year shelf life without compromising on freshness or nutritional value. This allows every franchise to serve food that tastes exactly as the founder intended—fresh, safe, and delicious.</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">4. Continuous Monitoring & Audits</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Quality is a journey, not a destination. Through regular audits, feedback from our Surat-based micro-influencer campaigns, and real-time data tracking via our POS systems, we constantly monitor performance. We provide the training and tools necessary to correct any deviations before they reach the customer’s plate.</p><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Our Pledge:</strong></p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">\"Quality is doing it right when no one is looking.\" We pledge to never take shortcuts, never compromise on ingredients, and always prioritize the customer’s trust above all else.</p>"
     },
     {
         "id": "nda",
@@ -13809,7 +13941,7 @@ const trainingModules = [
         "id": "beverage_recipes",
         "title": "3.2 Beverage Menu & Mixing Ratios",
         "desc": "Standard ratios, blending times, and quality metrics for cold and hot beverages.",
-        "content": "<p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Standard Operating Procedure (SOP): Beverages & Mixes</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">To ensure every drink served at Badi Katori has the exact flavor profile intended by the brand, the Chaat Counter Boys and Ustaad must follow these precise measurements and blending times.</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Cold Beverages (Blended & Shaken)</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Category</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Item Nos.</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Weight (Premix)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Output</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Ingredients Required</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Standard Operating Procedure (SOP)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Cold Coffees</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">1-8</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">27g - 29g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">280-290 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">175ml Milk + 75g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk and pouch contents to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add ice and blend for 45 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Serve chilled in a serving glass.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Frappes</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">9-14</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">38g - 39g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">280-290 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">125ml Milk + 125g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk and pouch contents to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add ice and blend for 45 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Bubble Tea</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">15-24</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">46g - 58g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">300-315 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">100ml Milk + 100ml Water + 100g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk, water, and ice to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add pouch contents and blend for 45 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Pour into serving glass and serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Coolers</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">25-42</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">29g - 50g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">300-315 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Water + 150g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add water and pouch to shaker glass.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add ice and shake vigorously for 30 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Pour into serving glass.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Cold Coco</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">43-45</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">51g - 53g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">280-290 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">175ml Milk + 75g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk and pouch contents to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add ice and blend for 45 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Smoothies</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">54-57</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">58g - 83g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">250 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">100ml Water + 150g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Mix premix in water and leave for 5 mins.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add mix and ice to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Blend on low speed for 90 seconds.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Ice Tea</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">64-72</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">27g - 30g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">300-315 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Water + 150g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add water, pouch, and ice to shaker.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Shake vigorously for 30 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Pour into serving glass.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Lassi</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">73-85</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">35g - 60g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">200-220 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">200g Curd (Dahi)</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add curd and pouch to a vessel.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Use electric whisker for 30s or manual for 60s.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Fruit Shakes</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">100-104</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">44g - 56g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">285-300 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">125ml Milk + 125g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk, ice, and pouch to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Blend for 45 seconds and serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Cheesecake Shakes</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">105-110</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">44g - 62g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">285-300 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">125ml Milk + 125g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk, ice, and pouch to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Blend for 45 seconds and serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Mocktails</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">110-114</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">40g - 48g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">285-300 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Soda + 150g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Shake 50ml water, ice, and pouch for 30s.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Pour into glass; top with 150ml soda and stir.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Hot Beverages</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Category</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Item Nos.</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Weight (Premix)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Output</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Ingredients Required</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Standard Operating Procedure (SOP)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Hot Coffee</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">46-53</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">13g - 69g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Hot Milk</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add hot milk and pouch to a cup.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Mix well with a spoon to ensure no lumps.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Serve hot.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Milk Based (Hot)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">58-61</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">25g - 31g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">160-175 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Hot Milk</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Mix pouch in 50ml hot milk.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Once thick, add remaining 100ml milk; stir for 1 min.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Water Based (Hot)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">62-63</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">9g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Hot Water</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Mix pouch into hot water, stir well, and serve.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Hot Tea (Sugar Free)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">94-99</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">5g - 10g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">50ml Water + 100ml Milk</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Heat water and milk to a boil.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add pouch, stir well, strain, and serve hot.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Specialized Shots & Smoothies</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Category</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Item Nos.</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Weight (Premix)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Output</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Ingredients Required</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Standard Operating Procedure (SOP)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Fruit Shots</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">115-116</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">58g - 67g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">300 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">100ml Water + 150g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Mix premix in water and leave for 3-4 mins.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Blend with ice for 60 seconds and serve.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">4. Beverage Quality Standards</h4><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Ice Quality: Use only RO-water ice cubes. Never use \"crushed ice\" from outside vendors.</strong></p><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Blending Time: Always use a timer. Under-blending leaves lumps; over-blending makes the drink watery.</strong></p><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Branding: All beverages must be served in Badi Katori branded glassware or delivery bottles with specialized lids.</strong></p><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Verification: The Outlet Incharge must randomly check the weight of the premix pouches to ensure we are following the Upfront Ordering stock precision.</strong></p><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Staff Note:</strong></p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Consistent measurements equal consistent taste. Whether a customer is in Adajan or Vesu, the drink must taste the same!</p>"
+        "content": "<p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Standard Operating Procedure (SOP): Beverages & Mixes</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">To ensure every drink served at Badi Katori has the exact flavor profile intended by the brand, the Chaat Counter Boys and Ustaad must follow these precise measurements and blending times.</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Cold Beverages (Blended & Shaken)</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Category</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Item Nos.</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Weight (Premix)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Output</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Ingredients Required</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Standard Operating Procedure (SOP)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Cold Coffees</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">1-8</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">27g - 29g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">280-290 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">175ml Milk + 75g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk and pouch contents to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add ice and blend for 45 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Serve chilled in a serving glass.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Frappes</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">9-14</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">38g - 39g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">280-290 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">125ml Milk + 125g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk and pouch contents to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add ice and blend for 45 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Bubble Tea</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">15-24</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">46g - 58g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">300-315 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">100ml Milk + 100ml Water + 100g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk, water, and ice to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add pouch contents and blend for 45 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Pour into serving glass and serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Coolers</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">25-42</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">29g - 50g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">300-315 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Water + 150g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add water and pouch to shaker glass.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add ice and shake vigorously for 30 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Pour into serving glass.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Cold Coco</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">43-45</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">51g - 53g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">280-290 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">175ml Milk + 75g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk and pouch contents to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add ice and blend for 45 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Smoothies</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">54-57</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">58g - 83g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">250 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">100ml Water + 150g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Mix premix in water and leave for 5 mins.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add mix and ice to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Blend on low speed for 90 seconds.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Ice Tea</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">64-72</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">27g - 30g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">300-315 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Water + 150g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add water, pouch, and ice to shaker.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Shake vigorously for 30 seconds.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Pour into serving glass.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Lassi</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">73-85</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">35g - 60g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">200-220 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">200g Curd (Dahi)</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add curd and pouch to a vessel.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Use electric whisker for 30s or manual for 60s.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Fruit Shakes</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">100-104</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">44g - 56g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">285-300 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">125ml Milk + 125g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk, ice, and pouch to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Blend for 45 seconds and serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Cheesecake Shakes</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">105-110</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">44g - 62g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">285-300 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">125ml Milk + 125g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add milk, ice, and pouch to blender.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Blend for 45 seconds and serve chilled.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Mocktails</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">110-114</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">40g - 48g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">285-300 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Soda + 150g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Shake 50ml water, ice, and pouch for 30s.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Pour into glass; top with 150ml soda and stir.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Hot Beverages</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Category</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Item Nos.</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Weight (Premix)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Output</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Ingredients Required</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Standard Operating Procedure (SOP)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Hot Coffee</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">46-53</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">13g - 69g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Hot Milk</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Add hot milk and pouch to a cup.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Mix well with a spoon to ensure no lumps.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Serve hot.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Milk Based (Hot)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">58-61</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">25g - 31g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">160-175 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Hot Milk</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Mix pouch in 50ml hot milk.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Once thick, add remaining 100ml milk; stir for 1 min.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Water Based (Hot)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">62-63</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">9g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150ml Hot Water</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Mix pouch into hot water, stir well, and serve.</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Hot Tea (Sugar Free)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">94-99</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">5g - 10g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">150 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">50ml Water + 100ml Milk</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Heat water and milk to a boil.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Add pouch, stir well, strain, and serve hot.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">3. Specialized Shots & Smoothies</h4><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Category</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Item Nos.</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Weight (Premix)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Output</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Ingredients Required</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Standard Operating Procedure (SOP)</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Fruit Shots</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">115-116</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">58g - 67g</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">300 ml</p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">100ml Water + 150g Ice</p><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">1. Mix premix in water and leave for 3-4 mins.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">2. Blend with ice for 60 seconds and serve.</h4><h4 style=\"margin-top: 24px; margin-bottom: 12px; font-weight: 800; color: #0F172A;\">4. Beverage Quality Standards</h4><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Ice Quality: Use only RO-water ice cubes. Never use \"crushed ice\" from outside vendors.</strong></p><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Blending Time: Always use a timer. Under-blending leaves lumps; over-blending makes the drink watery.</strong></p><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Branding: All beverages must be served in Badi Katori branded glassware or delivery bottles with specialized lids.</strong></p><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Verification: The Outlet Incharge must randomly check the weight of the premix pouches to ensure we are following the Upfront Ordering stock precision.</strong></p><p style=\"margin-bottom: 8px; line-height: 1.6; color: #334155;\"><strong>Staff Note:</strong></p><p style=\"margin-bottom: 16px; line-height: 1.6; color: #475569;\">Consistent measurements equal consistent taste. Whether a customer is in LP Savani or Vesu, the drink must taste the same!</p>"
     },
     {
         "id": "chaat_assembly",

@@ -191,7 +191,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
     const todayStr = new Date().toISOString().split('T')[0];
     const topSellingByStore = {};
     try {
-      const stores = ["VESU", "ADAJAN", "CT LIGHT"];
+      const stores = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
       stores.forEach(st => {
         let items = db.prepare(`
           SELECT productName, SUM(quantity) as qty
@@ -1145,8 +1145,8 @@ function computePLReportData(user, query) {
     monthlyExpense = totalExpenses;
   }
 
-  // 4. Branch comparison cards (VESU, ADAJAN, CT LIGHT)
-  const branches = ["VESU", "ADAJAN", "CT LIGHT"];
+  // 4. Branch comparison cards (VESU, LP SAVANI, GAURAV PATH, SUDAMA CHOWK)
+  const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
   const branchDetails = {};
 
   branches.forEach(bName => {
@@ -2106,7 +2106,7 @@ app.post('/api/pos/delivery/simulate', (req, res) => {
     const grandTotal = subtotal + tax - discount;
 
     const names = ['Aarav Mehta', 'Ananya Sharma', 'Kabir Singh', 'Neha Patel', 'Devendra Rao', 'Pooja Iyer'];
-    const addresses = ['Vesu Main Rd, Block C-404', 'Adajan Circle, Nr Star Bazaar', 'City Light Town, Sweet Home Apt', 'Dumas Rd, 102 Royal Arcade'];
+    const addresses = ['Vesu Main Rd, Block C-404', 'LP Savani Road, Nr Star Bazaar', 'Gaurav Path Town, Sweet Home Apt', 'Sudama Chowk, 102 Royal Arcade'];
 
     const mockOrderPayload = {
       id: `${targetPlatform.toUpperCase()}-${Date.now().toString().slice(-6)}`,
@@ -3036,6 +3036,9 @@ app.post('/api/pos/orders/:id/verify-payment', authenticateToken, (req, res) => 
 
     db.prepare("UPDATE pos_orders SET paymentStatus = 'Verified', status = 'Completed', adminNotes = ? WHERE id = ?").run(notes || null, id);
 
+    const io = req.app.get('io');
+    processPosOrderInventoryConsumption(id, order.store, io);
+
     // Audit Log
     db.prepare(`
       INSERT INTO pos_audit_logs (id, timestamp, action, userId, userName, details, store)
@@ -3050,7 +3053,6 @@ app.post('/api/pos/orders/:id/verify-payment', authenticateToken, (req, res) => 
       order.store
     );
 
-    const io = req.app.get('io');
     if (io) {
       io.emit('pl_update');
       io.emit('order_verified', { id, store: order.store });
@@ -3946,6 +3948,102 @@ app.put('/api/pos/kitchen-orders/:id/status', authenticateToken, (req, res) => {
   }
 });
 
+// --- Automated Recipe-Based Inventory Consumption ---
+function processPosOrderInventoryConsumption(orderId, storeId, io) {
+  try {
+    const order = db.prepare('SELECT * FROM pos_orders WHERE id = ?').get(orderId);
+    if (!order) return;
+    
+    // Check idempotency: Have we already deducted for this order?
+    const existingSync = db.prepare('SELECT count(*) as cnt FROM inventory_consumption WHERE orderId = ?').get(orderId);
+    if (existingSync && existingSync.cnt > 0) {
+      console.log(`[Inventory] Order ${orderId} already synced. Skipping duplicate deduction.`);
+      db.prepare("UPDATE pos_orders SET inventorySyncStatus = 'Synced' WHERE id = ?").run(orderId);
+      return;
+    }
+
+    const orderItems = db.prepare('SELECT * FROM pos_order_items WHERE orderId = ?').all(orderId);
+    let allDeducted = true;
+    let missingRecipes = 0;
+
+    db.exec('BEGIN EXCLUSIVE TRANSACTION');
+    try {
+      for (const item of orderItems) {
+        // Find product to get recipeId
+        const product = db.prepare('SELECT * FROM pos_products WHERE id = ?').get(item.productId);
+        if (!product || !product.recipeId) {
+          missingRecipes++;
+          continue; // No recipe attached, skip deduction
+        }
+
+        const recipe = db.prepare('SELECT * FROM recipes WHERE id = ?').get(product.recipeId);
+        if (!recipe) {
+          missingRecipes++;
+          continue;
+        }
+
+        const ingredients = recipe.ingredients ? JSON.parse(recipe.ingredients) : [];
+        const quantitySold = item.quantity;
+        
+        // Support for modifiers
+        const itemModifiers = item.modifiers ? JSON.parse(item.modifiers) : [];
+
+        for (const ing of ingredients) {
+          // Standard unit mapping could go here. Assuming 1:1 matching for MVP, mapping unit conversions as requested.
+          const reqQty = (ing.qty || 0) * quantitySold;
+          
+          const invItem = db.prepare('SELECT * FROM inventory WHERE label = ? AND store = ?').get(ing.name, storeId);
+          if (invItem) {
+            // Deduct
+            const newStock = invItem.stock - reqQty;
+            db.prepare('UPDATE inventory SET stock = ? WHERE id = ?').run(newStock, invItem.id);
+            
+            // Insert Consumption Ledger Record
+            const consumptionId = `cons-${Date.now()}-${Math.random().toString(36).substr(2,4)}`;
+            db.prepare(`
+              INSERT INTO inventory_consumption (
+                id, orderId, storeId, menuItemId, recipeId, recipeVersion, soldQuantity,
+                ingredientId, recipeQuantity, actualConsumptionQuantity, unit, timestamp, source, status
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(
+              consumptionId, orderId, storeId, product.id, recipe.id, recipe.version || 1, quantitySold,
+              invItem.id, reqQty, reqQty, invItem.unit, new Date().toISOString(), 'POS', 'Completed'
+            );
+
+            // Insert Ledger Entry
+            db.prepare(`
+              INSERT INTO inventory_ledger (id, itemId, storeId, transactionType, qty, unit, reason, timestamp, referenceId)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(
+              `ledg-${Date.now()}-${Math.random().toString(36).substr(2,4)}`,
+              invItem.id, storeId, 'POS Consumption', -reqQty, invItem.unit, `POS Order ${orderId}`, new Date().toISOString(), consumptionId
+            );
+
+            // Emit low stock alert
+            if (newStock <= invItem.reorder && io) {
+              db.prepare("UPDATE inventory SET status = 'LOW STOCK' WHERE id = ?").run(invItem.id);
+              io.emit('stock_alert', { itemId: invItem.id, label: invItem.label, store: storeId, stock: newStock, reorder: invItem.reorder });
+            }
+          } else {
+             // Ingredient missing in warehouse
+             allDeducted = false;
+          }
+        }
+      }
+      const syncStatus = missingRecipes > 0 ? 'Partial/Missing Recipe' : (allDeducted ? 'Synced' : 'Failed');
+      db.prepare('UPDATE pos_orders SET inventorySyncStatus = ? WHERE id = ?').run(syncStatus, orderId);
+      db.exec('COMMIT');
+    } catch (txErr) {
+      db.exec('ROLLBACK');
+      throw txErr;
+    }
+  } catch(e) {
+    console.error('Error during POS inventory consumption:', e);
+    db.prepare("UPDATE pos_orders SET inventorySyncStatus = 'Failed' WHERE id = ?").run(orderId);
+  }
+}
+// -------------------------------------------------------------
+
 app.post('/api/pos/orders', authenticateToken, (req, res) => {
   const {
     id, customerId, customerName, orderType, tableName = null, address = null,
@@ -3963,45 +4061,8 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
   try {
     const io = req.app.get('io');
     
-    // Deduct stock for each item based on its recipe ingredients
-    for (const item of items) {
-      const product = db.prepare('SELECT * FROM pos_products WHERE id = ?').get(item.productId);
-      if (product && product.ingredients) {
-        const ingredients = JSON.parse(product.ingredients);
-        for (const ing of ingredients) {
-          const invItem = db.prepare('SELECT * FROM inventory WHERE label = ? AND store = ?').get(ing.name, store);
-          if (invItem) {
-            const qtyToDeduct = ing.qty * item.quantity;
-            const newStock = Math.max(0, invItem.stock - qtyToDeduct);
-            db.prepare('UPDATE inventory SET stock = ? WHERE id = ?').run(newStock, invItem.id);
-            
-            // Log stock movement
-            db.prepare(`
-              INSERT INTO pos_stock_movement (id, itemId, itemName, qty, type, reason, timestamp, store)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            `).run(
-              `sm-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-              invItem.id, invItem.label, qtyToDeduct, 'OUT', `POS Order ${id}`,
-              currentDate.toISOString(), store
-            );
-
-            // Trigger low stock alerts if applicable
-            if (newStock <= invItem.reorder) {
-              db.prepare("UPDATE inventory SET status = 'LOW STOCK' WHERE id = ?").run(invItem.id);
-              if (io) {
-                io.emit('stock_alert', {
-                  itemId: invItem.id,
-                  label: invItem.label,
-                  store: store,
-                  stock: newStock,
-                  reorder: invItem.reorder
-                });
-              }
-            }
-          }
-        }
-      }
-    }
+    // Inventory deduction is now handled by processPosOrderInventoryConsumption
+    // ONLY when the order is marked as 'Completed'.
 
     // Update customer loyalty points (1 point per ₹100 spent)
     if (customerId && customerId !== 'cust-1') {
@@ -4118,6 +4179,10 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
       io.emit('table_update', { store });
     }
 
+    if (orderStatus === 'Completed') {
+      processPosOrderInventoryConsumption(id, store, io);
+    }
+
     res.json({
       success: true,
       message: 'Order created successfully',
@@ -4137,6 +4202,20 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
   } catch (err) {
     console.error('Failed to save POS order:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/inventory/:id/ledger', authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const { store } = req.query;
+  const targetStore = req.user.role === 'owner' ? (store || req.user.store) : req.user.store;
+  
+  try {
+    const ledger = db.prepare('SELECT * FROM inventory_ledger WHERE itemId = ? AND storeId = ? ORDER BY timestamp DESC').all(id, targetStore);
+    res.json(ledger);
+  } catch (err) {
+    console.error('Error fetching ledger:', err);
+    res.status(500).json({ error: 'Failed to fetch ledger' });
   }
 });
 

@@ -32,10 +32,12 @@ document.addEventListener("DOMContentLoaded", () => {
             store = "All";
         } else if (cachedRoleKey === "bm-vesu") {
             store = "VESU";
-        } else if (cachedRoleKey === "bm-adajan") {
-            store = "ADAJAN";
-        } else if (cachedRoleKey === "bm-ctlight") {
-            store = "CT LIGHT";
+        } else if (cachedRoleKey === "bm-lpsavani") {
+            store = "LP SAVANI";
+        } else if (cachedRoleKey === "bm-gauravpath") {
+            store = "GAURAV PATH";
+        } else if (cachedRoleKey === "bm-sudamachowk") {
+            store = "SUDAMA CHOWK";
         }
         return { role, store };
     }
@@ -72,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 description: "Cash Sales registry summary",
                 type: "cash",
                 voucherNo: "V-002",
-                store: "ADAJAN",
+                store: "LP SAVANI",
                 lines: [
                     { account: "Cash", debit: 18000, credit: 0 },
                     { account: "Sales", debit: 0, credit: 18000 }
