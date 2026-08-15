@@ -10134,6 +10134,7 @@ function initApp() {
                         <img src="brand_logo.jpg" alt="Badi Katori Logo" style="width: 100%; height: auto; display: block; border-radius: 4px; filter: grayscale(1);"/>
                     </div>
                     <div style="font-size:10px;">Store: ${order.store || currentStore}</div>
+                    ${(order.store || currentStore).includes('VESU') ? '<div style="font-size:10px;">Contact: +91 9428510400</div>' : ''}
                     <div style="font-size:10px; margin-top:4px;">GSTIN: 27AABCB1234F1Z0</div>
                     ${order.tokenNumber ? `
                     <div style="margin-top: 10px; padding: 6px; border: 2px dashed #000; border-radius: 4px; display: inline-block; font-weight: 900; font-size: 1.15rem; font-family: monospace; background: #fcfcfc;">
@@ -10172,10 +10173,6 @@ function initApp() {
                     <span>Discount</span>
                     <span>-₹${order.discount.toFixed(2)}</span>
                 </div>` : ''}
-                <div class="receipt-row">
-                    <span>Service Charge (5%)</span>
-                    <!-- <span>₹${order.serviceCharge.toFixed(2)}</span> -->
-                </div>
                 
                 <div class="receipt-divider"></div>
                 
