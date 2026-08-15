@@ -9398,34 +9398,6 @@ function initApp() {
                             alert("No items in the cart to settle!");
                             return;
                         }
-
-                        const qrSection = document.getElementById('billingQrSection');
-                        if (qrSection) {
-                            // Calculate total
-                            let subtotal = 0;
-                            posCart.forEach(item => {
-                                let itemPrice = item.price;
-                                (item.modifiers || []).forEach(modName => {
-                                    const modInfo = posModifiers.find(m => m.name === modName);
-                        // Calculate total
-                        let subtotal = 0;
-                        posCart.forEach(item => {
-                            let itemPrice = item.price;
-                            (item.modifiers || []).forEach(modName => {
-                                const modInfo = posModifiers.find(m => m.name === modName);
-                                if (modInfo) itemPrice += modInfo.price;
-                            });
-                            subtotal += itemPrice * item.quantity;
-                        });
-                        const tax = 0;
-                        const serviceCharge = 0;
-                        let discount = 0;
-                        if (posAppliedCoupon) {
-                            discount = posAppliedCoupon.discountType === 'percent' 
-                                ? subtotal * (posAppliedCoupon.discountValue / 100) 
-                                : posAppliedCoupon.discountValue;
-                        }
-
                         processPayment(method);
                     } else {
                         processPayment(method);
