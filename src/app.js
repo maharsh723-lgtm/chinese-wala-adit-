@@ -8900,7 +8900,7 @@ function initApp() {
         if (window.lucide) window.lucide.createIcons();
         
         const tax = 0;
-        const serviceCharge = subtotal * 0.05;
+        const serviceCharge = 0;
         
         let discount = 0;
         if (posAppliedCoupon) {
@@ -8937,7 +8937,7 @@ function initApp() {
             if (discountRow) discountRow.style.display = 'none';
         }
         
-        updateTotalsDOM("posServiceCharge", `₹${serviceCharge.toFixed(2)}`);
+        document.getElementById("posServiceChargeRow") && (document.getElementById("posServiceChargeRow").style.display = 'none');
         updateTotalsDOM("posGrandTotal", `₹${grandTotal.toFixed(2)}`);
     }
 
@@ -9439,7 +9439,7 @@ function initApp() {
                                 subtotal += itemPrice * item.quantity;
                             });
                             const tax = 0;
-                            const serviceCharge = subtotal * 0.05;
+                            const serviceCharge = 0;
                             let discount = 0;
                             if (posAppliedCoupon) {
                                 discount = posAppliedCoupon.discountType === 'percent' 
@@ -9646,7 +9646,7 @@ function initApp() {
                 });
                 text += `--------------------------------\n`;
                 if (order.discount > 0) text += `Discount: -₹${order.discount.toFixed(2)}\n`;
-                text += `Service Charge (5%): ₹${order.serviceCharge.toFixed(2)}\n`;
+                // Removed service charge
                 text += `*GRAND TOTAL:* ₹${order.grandTotal.toFixed(2)}\n`;
                 text += `Payment Method: ${order.paymentMethod}\n`;
                 text += `Status: PAID / CONFIRMED\n`;
@@ -9884,7 +9884,7 @@ function initApp() {
         });
         
         const tax = 0;
-        const serviceCharge = subtotal * 0.05;
+        const serviceCharge = 0;
         
         let discount = 0;
         if (posAppliedCoupon) {
@@ -10119,7 +10119,7 @@ function initApp() {
         });
         text += `--------------------------------\n`;
         if (order.discount > 0) text += `Discount: -₹${order.discount.toFixed(2)}\n`;
-        text += `Service Charge (5%): ₹${order.serviceCharge.toFixed(2)}\n`;
+        // Removed service charge
         text += `*GRAND TOTAL:* ₹${order.grandTotal.toFixed(2)}\n`;
         text += `Payment Method: ${order.paymentMethod}\n`;
         text += `Status: PAID / CONFIRMED\n`;
@@ -10206,7 +10206,7 @@ function initApp() {
                 </div>` : ''}
                 <div class="receipt-row">
                     <span>Service Charge (5%)</span>
-                    <span>₹${order.serviceCharge.toFixed(2)}</span>
+                    <!-- <span>₹${order.serviceCharge.toFixed(2)}</span> -->
                 </div>
                 
                 <div class="receipt-divider"></div>
@@ -10313,7 +10313,7 @@ function initApp() {
             y += 4;
         }
         doc.text("Service Charge (5%):", 5, y);
-        doc.text(`₹${order.serviceCharge.toFixed(2)}`, 75, y, { align: "right" });
+        // doc.text(`₹${order.serviceCharge.toFixed(2)}`, 75, y, { align: "right" });
         
         y += 2;
         doc.line(5, y, 75, y);
@@ -11816,7 +11816,7 @@ function initApp() {
         
         const qrContainer = document.getElementById("payModalQRCode");
         if (qrContainer) {
-            qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiURL)}" alt="UPI QR Code" style="width:200px; height:200px;" />`;
+            qrContainer.innerHTML = `<img src="upi_qr.jpg" alt="UPI QR Code" style="width:200px; height:200px;" />`;
         }
 
         const timerLbl = document.getElementById("payModalTimer");
