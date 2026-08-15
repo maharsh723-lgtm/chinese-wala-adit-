@@ -9428,8 +9428,8 @@ function initApp() {
                     });
                     posCart = [];
                     posAppliedCoupon = null;
-                    document.getElementById("posCouponInput").value = '';
-                    document.getElementById("posOrderInstructions").value = '';
+                    const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
+                    const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
                     syncCartStateAndUI();
                     updateHeldOrdersCount();
                     showToast("Order placed on hold successfully.");
@@ -9452,8 +9452,8 @@ function initApp() {
                 if (confirm("Are you sure you want to clear current checkout cart?")) {
                     posCart = [];
                     posAppliedCoupon = null;
-                    document.getElementById("posCouponInput").value = '';
-                    document.getElementById("posOrderInstructions").value = '';
+                    const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
+                    const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
                     syncCartStateAndUI();
                     showToast("Cart cleared.");
                 }
@@ -9886,8 +9886,8 @@ function initApp() {
             
             posCart = [];
             posAppliedCoupon = null;
-            document.getElementById("posCouponInput").value = '';
-            document.getElementById("posOrderInstructions").value = '';
+            const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
+            const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
             syncCartStateAndUI();
             incrementToken();
             return;
@@ -9937,8 +9937,8 @@ function initApp() {
             
             posCart = [];
             posAppliedCoupon = null;
-            document.getElementById("posCouponInput").value = '';
-            document.getElementById("posOrderInstructions").value = '';
+            const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
+            const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
             syncCartStateAndUI();
             incrementToken();
             
@@ -9968,8 +9968,8 @@ function initApp() {
             
             posCart = [];
             posAppliedCoupon = null;
-            document.getElementById("posCouponInput").value = '';
-            document.getElementById("posOrderInstructions").value = '';
+            const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
+            const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
             syncCartStateAndUI();
             incrementToken();
         }
