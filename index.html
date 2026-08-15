@@ -6550,6 +6550,20 @@
     </div>
 
     <!-- SELECT PAYMENT METHOD MODAL -->
+    <!-- POS QR Payment Modal -->
+    <div class="modal-overlay" id="modalPOSQRPayment" style="display:none; justify-content:center; align-items:center; z-index:99999;">
+        <div class="modal-content" style="max-width: 350px; padding: 24px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--pos-espresso); margin-bottom: 4px;">Scan to Pay</h3>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 20px;">Use any UPI app to scan and pay.</p>
+            <div style="font-size: 1.6rem; font-weight: 800; color: var(--pos-accent-orange); margin-bottom: 20px;" id="posQRAmountDue">₹0.00</div>
+            <img src="upi_qr.jpg?v=2" alt="UPI QR Code" style="width: 220px; height: 220px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <button type="button" class="saas-btn saas-btn-primary" id="btnConfirmPOSUpiPayment" style="width: 100%; padding: 12px; font-weight: 800; margin-bottom: 8px;">Confirm Payment Received</button>
+            <button type="button" class="saas-btn saas-btn-secondary" onclick="document.getElementById('modalPOSQRPayment').style.display='none'" style="width: 100%; padding: 10px;">Cancel</button>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="modalPOSSelectPayment" style="z-index: 10000; display: none; align-items: center; justify-content: center;">
         <div class="modal-content" style="max-width: 400px; width: 95%;">
             <div class="modal-header">

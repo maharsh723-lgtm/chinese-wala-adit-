@@ -9407,20 +9407,31 @@ function initApp() {
                                 let itemPrice = item.price;
                                 (item.modifiers || []).forEach(modName => {
                                     const modInfo = posModifiers.find(m => m.name === modName);
-                                    if (modInfo) itemPrice += modInfo.price;
-                                });
-                                subtotal += itemPrice * item.quantity;
+                        // Calculate total
+                        let subtotal = 0;
+                        posCart.forEach(item => {
+                            let itemPrice = item.price;
+                            (item.modifiers || []).forEach(modName => {
+                                const modInfo = posModifiers.find(m => m.name === modName);
+                                if (modInfo) itemPrice += modInfo.price;
                             });
-                            const tax = 0;
-                            const serviceCharge = 0;
-                            let discount = 0;
-                            if (posAppliedCoupon) {
-                                discount = posAppliedCoupon.discountType === 'percent' 
-                                    ? subtotal * (posAppliedCoupon.discountValue / 100) 
-                                    : posAppliedCoupon.discountValue;
-                            }
+                            subtotal += itemPrice * item.quantity;
+                        });
+                        const tax = 0;
+                        const serviceCharge = 0;
+                        let discount = 0;
+                        if (posAppliedCoupon) {
+                            discount = posAppliedCoupon.discountType === 'percent' 
+                                ? subtotal * (posAppliedCoupon.discountValue / 100) 
+                                : posAppliedCoupon.discountValue;
+                        }
+
+                        const qrModal = document.getElementById('modalPOSQRPayment');
+                        if (qrModal) {
                             const amount = Math.max(0, subtotal + tax + serviceCharge - discount);
-                            qrSection.style.display = 'block';
+                            const amtLabel = document.getElementById('posQRAmountDue');
+                            if (amtLabel) amtLabel.textContent = `₹${amount.toFixed(2)}`;
+                            qrModal.style.display = 'flex';
                         } else {
                             processPayment(method);
                         }
@@ -9431,11 +9442,11 @@ function initApp() {
             }
         });
 
-        const confirmUpiBtn = document.getElementById("btnConfirmUpiPayment");
-        if (confirmUpiBtn && !confirmUpiBtn.dataset.listenerBound) {
-            confirmUpiBtn.dataset.listenerBound = "true";
-            confirmUpiBtn.addEventListener("click", () => {
-                document.getElementById('billingQrSection').style.display = 'none';
+        const confirmPOSUpiBtn = document.getElementById("btnConfirmPOSUpiPayment");
+        if (confirmPOSUpiBtn && !confirmPOSUpiBtn.dataset.listenerBound) {
+            confirmPOSUpiBtn.dataset.listenerBound = "true";
+            confirmPOSUpiBtn.addEventListener("click", () => {
+                document.getElementById('modalPOSQRPayment').style.display = 'none';
                 processPayment("UPI");
             });
         }
