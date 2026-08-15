@@ -8844,7 +8844,7 @@ function initApp() {
         posCart.forEach((item, index) => {
             let itemPrice = item.price;
             if (item.modifiers && item.modifiers.length > 0) {
-                item.modifiers.forEach(modName => {
+                (item.modifiers || []).forEach(modName => {
                     const modInfo = posModifiers.find(m => m.name === modName);
                     if (modInfo) itemPrice += modInfo.price;
                 });
@@ -9398,7 +9398,22 @@ function initApp() {
                             alert("No items in the cart to settle!");
                             return;
                         }
-                        processPayment(method);
+                        
+                        const amtEl = document.getElementById("posGrandTotal");
+                        let amt = 0;
+                        if (amtEl) amt = parseFloat(amtEl.textContent.replace(/[^0-9.]/g, '')) || 0;
+                        
+                        const qrModal = document.getElementById("modalPOSQRPayment");
+                        if (qrModal) {
+                            document.getElementById("posQRAmountDue").textContent = "₹" + amt.toFixed(2);
+                            qrModal.style.display = "flex";
+                            document.getElementById("btnConfirmPOSUpiPayment").onclick = () => {
+                                qrModal.style.display = "none";
+                                processPayment('UPI');
+                            };
+                        } else {
+                            processPayment('UPI');
+                        }
                     } else {
                         processPayment(method);
                     }
@@ -9570,7 +9585,7 @@ function initApp() {
                 order.items.forEach(item => {
                     let itemPrice = item.price;
                     if (item.modifiers && item.modifiers.length > 0) {
-                        item.modifiers.forEach(mName => {
+                        (item.modifiers || []).forEach(mName => {
                             const modInfo = posModifiers.find(m => m.name === mName);
                             if (modInfo) itemPrice += modInfo.price;
                         });
@@ -9809,7 +9824,7 @@ function initApp() {
         let subtotal = 0;
         posCart.forEach(item => {
             let itemPrice = item.price;
-            item.modifiers.forEach(modName => {
+            (item.modifiers || []).forEach(modName => {
                 const modInfo = posModifiers.find(m => m.name === modName);
                 if (modInfo) itemPrice += modInfo.price;
             });
@@ -10063,7 +10078,7 @@ function initApp() {
         order.items.forEach(item => {
             let itemPrice = item.price;
             if (item.modifiers && item.modifiers.length > 0) {
-                item.modifiers.forEach(mName => {
+                (item.modifiers || []).forEach(mName => {
                     const modInfo = posModifiers.find(m => m.name === mName);
                     if (modInfo) itemPrice += modInfo.price;
                 });
@@ -10095,7 +10110,7 @@ function initApp() {
                 : '';
                 
             let itemPrice = item.price;
-            item.modifiers.forEach(mName => {
+            (item.modifiers || []).forEach(mName => {
                 const modInfo = posModifiers.find(m => m.name === mName);
                 if (modInfo) itemPrice += modInfo.price;
             });
@@ -10247,7 +10262,7 @@ function initApp() {
         
         order.items.forEach(item => {
             let itemPrice = item.price;
-            item.modifiers.forEach(mName => {
+            (item.modifiers || []).forEach(mName => {
                 const modInfo = posModifiers.find(m => m.name === mName);
                 if (modInfo) itemPrice += modInfo.price;
             });
