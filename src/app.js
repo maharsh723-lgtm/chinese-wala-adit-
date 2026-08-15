@@ -9944,7 +9944,7 @@ function initApp() {
             
         } catch (err) {
             console.error("Online order failed. Saving offline.", err);
-            alert("Connection error! Saving order locally to sync later.");
+            alert("Order Error: " + err.message + "\nSaving locally to sync later.");
             
             let offlineQueue = JSON.parse(localStorage.getItem("pos_offline_orders") || "[]");
             offlineQueue.push(orderPayload);
