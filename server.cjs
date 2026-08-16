@@ -171,8 +171,9 @@ app.get('/api/state', authenticateToken, (req, res) => {
       retailPrice: row.retailPrice
     }));
 
-    // 10. Product Sales
-    const productSales = db.prepare('SELECT * FROM product_sales').all();
+    // 10. Product Sales (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const productSales = db.prepare('SELECT * FROM product_sales WHERE date >= ?').all(thirtyDaysAgo);
 
     // 11. POS Specific Tables
     const posProducts = db.prepare('SELECT * FROM pos_products').all();
@@ -181,10 +182,17 @@ app.get('/api/state', authenticateToken, (req, res) => {
     const posTables = db.prepare('SELECT * FROM pos_tables').all();
     const posCoupons = db.prepare('SELECT * FROM pos_coupons').all();
     const posKitchenOrders = db.prepare('SELECT * FROM pos_kitchen_orders').all();
-    const posOrders = db.prepare('SELECT * FROM pos_orders').all();
-    const posOrderItems = db.prepare('SELECT * FROM pos_order_items').all();
-    const posAuditLogs = db.prepare('SELECT * FROM pos_audit_logs').all();
-    const posStockMovement = db.prepare('SELECT * FROM pos_stock_movement').all();
+    // Fetch only recent POS data (last 7 days) to speed up initial load
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const posOrders = db.prepare('SELECT * FROM pos_orders WHERE date >= ?').all(sevenDaysAgo);
+    const recentOrderIds = posOrders.map(o => o.id);
+    let posOrderItems = [];
+    if (recentOrderIds.length > 0) {
+      const placeholders = recentOrderIds.map(() => '?').join(',');
+      posOrderItems = db.prepare(`SELECT * FROM pos_order_items WHERE orderId IN (${placeholders})`).all(...recentOrderIds);
+    }
+    const posAuditLogs = db.prepare("SELECT * FROM pos_audit_logs WHERE timestamp >= datetime('now', '-7 days')").all();
+    const posStockMovement = db.prepare('SELECT * FROM pos_stock_movement WHERE date >= ?').all(sevenDaysAgo);
     const purchases = db.prepare('SELECT * FROM purchases').all();
     const expenses = db.prepare('SELECT * FROM expenses').all();
 
