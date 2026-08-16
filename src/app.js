@@ -8355,8 +8355,8 @@ function initApp() {
                 syncStateFromServer();
             });
             socket.on('order_placed', (data) => {
-                showToast(`New order placed: ${data.kotNumber} (₹${data.grandTotal})`);
-                syncStateFromServer();
+                // Removed toast and syncStateFromServer to prevent "extra requests" and annoying popups
+                // Only dispatch the event for the P&L dashboard or KDS to update
                 window.dispatchEvent(new CustomEvent('bk_order_placed', { detail: data }));
             });
             socket.on('table_update', () => {
@@ -9924,7 +9924,7 @@ function initApp() {
             if (!response.ok) throw new Error("Order placement API returned error code " + response.status);
             const result = await response.json();
             
-            syncStateFromServer();
+            // Removed syncStateFromServer() to prevent a heavy extra request on every order placement
             
             const orderObj = {
                 id: result.order.id,
