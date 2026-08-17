@@ -315,14 +315,14 @@ function initApp() {
 
     const defaultEmployees = {
         "1": { id: "1", name: "Crew Member 1", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP102": { id: "EMP102", name: "Kitchen Staff 1", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "password123", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP103": { id: "EMP103", name: "Manager GAURAV PATH", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "GAURAV PATH", activePunch: null, history: [] },
-        "EMP104": { id: "EMP104", name: "Manager VESU", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP105": { id: "EMP105", name: "Manager LP SAVANI", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "LP SAVANI", activePunch: null, history: [] },
-        "EMP106": { id: "EMP106", name: "Manager SUDAMA CHOWK", role: "Branch Manager", mobile: "9876543215", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "SUDAMA CHOWK", activePunch: null, history: [] },
-        "OWNER101": { id: "OWNER101", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "bkoperation/89*", status: "Active", store: "All", activePunch: null, history: [] },
-        "bk2022": { id: "bk2022", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "bkoperation/89*", status: "Active", store: "All", activePunch: null, history: [] },
-        "manager/123": { id: "manager/123", name: "Store Manager", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "managerbk/09#", status: "Active", store: "VESU", activePunch: null, history: [] }
+        "EMP102": { id: "EMP102", name: "Kitchen Staff 1", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "EMP103": { id: "EMP103", name: "Manager GAURAV PATH", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "", status: "Active", store: "GAURAV PATH", activePunch: null, history: [] },
+        "EMP104": { id: "EMP104", name: "Manager VESU", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "EMP105": { id: "EMP105", name: "Manager LP SAVANI", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "LP SAVANI", activePunch: null, history: [] },
+        "EMP106": { id: "EMP106", name: "Manager SUDAMA CHOWK", role: "Branch Manager", mobile: "9876543215", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "SUDAMA CHOWK", activePunch: null, history: [] },
+        "OWNER101": { id: "OWNER101", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "", status: "Active", store: "All", activePunch: null, history: [] },
+        "bk2022": { id: "bk2022", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "", status: "Active", store: "All", activePunch: null, history: [] },
+        "manager/123": { id: "manager/123", name: "Store Manager", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "VESU", activePunch: null, history: [] }
     };
 
     // Helper: Compress image file using canvas resize & quality adjustment
@@ -5454,7 +5454,7 @@ function initApp() {
                         mobile,
                         shiftStart: "09:00",
                         roleKey,
-                        password: "password123",
+                        password: "",
                         status: "Active",
                         store,
                         activePunch: null,
@@ -8345,7 +8345,7 @@ function initApp() {
     function renderBillingScreen() {
         loadCartFromStorage();
         if (!socket && typeof io !== 'undefined') {
-            socket = io(API_BASE || window.location.origin);
+            socket = io(API_BASE || window.location.origin, { auth: { token: localStorage.getItem('bk_jwt_token') } });
             socket.on('stock_alert', (data) => {
                 showToast(`Low Stock Alert: ${data.label} in ${data.store}! Only ${data.stock} left.`);
                 syncStateFromServer();
@@ -10450,7 +10450,7 @@ function initApp() {
 
     function initDeliveryAndKDSModule() {
         if (!socket && typeof io !== 'undefined') {
-            socket = io(API_BASE || window.location.origin);
+            socket = io(API_BASE || window.location.origin, { auth: { token: localStorage.getItem('bk_jwt_token') } });
         }
         if (socket) {
             socket.on('delivery_order_update', () => {

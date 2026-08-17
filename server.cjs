@@ -4332,8 +4332,20 @@ const io = new Server(server, {
   }
 });
 
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error('Authentication error: Token required'));
+  }
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return next(new Error('Authentication error: Invalid token'));
+    socket.user = decoded;
+    next();
+  });
+});
+
 io.on('connection', (socket) => {
-  console.log('Client connected to Socket.IO:', socket.id);
+  console.log('Authenticated client connected to Socket.IO:', socket.id);
   socket.on('disconnect', () => {
     console.log('Client disconnected from Socket.IO:', socket.id);
   });
