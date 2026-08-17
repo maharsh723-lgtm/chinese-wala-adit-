@@ -91,11 +91,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
   }
 }));
 
-app.use(express.static(__dirname, {
-  setHeaders: (res, filePath) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  }
-}));
+
 
 // API: Get Environment Variables Config (Public)
 app.get('/api/config', (req, res) => {
@@ -261,7 +257,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
 
 
 // API: Employees
-app.post('/api/employees', (req, res) => {
+app.post('/api/employees', authenticateToken, (req, res) => {
   try {
     const { id, name, mobile, role, shiftStart, roleKey, password, status, store, activePunch, history, salary } = req.body;
     
@@ -295,7 +291,7 @@ app.post('/api/employees', (req, res) => {
   }
 });
 
-app.put('/api/employees/:id/status', (req, res) => {
+app.put('/api/employees/:id/status', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -311,7 +307,7 @@ app.put('/api/employees/:id/status', (req, res) => {
   }
 });
 
-app.put('/api/employees/:id/reset-password', (req, res) => {
+app.put('/api/employees/:id/reset-password', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     db.prepare('UPDATE employees SET password = "" WHERE id = ?').run(id);
@@ -322,7 +318,7 @@ app.put('/api/employees/:id/reset-password', (req, res) => {
   }
 });
 
-app.post('/api/employees/punch-in', (req, res) => {
+app.post('/api/employees/punch-in', authenticateToken, (req, res) => {
   try {
     const { empId, activePunch } = req.body;
     db.prepare('UPDATE employees SET activePunch = ? WHERE id = ?').run(JSON.stringify(activePunch), empId);
@@ -333,7 +329,7 @@ app.post('/api/employees/punch-in', (req, res) => {
   }
 });
 
-app.post('/api/employees/punch-out', (req, res) => {
+app.post('/api/employees/punch-out', authenticateToken, (req, res) => {
   try {
     const { empId, history } = req.body;
     db.prepare('UPDATE employees SET activePunch = NULL, history = ? WHERE id = ?').run(JSON.stringify(history), empId);
@@ -344,7 +340,7 @@ app.post('/api/employees/punch-out', (req, res) => {
   }
 });
 
-app.post('/api/employees/:id/attendance-log', (req, res) => {
+app.post('/api/employees/:id/attendance-log', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const { date, punchIn, punchOut, hours, status, device, location, salary } = req.body;
@@ -375,7 +371,7 @@ app.post('/api/employees/:id/attendance-log', (req, res) => {
 });
 
 // API: Leave Requests
-app.post('/api/leave-requests', (req, res) => {
+app.post('/api/leave-requests', authenticateToken, (req, res) => {
   try {
     const { id, empId, name, store, date, reason, status } = req.body;
     db.prepare(`
@@ -389,7 +385,7 @@ app.post('/api/leave-requests', (req, res) => {
   }
 });
 
-app.put('/api/leave-requests/:id/status', (req, res) => {
+app.put('/api/leave-requests/:id/status', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -404,7 +400,7 @@ app.put('/api/leave-requests/:id/status', (req, res) => {
 
 
 // API: SOPs
-app.post('/api/sops', (req, res) => {
+app.post('/api/sops', authenticateToken, (req, res) => {
   try {
     const { id, title, dept, priority, freq, instructions, assignedTo, store, status, completionPct, dueDate } = req.body;
     db.prepare(`
@@ -418,7 +414,7 @@ app.post('/api/sops', (req, res) => {
   }
 });
 
-app.put('/api/sops/:id/status', (req, res) => {
+app.put('/api/sops/:id/status', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const { status, completionPct } = req.body;
@@ -431,7 +427,7 @@ app.put('/api/sops/:id/status', (req, res) => {
 });
 
 // API: Inventory
-app.post('/api/inventory', (req, res) => {
+app.post('/api/inventory', authenticateToken, (req, res) => {
   try {
     const { id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status } = req.body;
     db.prepare(`
@@ -445,7 +441,7 @@ app.post('/api/inventory', (req, res) => {
   }
 });
 
-app.put('/api/inventory/:id/adjust', (req, res) => {
+app.put('/api/inventory/:id/adjust', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const { stock, status } = req.body;
@@ -457,7 +453,7 @@ app.put('/api/inventory/:id/adjust', (req, res) => {
   }
 });
 
-app.put('/api/inventory/:id/edit', (req, res) => {
+app.put('/api/inventory/:id/edit', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const { label, category, stock, unit, reorder, unitCost, expiryDate, status } = req.body;
@@ -754,7 +750,7 @@ app.post('/api/inventory/clear', authenticateToken, (req, res) => {
 });
 
 // API: Purchases
-app.post('/api/purchases', (req, res) => {
+app.post('/api/purchases', authenticateToken, (req, res) => {
   try {
     const { itemId, qty, unitCost, supplier, store } = req.body;
     const item = db.prepare('SELECT * FROM inventory WHERE id = ?').get(itemId);
@@ -808,7 +804,7 @@ app.post('/api/purchases', (req, res) => {
 });
 
 // API: Expenses
-app.post('/api/expenses', (req, res) => {
+app.post('/api/expenses', authenticateToken, (req, res) => {
   try {
     const { category, amount, date, store, description } = req.body;
     const expenseId = 'exp-' + Date.now();
@@ -1496,7 +1492,7 @@ function matchIngredientToInventory(ingName, storeInventory) {
   return null;
 }
 
-app.post('/api/wastage', (req, res) => {
+app.post('/api/wastage', authenticateToken, (req, res) => {
   try {
     const { id, store, name, qty, unit, reason, date, cost, image, loggedBy } = req.body;
     db.prepare(`
@@ -1518,7 +1514,7 @@ app.post('/api/wastage', (req, res) => {
   }
 });
 
-app.post('/api/wastage/bulk', (req, res) => {
+app.post('/api/wastage/bulk', authenticateToken, (req, res) => {
   try {
     const records = req.body;
     if (!Array.isArray(records)) {
@@ -1567,7 +1563,7 @@ app.post('/api/wastage/bulk', (req, res) => {
   }
 });
 
-app.delete('/api/wastage/:id', (req, res) => {
+app.delete('/api/wastage/:id', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
 
@@ -1590,7 +1586,7 @@ app.delete('/api/wastage/:id', (req, res) => {
 });
 
 // API: Product Sales
-app.post('/api/product-sales', (req, res) => {
+app.post('/api/product-sales', authenticateToken, (req, res) => {
   try {
     const { id, store, date, recipeId, itemName, category, qty, revenue, image } = req.body;
     
@@ -1630,7 +1626,7 @@ app.post('/api/product-sales', (req, res) => {
   }
 });
 
-app.post('/api/product-sales/bulk', (req, res) => {
+app.post('/api/product-sales/bulk', authenticateToken, (req, res) => {
   try {
     const records = req.body;
     if (!Array.isArray(records)) {
@@ -1698,7 +1694,7 @@ app.post('/api/product-sales/bulk', (req, res) => {
 });
 
 // API: Checklists
-app.post('/api/checklists', (req, res) => {
+app.post('/api/checklists', authenticateToken, (req, res) => {
   try {
     const { id, type, store, date, progress, completed, items, photo } = req.body;
     db.prepare(`
@@ -1713,7 +1709,7 @@ app.post('/api/checklists', (req, res) => {
 });
 
 // API: EOD Reports
-app.post('/api/eod-reports', (req, res) => {
+app.post('/api/eod-reports', authenticateToken, (req, res) => {
   try {
     const { id, store, date, sales, expenses, cash, upi, card, orders, submittedBy, submittedAt } = req.body;
     db.prepare(`
@@ -2095,7 +2091,7 @@ app.put('/api/pos/orders/:id/delivery-status', authenticateToken, (req, res) => 
   }
 });
 
-app.post('/api/pos/delivery/simulate', (req, res) => {
+app.post('/api/pos/delivery/simulate', authenticateToken, (req, res) => {
   const { platform, store } = req.body;
   const targetStore = store || 'VESU';
   if (targetStore !== 'VESU' && targetStore !== 'All') {
@@ -3828,7 +3824,7 @@ app.post('/api/auth/login', bruteForceCheck, (req, res) => {
 
 // === POS Billing Module REST APIs ===
 
-app.get('/api/pos/products', (req, res) => {
+app.get('/api/pos/products', authenticateToken, (req, res) => {
   try {
     const products = db.prepare('SELECT * FROM pos_products').all();
     res.json(products.map(p => ({ ...p, ingredients: p.ingredients ? JSON.parse(p.ingredients) : [] })));
@@ -3837,7 +3833,7 @@ app.get('/api/pos/products', (req, res) => {
   }
 });
 
-app.get('/api/pos/modifiers', (req, res) => {
+app.get('/api/pos/modifiers', authenticateToken, (req, res) => {
   try {
     const modifiers = db.prepare('SELECT * FROM pos_modifiers').all();
     res.json(modifiers);
@@ -3846,7 +3842,7 @@ app.get('/api/pos/modifiers', (req, res) => {
   }
 });
 
-app.get('/api/pos/customers', (req, res) => {
+app.get('/api/pos/customers', authenticateToken, (req, res) => {
   try {
     const customers = db.prepare('SELECT * FROM pos_customers').all();
     res.json(customers);
@@ -3898,7 +3894,7 @@ app.put('/api/pos/customers/:id/guest-profile', authenticateToken, (req, res) =>
   }
 });
 
-app.get('/api/pos/tables', (req, res) => {
+app.get('/api/pos/tables', authenticateToken, (req, res) => {
   try {
     const store = req.query.store || 'VESU';
     const tables = db.prepare('SELECT * FROM pos_tables WHERE store = ?').all(store);
@@ -3937,7 +3933,7 @@ app.put('/api/pos/tables/merge', authenticateToken, (req, res) => {
   }
 });
 
-app.get('/api/pos/kitchen-orders', (req, res) => {
+app.get('/api/pos/kitchen-orders', authenticateToken, (req, res) => {
   try {
     const store = req.query.store || 'VESU';
     const kots = db.prepare('SELECT * FROM pos_kitchen_orders WHERE store = ?').all(store);
