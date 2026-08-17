@@ -3810,7 +3810,11 @@ app.post('/api/auth/login', bruteForceCheck, (req, res) => {
       registerFailedLogin(ip);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    if (user.password && !verifyPassword(password, user.password)) {
+    if (!user.password) {
+      registerFailedLogin(ip);
+      return res.status(401).json({ error: 'Account has no password set. Access denied.' });
+    }
+    if (!verifyPassword(password, user.password)) {
       registerFailedLogin(ip);
       return res.status(401).json({ error: 'Invalid credentials' });
     }

@@ -108,13 +108,7 @@ function initApp() {
             localStorage.removeItem("bk_current_role_key");
             
             const overlay = document.getElementById("login-overlay");
-            if (overlay) {
-                overlay.style.display = "flex";
-                if (usernameInput) usernameInput.value = "";
-                if (passwordInput) passwordInput.value = "";
-                const errorMsg = document.getElementById("login-error-msg");
-                if (errorMsg) errorMsg.textContent = "";
-            }
+            window.location.reload();
         }
     });
 
@@ -455,8 +449,7 @@ function initApp() {
                 localStorage.removeItem("bk_jwt_token");
                 localStorage.removeItem("bk_logged_in_user");
                 localStorage.removeItem("bk_current_role_key");
-                const overlay = document.getElementById("login-overlay");
-                if (overlay) overlay.style.display = "flex";
+                window.location.reload();
                 return;
             }
             if (!response.ok) throw new Error("HTTP error " + response.status);
