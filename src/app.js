@@ -10221,9 +10221,15 @@ function initApp() {
         doc.setFont("courier", "normal");
         doc.text("Indian Street-Eatery", 40, 14, { align: "center" });
         doc.text(`Store: ${order.store || currentStore}`, 40, 18, { align: "center" });
-        doc.text("GSTIN: 27AABCB1234F1Z0", 40, 22, { align: "center" });
         
-        let startHeaderY = 26;
+        let startHeaderY = 22;
+        if ((order.store || currentStore).includes('VESU')) {
+            doc.text("Contact: +91 9428510400", 40, startHeaderY, { align: "center" });
+            startHeaderY += 4;
+        }
+        doc.text("GSTIN: 27AABCB1234F1Z0", 40, startHeaderY, { align: "center" });
+        startHeaderY += 4;
+        
         if (order.tokenNumber) {
             doc.setFont("courier", "bold");
             doc.setFontSize(12);
