@@ -564,7 +564,9 @@ function initApp() {
 
     // Periodic Polling loop (every 5 seconds)
     setInterval(() => {
-        syncStateFromServer();
+        if (localStorage.getItem("bk_jwt_token")) {
+            syncStateFromServer();
+        }
     }, 5000);
 
     // Configure Sidebar options and hide unnecessary menus
