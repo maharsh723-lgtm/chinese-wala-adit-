@@ -10195,6 +10195,28 @@ function initApp() {
                     Thank you for dining at Badi Katori!<br>
                     Live KOT: ${order.kotNumber || 'KOT-PENDING'}
                 </div>
+                
+                <!-- KOT SECTION APPENDED TO BILL -->
+                <div style="page-break-before: always; margin-top: 30px; padding-top: 15px; border-top: 2px dashed #000;">
+                    <div style="text-align:center; font-weight: 900; font-size: 16px; margin-bottom: 8px;">KITCHEN ORDER TICKET (KOT)</div>
+                    <div class="receipt-row"><span>Order: ${order.id.substring(0,8)}</span><span>KOT: ${order.kotNumber || 'PENDING'}</span></div>
+                    <div class="receipt-row"><span>Date: ${order.date}</span><span>Time: ${order.time || ''}</span></div>
+                    <div class="receipt-row"><span>Type: ${order.orderType}</span>${order.tableName ? `<span>Table: ${order.tableName}</span>` : ''}</div>
+                    
+                    <div class="receipt-divider"></div>
+                    <div style="font-weight:700; margin-bottom:8px; font-size:13px; text-align:center;">ITEMS TO PREPARE</div>
+                    ${order.items.map(item => `
+                        <div class="receipt-item-row" style="margin-bottom: 6px;">
+                            <div class="receipt-item-top" style="font-size: 14px; font-weight: 800;">
+                                <span>[ ${item.quantity} ] x ${item.productName}</span>
+                            </div>
+                            ${item.modifiers && item.modifiers.length > 0 ? `<div class="receipt-item-mods" style="font-size: 11px; margin-left: 20px; font-weight: bold;">+ ${item.modifiers.join(', ')}</div>` : ''}
+                        </div>
+                    `).join('')}
+                    <div class="receipt-divider"></div>
+                    <div style="text-align:center; font-size:10px;">--- End of KOT ---</div>
+                </div>
+
             </div>
         `;
         printArea.innerHTML = invoiceHtml;
