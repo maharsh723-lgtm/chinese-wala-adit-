@@ -8624,9 +8624,9 @@ function initApp() {
         // Check if out of stock
         let displayStock = prod.stock;
         if (prod.ingredients && prod.ingredients.length > 0) {
-            let minAvailable = 9999;
+            let minAvailable = Infinity;
             prod.ingredients.forEach(ing => {
-                const inv = inventory.find(i => i.label === ing.name && i.store === getPOSStore());
+                const inv = inventory.find(i => (i.label||'').toLowerCase() === (ing.name||'').toLowerCase() && i.store === getPOSStore());
                 if (inv) {
                     const portionAvailable = Math.floor(inv.stock / ing.qty);
                     if (portionAvailable < minAvailable) minAvailable = portionAvailable;
@@ -8634,7 +8634,7 @@ function initApp() {
                     minAvailable = 0;
                 }
             });
-            displayStock = minAvailable === 9999 ? 0 : minAvailable;
+            displayStock = minAvailable === Infinity ? 0 : minAvailable;
         }
         
         if (displayStock === 0) {
@@ -8687,9 +8687,9 @@ function initApp() {
             
             let displayStock = p.stock;
             if (p.ingredients && p.ingredients.length > 0) {
-                let minAvailable = 9999;
+                let minAvailable = Infinity;
                 p.ingredients.forEach(ing => {
-                    const inv = inventory.find(i => i.label === ing.name && i.store === getPOSStore());
+                    const inv = inventory.find(i => (i.label||'').toLowerCase() === (ing.name||'').toLowerCase() && i.store === getPOSStore());
                     if (inv) {
                         const portionAvailable = Math.floor(inv.stock / ing.qty);
                         if (portionAvailable < minAvailable) minAvailable = portionAvailable;
@@ -10009,7 +10009,7 @@ function initApp() {
             const product = posProducts.find(p => p.id === item.productId);
             if (product && product.ingredients) {
                 product.ingredients.forEach(ing => {
-                    const invItem = inventory.find(i => i.label === ing.name && i.store === getPOSStore());
+                    const invItem = inventory.find(i => (i.label||'').toLowerCase() === (ing.name||'').toLowerCase() && i.store === getPOSStore());
                     if (invItem) {
                         invItem.stock = Math.max(0, invItem.stock - (ing.qty * item.quantity));
                     }
