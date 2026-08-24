@@ -10287,8 +10287,7 @@ function initApp() {
             doc.text(`-₹${order.discount.toFixed(2)}`, 75, y, { align: "right" });
             y += 4;
         }
-        doc.text("Service Charge (5%):", 5, y);
-        // doc.text(`₹${order.serviceCharge.toFixed(2)}`, 75, y, { align: "right" });
+        
         
         y += 2;
         doc.line(5, y, 75, y);
