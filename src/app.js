@@ -8697,7 +8697,7 @@ function initApp() {
                         minAvailable = 0;
                     }
                 });
-                displayStock = minAvailable === 9999 ? 0 : minAvailable;
+                displayStock = minAvailable === Infinity ? 0 : minAvailable;
             }
             
             const isLowStock = displayStock > 0 && displayStock <= 5;
