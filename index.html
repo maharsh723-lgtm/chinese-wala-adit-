@@ -176,6 +176,10 @@
                 <!-- Group 5.6: Sales Operations -->
                 <div class="nav-group">
                     <div class="nav-group-title">SALES</div>
+                    <div class="nav-item" data-target="live-sales-stream">
+                        <i data-lucide="activity"></i>
+                        <span>Live Sales Stream</span>
+                    </div>
                 </div>
 
 
@@ -2975,6 +2979,39 @@
                     <!-- KDS Tickets Container -->
                     <div class="kds-tickets-container" id="kdsTicketsGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
                         <!-- Populate Dynamically -->
+                    </div>
+                </div>
+
+                <!-- SCREEN 14.5: LIVE SALES STREAM -->
+                <div class="app-screen" id="screen-live-sales-stream">
+                    <div class="screen-header-layout">
+                        <div class="screen-title-desc">
+                            <h1>Live Sales Stream</h1>
+                            <p>Real-time feed of items being sold across all outlets.</p>
+                        </div>
+                        <div class="screen-actions">
+                            <button class="saas-btn saas-btn-secondary" onclick="renderLiveSalesStream()">
+                                <i data-lucide="refresh-cw"></i> Refresh Feed
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="saas-table-container">
+                        <table class="saas-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Outlet</th>
+                                    <th>Order #</th>
+                                    <th>Item Sold</th>
+                                    <th style="text-align:center;">Qty</th>
+                                    <th style="text-align:right;">Total (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="liveSalesFeedBody">
+                                <!-- Populated dynamically by app.js -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

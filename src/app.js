@@ -535,6 +535,7 @@ function initApp() {
             case 'auto-procurement': renderProcurementScreen(); break;
             case 'ai-procurement': renderAiProcurementScreen(); break;
             case 'wastage-management': renderWastageScreen(); break;
+            case 'live-sales-stream': if(typeof window.renderLiveSalesStream === "function") window.renderLiveSalesStream(); break;
             case 'product-sales': renderProductSalesScreen(); break;
             case 'day-end-report': renderDayEndReportScreen(); break;
             case 'recipe-management': renderRecipeScreen(); break;
@@ -3494,6 +3495,57 @@ function initApp() {
     }
 
     // SCREEN 14: PRODUCT SALES MANAGEMENT
+    window.renderLiveSalesStream = renderLiveSalesStream;
+    function renderLiveSalesStream() {
+        const tbody = document.getElementById("liveSalesFeedBody");
+        if (!tbody) return;
+
+        let liveItems = [];
+        (posOrderItems || []).forEach(item => {
+            const order = (posOrders || []).find(o => o.id === item.orderId);
+            if (order) {
+                // If the user is a branch manager, only show their store
+                if (currentRole === "bm" && order.store !== currentStore) return;
+                
+                liveItems.push({
+                    ...item,
+                    orderTime: order.timestamp || order.date,
+                    orderNumber: order.orderNumber || order.id,
+                    store: order.store
+                });
+            }
+        });
+
+        // Sort newest first
+        liveItems.sort((a, b) => new Date(b.orderTime) - new Date(a.orderTime));
+        
+        // Take top 100 to not overwhelm the UI
+        liveItems = liveItems.slice(0, 100);
+
+        tbody.innerHTML = "";
+        if (liveItems.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-tertiary);">No recent sales.</td></tr>`;
+            return;
+        }
+
+        liveItems.forEach(item => {
+            const row = document.createElement("tr");
+            
+            const t = new Date(item.orderTime);
+            const timeStr = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            row.innerHTML = `
+                <td><span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">${timeStr}</span></td>
+                <td><span class="pill-badge" style="background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border);">${item.store || 'Unknown'}</span></td>
+                <td style="font-weight: 700; color: var(--orange-primary);">#${item.orderNumber}</td>
+                <td style="font-weight: 600;">${item.productName || item.name || 'Unknown Item'}</td>
+                <td style="text-align:center;"><span style="display:inline-block; padding: 2px 8px; background: rgba(16, 185, 129, 0.1); color: var(--success); border-radius: 4px; font-weight:700;">x${item.quantity || item.qty || 1}</span></td>
+                <td style="text-align:right; font-weight:700;">₹${((item.price || 0) * (item.quantity || item.qty || 1)).toLocaleString('en-IN')}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
     function renderProductSalesScreen() {
         const container = document.getElementById("screen-product-sales");
         if (!container) return;
@@ -9934,6 +9986,26 @@ function initApp() {
                 kotNumber: result.order.kotNumber,
                 tokenNumber: posNextToken
             };
+            
+            // Push locally to update Live Sales Stream instantly
+            posOrders.push({
+                id: result.order.id,
+                timestamp: result.order.date + 'T' + result.order.time,
+                orderNumber: result.order.kotNumber,
+                store: getPOSStore()
+            });
+            posCart.forEach(item => {
+                posOrderItems.push({
+                    orderId: result.order.id,
+                    productName: item.productName || item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                });
+            });
+            if (currentActiveScreen === "live-sales-stream" && typeof window.renderLiveSalesStream === "function") {
+                window.renderLiveSalesStream();
+            }
+
             renderGSTInvoice(orderObj);
             
             // Show the invoice modal
@@ -9975,6 +10047,25 @@ function initApp() {
                 items: posCart,
                 tokenNumber: posNextToken
             };
+
+            posOrders.push({
+                id: orderId,
+                timestamp: orderObj.date + 'T' + orderObj.time,
+                orderNumber: posNextToken,
+                store: getPOSStore()
+            });
+            posCart.forEach(item => {
+                posOrderItems.push({
+                    orderId: orderId,
+                    productName: item.productName || item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                });
+            });
+            if (currentActiveScreen === "live-sales-stream" && typeof window.renderLiveSalesStream === "function") {
+                window.renderLiveSalesStream();
+            }
+
             renderGSTInvoice(orderObj);
             
             posCart = [];
