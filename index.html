@@ -167,6 +167,10 @@
                 <!-- Group 5.5: Accounting -->
                 <div class="nav-group">
                     <div class="nav-group-title">ACCOUNTING</div>
+                    <div class="nav-item" data-target="daily-expenses">
+                        <i data-lucide="receipt"></i>
+                        <span>Daily Expenses</span>
+                    </div>
                     <div class="nav-item" data-target="pl-automation">
                         <i data-lucide="trending-up"></i>
                         <span>P&L Automation</span>
@@ -3238,7 +3242,7 @@
                                 <tbody>
                                     <!-- Populated dynamically -->
                                 </tbody>
-                                <tfoot>
+<tfoot>
                                     <tr style="font-weight: 800; border-top: 2px solid var(--border);">
                                         <td>TOTAL</td>
                                         <td style="text-align:right;" id="trialBalanceTotalDebit">₹0.00</td>
@@ -3247,6 +3251,85 @@
                                 </tfoot>
                             </table>
                         </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- SCREEN 14.8: DAILY EXPENSES -->
+                <div class="app-screen" id="screen-daily-expenses" style="display: none;">
+                    <div class="screen-header">
+                        <div>
+                            <h1>Daily Expenses</h1>
+                            <p>Log and manage your daily operational expenses (e.g., Raw Materials, Utilities, Petty Cash).</p>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-grid" style="grid-template-columns: 300px 1fr; align-items: start; gap: 24px;">
+                        
+                        <!-- Expense Form -->
+                        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding: 24px; position: sticky; top: 24px;">
+                            <h3 style="margin-bottom: 16px; font-weight:800;">Log New Expense</h3>
+                            <form id="formAddDailyExpense" style="display:flex; flex-direction:column; gap:16px;">
+                                <div class="saas-form-group">
+                                    <label style="font-weight:700; margin-bottom:6px; display:block;">Date</label>
+                                    <input type="date" id="dailyExpenseDate" class="saas-input" required>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label style="font-weight:700; margin-bottom:6px; display:block;">Category</label>
+                                    <select id="dailyExpenseCategory" class="saas-select" required>
+                                        <option value="Raw Materials">Raw Materials (Cash Purchase)</option>
+                                        <option value="Packaging">Packaging</option>
+                                        <option value="Utilities">Utilities & Bills</option>
+                                        <option value="Transport">Transport & Logistics</option>
+                                        <option value="Salaries">Labor / Salaries</option>
+                                        <option value="Petty Cash">Miscellaneous Petty Cash</option>
+                                    </select>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label style="font-weight:700; margin-bottom:6px; display:block;">Description / Note</label>
+                                    <input type="text" id="dailyExpenseDescription" class="saas-input" placeholder="e.g. Milk from local vendor" required>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label style="font-weight:700; margin-bottom:6px; display:block;">Payment Method</label>
+                                    <select id="dailyExpensePayment" class="saas-select" required>
+                                        <option value="Cash">Cash (Drawer)</option>
+                                        <option value="UPI">UPI / Online</option>
+                                        <option value="Card">Credit Card</option>
+                                    </select>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label style="font-weight:700; margin-bottom:6px; display:block;">Amount (₹)</label>
+                                    <input type="number" id="dailyExpenseAmount" class="saas-input" min="1" step="0.01" required>
+                                </div>
+                                <button type="submit" class="saas-btn saas-btn-primary" style="margin-top:8px;">Add Expense</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Expense List -->
+                        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding: 24px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                                <h3 style="font-weight:800;">Today's Logged Expenses</h3>
+                                <div style="font-weight:700; font-size:1.1rem; color:var(--danger);">Total: ₹<span id="dailyExpenseTotalDisplay">0.00</span></div>
+                            </div>
+                            
+                            <div class="saas-table-container">
+                                <table class="saas-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Description</th>
+                                            <th>Paid Via</th>
+                                            <th>Added By</th>
+                                            <th style="text-align:right;">Amount (₹)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dailyExpensesTableBody">
+                                        <!-- Populated via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 

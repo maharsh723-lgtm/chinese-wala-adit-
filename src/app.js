@@ -538,6 +538,7 @@ function initApp() {
             case 'live-sales-stream': if(typeof window.renderLiveSalesStream === "function") window.renderLiveSalesStream(); break;
             case 'product-sales': renderProductSalesScreen(); break;
             case 'day-end-report': renderDayEndReportScreen(); break;
+            case 'daily-expenses': if(typeof window.renderDailyExpensesScreen === "function") window.renderDailyExpensesScreen(); break;
             case 'recipe-management': renderRecipeScreen(); break;
             case 'material-reconciliation': renderMaterialReconciliationScreen(); break;
             case 'billing': renderBillingScreen(); break;
@@ -3493,6 +3494,115 @@ function initApp() {
         
         if (window.lucide) window.lucide.createIcons();
     }
+    // ==============================================
+    // SCREEN 14.8: DAILY EXPENSES
+    // ==============================================
+    window.renderDailyExpensesScreen = renderDailyExpensesScreen;
+    function renderDailyExpensesScreen() {
+        const tbody = document.getElementById("dailyExpensesTableBody");
+        const totalDisplay = document.getElementById("dailyExpenseTotalDisplay");
+        if (!tbody || !totalDisplay) return;
+        
+        const todayStr = getTodayDateStr();
+        
+        let todayExpenses = expenses.filter(e => e.date === todayStr);
+        if (currentRole === "bm") {
+            todayExpenses = todayExpenses.filter(e => e.store === currentStore);
+        }
+        
+        // Sort latest first
+        todayExpenses.sort((a, b) => b.id.localeCompare(a.id));
+        
+        tbody.innerHTML = "";
+        let total = 0;
+        
+        if (todayExpenses.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-tertiary);">No expenses logged today.</td></tr>`;
+        } else {
+            todayExpenses.forEach(exp => {
+                total += parseFloat(exp.amount) || 0;
+                const row = document.createElement("tr");
+                let paymentBadgeColor = (exp.paymentMethod || "Cash").toLowerCase().includes('cash') ? 'var(--orange-primary)' : 'var(--success)';
+                let paymentBadgeBg = (exp.paymentMethod || "Cash").toLowerCase().includes('cash') ? 'rgba(249, 115, 22, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+                
+                row.innerHTML = `
+                    <td style="font-weight:700;">${exp.category || "General"}</td>
+                    <td>${exp.description || ""}</td>
+                    <td><span class="pill-badge" style="background: ${paymentBadgeBg}; color: ${paymentBadgeColor}; border: 1px solid ${paymentBadgeColor};">${exp.paymentMethod || 'Cash'}</span></td>
+                    <td style="color:var(--text-secondary); font-size:0.85rem;">${exp.addedBy || "Unknown"}</td>
+                    <td style="text-align:right; font-weight:700; color:var(--danger);">₹${parseFloat(exp.amount).toLocaleString('en-IN')}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        totalDisplay.textContent = total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    }
+
+    // Add Expense Form Handler
+    document.addEventListener("DOMContentLoaded", () => {
+        const expenseForm = document.getElementById("formAddDailyExpense");
+        if (expenseForm) {
+            expenseForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const btn = e.submitter;
+                if(btn) { btn.disabled = true; btn.textContent = "Adding..."; }
+                
+                const dateVal = document.getElementById("dailyExpenseDate").value;
+                const catVal = document.getElementById("dailyExpenseCategory").value;
+                const descVal = document.getElementById("dailyExpenseDescription").value;
+                const payVal = document.getElementById("dailyExpensePayment").value;
+                const amtVal = parseFloat(document.getElementById("dailyExpenseAmount").value);
+                
+                const payload = {
+                    date: dateVal,
+                    category: catVal,
+                    description: descVal,
+                    paymentMethod: payVal,
+                    amount: amtVal,
+                    store: getPOSStore(),
+                    addedBy: currentUser ? currentUser.name : "System"
+                };
+
+                // Push locally
+                expenses.push({
+                    id: 'exp-' + Date.now(),
+                    ...payload
+                });
+
+                // Save to server
+                try {
+                    const reqToken = localStorage.getItem("bk_token") || sessionStorage.getItem("bk_token") || "";
+                    await fetch('/api/expenses', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + reqToken
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                } catch(err) {
+                    console.error("Failed to sync expense to server", err);
+                }
+
+                expenseForm.reset();
+                document.getElementById("dailyExpenseDate").value = getTodayDateStr(); // reset date
+                
+                if (typeof window.renderDailyExpensesScreen === "function") {
+                    window.renderDailyExpensesScreen();
+                }
+                
+                if(btn) { btn.disabled = false; btn.textContent = "Add Expense"; }
+                alert("Expense logged successfully!");
+            });
+            
+            // Set default date when opened
+            const dateInput = document.getElementById("dailyExpenseDate");
+            if (dateInput) {
+                dateInput.value = getTodayDateStr();
+            }
+        }
+    });
 
     // SCREEN 14: PRODUCT SALES MANAGEMENT
     window.renderLiveSalesStream = renderLiveSalesStream;

@@ -806,14 +806,14 @@ app.post('/api/purchases', authenticateToken, (req, res) => {
 // API: Expenses
 app.post('/api/expenses', authenticateToken, (req, res) => {
   try {
-    const { category, amount, date, store, description } = req.body;
+    const { category, amount, date, store, description, paymentMethod } = req.body;
     const expenseId = 'exp-' + Date.now();
     const dateStr = date || new Date().toISOString().split('T')[0];
 
     db.prepare(`
-      INSERT INTO expenses (id, category, amount, date, store, description)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(expenseId, category, parseFloat(amount), dateStr, store, description);
+      INSERT INTO expenses (id, category, amount, date, store, description, paymentMethod)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(expenseId, category, parseFloat(amount), dateStr, store, description, paymentMethod || 'Cash');
 
     // Insert P&L transaction
     db.prepare(`
