@@ -10082,8 +10082,10 @@ function initApp() {
                 },
                 body: JSON.stringify(orderPayload)
             });
-            
-            if (!response.ok) throw new Error("Order placement API returned error code " + response.status);
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Order placement API returned error code ${response.status}. Details: ${errText}`);
+            }
             const result = await response.json();
             
             // Removed syncStateFromServer() to prevent a heavy extra request on every order placement
@@ -10249,6 +10251,9 @@ function initApp() {
                 });
                 if (response.ok) {
                     successCount++;
+                } else {
+                    const errText = await response.text();
+                    console.error(`Offline sync failed for order ${orderPayload.id}: ${response.status} - ${errText}`);
                 }
             } catch(e) {
                 console.error("Failed to sync offline order:", e);
