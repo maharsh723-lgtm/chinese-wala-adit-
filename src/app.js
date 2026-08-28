@@ -10411,19 +10411,23 @@ function initApp() {
                 
                 <!-- KOT SECTION APPENDED TO BILL -->
                 <div style="page-break-before: always; margin-top: 30px; padding-top: 15px; border-top: 2px dashed #000;">
-                    <div style="text-align:center; font-weight: 900; font-size: 16px; margin-bottom: 8px;">KITCHEN ORDER TICKET (KOT)</div>
-                    <div class="receipt-row"><span>Order: ${order.id.substring(0,8)}</span><span>KOT: ${order.kotNumber || 'PENDING'}</span></div>
-                    <div class="receipt-row"><span>Date: ${order.date}</span><span>Time: ${order.time || ''}</span></div>
-                    <div class="receipt-row"><span>Type: ${order.orderType}</span>${order.tableName ? `<span>Table: ${order.tableName}</span>` : ''}</div>
+                    <div style="text-align:center; font-weight: 900; font-size: 18px; margin-bottom: 4px;">BADI KATORI</div>
+                    <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 12px;">KITCHEN ORDER TICKET</div>
                     
+                    <div style="text-align:center; margin-bottom:12px;">
+                        <span style="font-size: 20px; font-weight: 900; border: 2px solid #000; padding: 4px 12px; border-radius: 4px;">
+                            TOKEN: ${order.dToken || order.tableName || order.id.substring(0,8)}
+                        </span>
+                    </div>
+
                     <div class="receipt-divider"></div>
                     <div style="font-weight:700; margin-bottom:8px; font-size:13px; text-align:center;">ITEMS TO PREPARE</div>
                     ${order.items.map(item => `
                         <div class="receipt-item-row" style="margin-bottom: 6px;">
-                            <div class="receipt-item-top" style="font-size: 14px; font-weight: 800;">
+                            <div class="receipt-item-top" style="font-size: 16px; font-weight: 900;">
                                 <span>[ ${item.quantity} ] x ${item.productName}</span>
                             </div>
-                            ${item.modifiers && item.modifiers.length > 0 ? `<div class="receipt-item-mods" style="font-size: 11px; margin-left: 20px; font-weight: bold;">+ ${item.modifiers.join(', ')}</div>` : ''}
+                            ${item.modifiers && item.modifiers.length > 0 ? `<div class="receipt-item-mods" style="font-size: 13px; margin-left: 20px; font-weight: bold;">+ ${item.modifiers.join(', ')}</div>` : ''}
                         </div>
                     `).join('')}
                     <div class="receipt-divider"></div>
