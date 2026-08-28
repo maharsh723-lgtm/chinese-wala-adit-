@@ -10410,7 +10410,7 @@ function initApp() {
                 </div>
                 
                 <!-- KOT SECTION APPENDED TO BILL -->
-                <div style="page-break-before: always; margin-top: 30px; padding-top: 15px; border-top: 2px dashed #000;">
+                <div style="margin-top: 30px; padding-top: 15px; border-top: 2px dashed #000;">
                     <div style="text-align:center; font-weight: 900; font-size: 18px; margin-bottom: 4px;">BADI KATORI</div>
                     <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 12px;">KITCHEN ORDER TICKET</div>
                     
