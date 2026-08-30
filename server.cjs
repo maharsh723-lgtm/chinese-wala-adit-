@@ -829,6 +829,21 @@ app.post('/api/expenses', authenticateToken, (req, res) => {
   }
 });
 
+app.delete('/api/expenses/:id', authenticateToken, (req, res) => {
+  try {
+    const id = req.params.id;
+    // Delete from expenses table
+    db.prepare('DELETE FROM expenses WHERE id = ?').run(id);
+    // Delete corresponding transaction
+    db.prepare('DELETE FROM transactions WHERE id = ?').run('exp-' + id);
+    if (io) io.emit('pl_update');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting expense:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Helper function to query, aggregate and calculate accounting P&L values
 function computePLReportData(user, query) {
   const { dateFilter, startDate, endDate, branch } = query;
@@ -4328,6 +4343,26 @@ app.get('/api/inventory/:id/ledger', authenticateToken, (req, res) => {
   } catch (err) {
     console.error('Error fetching ledger:', err);
     res.status(500).json({ error: 'Failed to fetch ledger' });
+  }
+});
+
+app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    // Delete order items
+    db.prepare('DELETE FROM pos_order_items WHERE orderId = ?').run(id);
+    // Delete order
+    db.prepare('DELETE FROM pos_orders WHERE id = ?').run(id);
+    // Delete from transactions (income)
+    db.prepare('DELETE FROM transactions WHERE id = ?').run('pos-' + id);
+    if (io) {
+      io.emit('pl_update');
+      io.emit('live_sales_update');
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting POS order:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

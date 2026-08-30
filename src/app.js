@@ -3531,6 +3531,7 @@ function initApp() {
                     <td><span class="pill-badge" style="background: ${paymentBadgeBg}; color: ${paymentBadgeColor}; border: 1px solid ${paymentBadgeColor};">${exp.paymentMethod || 'Cash'}</span></td>
                     <td style="color:var(--text-secondary); font-size:0.85rem;">${exp.addedBy || "Unknown"}</td>
                     <td style="text-align:right; font-weight:700; color:var(--danger);">₹${parseFloat(exp.amount).toLocaleString('en-IN')}</td>
+                    <td style="text-align:right;"><button class="saas-btn saas-btn-danger" style="padding:4px 8px; font-size:0.8rem;" onclick="window.deleteExpense('${exp.id}')">Delete</button></td>
                 `;
                 tbody.appendChild(row);
             });
@@ -3538,6 +3539,25 @@ function initApp() {
         
         totalDisplay.textContent = total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
     }
+
+    window.deleteExpense = async function(id) {
+        if (!confirm("Are you sure you want to delete this expense?")) return;
+        try {
+            const res = await fetch(`/api/expenses/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}` }
+            });
+            if (res.ok) {
+                expenses = expenses.filter(e => e.id !== id);
+                renderDailyExpensesScreen();
+            } else {
+                alert("Failed to delete expense");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error deleting expense");
+        }
+    };
 
     // Add Expense Form Handler
     document.addEventListener("DOMContentLoaded", () => {
@@ -3680,10 +3700,31 @@ function initApp() {
                 <td style="font-weight: 600;">${item.productName || item.name || 'Unknown Item'}</td>
                 <td style="text-align:center;"><span style="display:inline-block; padding: 2px 8px; background: rgba(16, 185, 129, 0.1); color: var(--success); border-radius: 4px; font-weight:700;">x${item.quantity || item.qty || 1}</span></td>
                 <td style="text-align:right; font-weight:700;">₹${((item.price || 0) * (item.quantity || item.qty || 1)).toLocaleString('en-IN')}</td>
+                <td style="text-align:center;"><button class="saas-btn saas-btn-danger" style="padding: 2px 6px; font-size: 0.75rem;" onclick="window.deletePOSOrder('${item.orderId}')">Delete Bill</button></td>
             `;
             tbody.appendChild(row);
         });
     }
+
+    window.deletePOSOrder = async function(orderId) {
+        if (!confirm("Are you sure you want to delete this bill? This will remove the entire order.")) return;
+        try {
+            const res = await fetch(`/api/pos/orders/${orderId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}` }
+            });
+            if (res.ok) {
+                posOrders = posOrders.filter(o => o.id !== orderId);
+                posOrderItems = posOrderItems.filter(i => i.orderId !== orderId);
+                renderLiveSalesStream();
+            } else {
+                alert("Failed to delete bill");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error deleting bill");
+        }
+    };
 
     function renderProductSalesScreen() {
         const container = document.getElementById("screen-product-sales");
