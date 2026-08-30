@@ -3635,12 +3635,15 @@ function initApp() {
                 }
 
                 
+                const prod = (posProducts || []).find(p => p.id === item.productId);
+                
                 liveItems.push({
                     ...item,
                     orderTime: order.timestamp || (order.date + (order.time ? `T${order.time}` : '')),
                     orderNumber: order.orderNumber || order.id,
                     store: order.store,
-                    paymentMethod: order.paymentMethod || 'Cash'
+                    paymentMethod: order.paymentMethod || 'Cash',
+                    category: prod ? prod.category : 'Unknown'
                 });
             }
         });
@@ -3678,6 +3681,7 @@ function initApp() {
                 <td><span class="pill-badge" style="background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border);">${item.store || 'Unknown'}</span></td>
                 <td style="font-weight: 700; color: var(--orange-primary);">#${item.orderNumber}</td>
                 <td><span class="pill-badge" style="background: ${paymentBadgeBg}; color: ${paymentBadgeColor}; border: 1px solid ${paymentBadgeColor};">${item.paymentMethod}</span></td>
+                <td><span style="font-size:0.85rem; color: var(--text-secondary);">${item.category || 'Unknown'}</span></td>
                 <td style="font-weight: 600;">${item.productName || item.name || 'Unknown Item'}</td>
                 <td style="text-align:center;"><span style="display:inline-block; padding: 2px 8px; background: rgba(16, 185, 129, 0.1); color: var(--success); border-radius: 4px; font-weight:700;">x${item.quantity || item.qty || 1}</span></td>
                 <td style="text-align:right; font-weight:700;">₹${((item.price || 0) * (item.quantity || item.qty || 1)).toLocaleString('en-IN')}</td>
