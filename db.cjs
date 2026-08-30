@@ -348,6 +348,8 @@ try { db.exec("ALTER TABLE pos_orders ADD COLUMN source TEXT DEFAULT 'pos'"); } 
 try { db.exec("ALTER TABLE pos_orders ADD COLUMN dToken TEXT"); } catch(e){}
 try { db.exec("ALTER TABLE pos_orders ADD COLUMN deliveryStatus TEXT"); } catch(e){}
 try { db.exec("ALTER TABLE pos_orders ADD COLUMN externalOrderId TEXT"); } catch(e){}
+try { db.exec("ALTER TABLE pos_orders ADD COLUMN splitCashAmount REAL DEFAULT 0"); } catch(e){}
+try { db.exec("ALTER TABLE pos_orders ADD COLUMN splitUpiAmount REAL DEFAULT 0"); } catch(e){}
 try { db.exec("ALTER TABLE pos_orders ADD COLUMN estimatedPickupTime TEXT"); } catch(e){}
 try { db.exec("ALTER TABLE pos_orders ADD COLUMN customerPhone TEXT"); } catch(e){}
 try { db.exec("ALTER TABLE pos_orders ADD COLUMN utr TEXT"); } catch(e){}
