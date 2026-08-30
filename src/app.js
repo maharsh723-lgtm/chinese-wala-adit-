@@ -9750,7 +9750,21 @@ function initApp() {
         if (printBtn && !printBtn.dataset.listenerBound) {
             printBtn.dataset.listenerBound = "true";
             printBtn.addEventListener("click", () => {
+                document.body.classList.add('print-bill-only');
+                document.body.classList.remove('print-kot-only');
                 window.print();
+                setTimeout(() => document.body.classList.remove('print-bill-only'), 500);
+            });
+        }
+
+        const printKOTBtn = document.getElementById("btnPrintKOTBtn");
+        if (printKOTBtn && !printKOTBtn.dataset.listenerBound) {
+            printKOTBtn.dataset.listenerBound = "true";
+            printKOTBtn.addEventListener("click", () => {
+                document.body.classList.add('print-kot-only');
+                document.body.classList.remove('print-bill-only');
+                window.print();
+                setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
             });
         }
 
@@ -10373,6 +10387,7 @@ function initApp() {
 
         const invoiceHtml = `
             <div class="receipt-container">
+                <div class="bill-print-section">
                 <div class="receipt-header">
                     <div class="receipt-brand-logo-container" style="width: 160px; height: auto; display: block; margin: 0 auto 8px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));">
                         <img src="brand_logo.jpg" alt="Badi Katori Logo" style="width: 100%; height: auto; display: block; border-radius: 4px; filter: grayscale(1);"/>
@@ -10443,15 +10458,16 @@ function initApp() {
                     Thank you for dining at Badi Katori!<br>
                     Live KOT: ${order.kotNumber || 'KOT-PENDING'}
                 </div>
+                </div>
                 
                 <!-- KOT SECTION APPENDED TO BILL -->
-                <div style="page-break-before: always; break-before: page; margin-top: 30px; padding-top: 15px; border-top: 2px dashed #000;">
+                <div class="kot-print-section" style="page-break-before: always; break-before: page; margin-top: 30px; padding-top: 15px; border-top: 2px dashed #000;">
                     <div style="text-align:center; font-weight: 900; font-size: 18px; margin-bottom: 4px;">BADI KATORI</div>
                     <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 12px;">KITCHEN ORDER TICKET</div>
                     
                     <div style="text-align:center; margin-bottom:12px;">
                         <span style="font-size: 20px; font-weight: 900; border: 2px solid #000; padding: 4px 12px; border-radius: 4px;">
-                            TOKEN: ${order.dToken || order.tableName || order.id.substring(0,8)}
+                            TOKEN: #${order.tokenNumber || order.dToken || order.tableName || order.id.substring(0,8)}
                         </span>
                     </div>
 
