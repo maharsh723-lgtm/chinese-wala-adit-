@@ -10129,6 +10129,7 @@ function initApp() {
             const invoiceModal = document.getElementById("modalPOSInvoice");
             if (invoiceModal) {
                 invoiceModal.style.display = "flex";
+                setTimeout(() => window.print(), 500);
             }
             
             posCart = [];
@@ -10199,6 +10200,7 @@ function initApp() {
             const invoiceModal = document.getElementById("modalPOSInvoice");
             if (invoiceModal) {
                 invoiceModal.style.display = "flex";
+                setTimeout(() => window.print(), 500);
             }
             
             posCart = [];
