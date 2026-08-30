@@ -1016,8 +1016,9 @@ body.dark-theme .wastage-logger-card {
     color: var(--text-secondary);
 }
 
-.saas-form-input, .saas-form-select {
+.saas-form-input, .saas-form-select, .saas-input, .saas-select {
     width: 100%;
+    max-width: 100%;
     padding: 14px 18px;
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -1026,25 +1027,26 @@ body.dark-theme .wastage-logger-card {
     font-family: inherit;
     font-size: 0.9rem;
     outline: none;
+    text-overflow: ellipsis;
     transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 }
 
-.saas-form-select option {
+.saas-form-select option, .saas-select option {
     background: var(--bg-card);
     color: var(--text-primary);
 }
 
-body.dark-theme .saas-form-input, body.dark-theme .saas-form-select {
+body.dark-theme .saas-form-input, body.dark-theme .saas-form-select, body.dark-theme .saas-input, body.dark-theme .saas-select {
     background: var(--bg-card);
 }
 
-.saas-form-input:focus, .saas-form-select:focus {
+.saas-form-input:focus, .saas-form-select:focus, .saas-input:focus, .saas-select:focus {
     border-color: var(--orange-primary);
     box-shadow: 0 0 0 4px rgba(92, 64, 51, 0.1);
     background: #ffffff;
 }
 
-body.dark-theme .saas-form-input:focus, body.dark-theme .saas-form-select:focus {
+body.dark-theme .saas-form-input:focus, body.dark-theme .saas-form-select:focus, body.dark-theme .saas-input:focus, body.dark-theme .saas-select:focus {
     background: var(--bg-card);
     box-shadow: 0 0 0 4px rgba(194, 159, 104, 0.15);
 }
