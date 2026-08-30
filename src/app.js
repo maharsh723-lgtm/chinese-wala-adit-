@@ -10129,12 +10129,6 @@ function initApp() {
             const invoiceModal = document.getElementById("modalPOSInvoice");
             if (invoiceModal) {
                 invoiceModal.style.display = "flex";
-                // Automatically trigger print dialog once for both Bill and KOT
-                setTimeout(() => {
-                    // Do not add 'print-bill-only' or 'print-kot-only' classes
-                    // This way both the bill and the KOT will be printed together in a single job
-                    window.print();
-                }, 500);
             }
             
             posCart = [];
@@ -10205,12 +10199,6 @@ function initApp() {
             const invoiceModal = document.getElementById("modalPOSInvoice");
             if (invoiceModal) {
                 invoiceModal.style.display = "flex";
-                // Automatically trigger print dialog once for both Bill and KOT
-                setTimeout(() => {
-                    // Do not add 'print-bill-only' or 'print-kot-only' classes
-                    // This way both the bill and the KOT will be printed together in a single job
-                    window.print();
-                }, 500);
             }
             
             posCart = [];
