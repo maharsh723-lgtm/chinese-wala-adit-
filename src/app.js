@@ -9956,6 +9956,7 @@ function initApp() {
                 window.deletePOSOrder(order.id, true); // true = skip confirm
                 
                 syncCartStateAndUI();
+                navigateToScreen("pos");
                 showToast("Bill loaded for editing!");
             });
         }
@@ -10373,9 +10374,12 @@ function initApp() {
             posCart.forEach(item => {
                 posOrderItems.push({
                     orderId: result.order.id,
+                    productId: item.productId,
                     productName: item.productName || item.name,
                     quantity: item.quantity,
-                    price: item.price
+                    price: item.price,
+                    modifiers: typeof item.modifiers === 'string' ? item.modifiers : JSON.stringify(item.modifiers || []),
+                    instructions: item.instructions || ''
                 });
             });
             if (currentActiveScreen === "live-sales-stream" && typeof window.renderLiveSalesStream === "function") {
@@ -10431,9 +10435,12 @@ function initApp() {
             posCart.forEach(item => {
                 posOrderItems.push({
                     orderId: orderId,
+                    productId: item.productId,
                     productName: item.productName || item.name,
                     quantity: item.quantity,
-                    price: item.price
+                    price: item.price,
+                    modifiers: typeof item.modifiers === 'string' ? item.modifiers : JSON.stringify(item.modifiers || []),
+                    instructions: item.instructions || ''
                 });
             });
             if (currentActiveScreen === "live-sales-stream" && typeof window.renderLiveSalesStream === "function") {
