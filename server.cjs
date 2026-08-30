@@ -2204,22 +2204,49 @@ app.get('/api/pos/requisitions', authenticateToken, (req, res) => {
 app.post('/api/pos/requisitions/send-confirmation-sms', authenticateToken, async (req, res) => {
   const { poId, amount } = req.body;
   const targetPhone = "9978673137";
-  const apiKey = process.env.FAST2SMS_API_KEY;
+  
+  // Fast2SMS Fallback
+  const smsApiKey = process.env.FAST2SMS_API_KEY;
+  
+  // Telegram Integration
+  const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+  const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+  
   const message = `BADI KATORI Smart Procurement: Requisition ${poId} for Rs ${parseFloat(amount).toFixed(2)} is paid. Please confirm order.`;
 
-  if (!apiKey) {
-    console.log(`[Background SMS Simulation] Target: ${targetPhone} | Msg: ${message}`);
-    return res.json({ success: true, simulated: true });
-  }
-
   try {
-    const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(apiKey)}&route=q&message=${encodeURIComponent(message)}&flash=0&numbers=${targetPhone}`;
-    const response = await fetch(url);
-    const result = await response.json();
-    console.log(`[Requisition SMS Response] PO: ${poId}`, result);
-    res.json({ success: true, result });
+    let telegramResult = null;
+    let smsResult = null;
+    let isSimulated = false;
+    
+    if (telegramToken && telegramChatId) {
+        // Send via Telegram
+        const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: telegramChatId, text: message })
+        });
+        telegramResult = await response.json();
+        console.log(`[Requisition Telegram Response] PO: ${poId}`, telegramResult);
+    }
+    
+    if (smsApiKey) {
+        // Send via Fast2SMS
+        const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(smsApiKey)}&route=q&message=${encodeURIComponent(message)}&flash=0&numbers=${targetPhone}`;
+        const response = await fetch(url);
+        smsResult = await response.json();
+        console.log(`[Requisition SMS Response] PO: ${poId}`, smsResult);
+    }
+    
+    if (!telegramToken && !smsApiKey) {
+        console.log(`[Background Message Simulation] Target: ${targetPhone} | Msg: ${message}`);
+        isSimulated = true;
+    }
+
+    res.json({ success: true, simulated: isSimulated, telegramResult, smsResult });
   } catch (err) {
-    console.error('Error sending requisition SMS:', err);
+    console.error('Error sending requisition message:', err);
     res.status(500).json({ error: err.message });
   }
 });
