@@ -1251,6 +1251,15 @@ function computePLReportData(user, query) {
       inventoryValue: inventoryVal,
       cashInHand,
       bankBalance,
+      todayExpense: (() => {
+        try {
+          if (activeBranch && activeBranch !== 'All') {
+            return db.prepare("SELECT SUM(amount) as total FROM expenses WHERE store = ? AND date = ?").get(activeBranch, todayStr).total || 0;
+          } else {
+            return db.prepare("SELECT SUM(amount) as total FROM expenses WHERE date = ?").get(todayStr).total || 0;
+          }
+        } catch (e) { return 0; }
+      })(),
       outstandingCustomer: outstandingCustomer,
       outstandingSupplier: outstandingSupplier,
       avgOrderValue,
