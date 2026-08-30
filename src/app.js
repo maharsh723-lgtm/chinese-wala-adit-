@@ -10105,9 +10105,17 @@ function initApp() {
             const invoiceModal = document.getElementById("modalPOSInvoice");
             if (invoiceModal) {
                 invoiceModal.style.display = "flex";
-                // Automatically trigger print dialog to save clicks
+                // Automatically trigger print dialog for Bill and KOT sequentially
                 setTimeout(() => {
+                    document.body.classList.add('print-bill-only');
+                    document.body.classList.remove('print-kot-only');
                     window.print();
+                    setTimeout(() => {
+                        document.body.classList.remove('print-bill-only');
+                        document.body.classList.add('print-kot-only');
+                        window.print();
+                        setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
+                    }, 1000);
                 }, 500);
             }
             
@@ -10179,9 +10187,17 @@ function initApp() {
             const invoiceModal = document.getElementById("modalPOSInvoice");
             if (invoiceModal) {
                 invoiceModal.style.display = "flex";
-                // Automatically trigger print dialog to save clicks
+                // Automatically trigger print dialog for Bill and KOT sequentially
                 setTimeout(() => {
+                    document.body.classList.add('print-bill-only');
+                    document.body.classList.remove('print-kot-only');
                     window.print();
+                    setTimeout(() => {
+                        document.body.classList.remove('print-bill-only');
+                        document.body.classList.add('print-kot-only');
+                        window.print();
+                        setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
+                    }, 1000);
                 }, 500);
             }
             
