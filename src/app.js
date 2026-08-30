@@ -3725,8 +3725,13 @@ function initApp() {
         renderGSTInvoice(order);
         document.body.classList.add('print-bill-only');
         document.body.classList.remove('print-kot-only');
-        window.print();
-        setTimeout(() => document.body.classList.remove('print-bill-only'), 500);
+        const invoiceModal = document.getElementById("modalPOSInvoice");
+        if (invoiceModal) invoiceModal.style.display = "flex";
+        setTimeout(() => {
+            window.print();
+            document.body.classList.remove('print-bill-only');
+            if (invoiceModal) invoiceModal.style.display = "none";
+        }, 500);
     };
 
     window.reprintKOT = function(orderId) {
@@ -3744,8 +3749,13 @@ function initApp() {
         renderGSTInvoice(order);
         document.body.classList.add('print-kot-only');
         document.body.classList.remove('print-bill-only');
-        window.print();
-        setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
+        const invoiceModal = document.getElementById("modalPOSInvoice");
+        if (invoiceModal) invoiceModal.style.display = "flex";
+        setTimeout(() => {
+            window.print();
+            document.body.classList.remove('print-kot-only');
+            if (invoiceModal) invoiceModal.style.display = "none";
+        }, 500);
     };
 
     window.deletePOSOrder = async function(orderId) {
