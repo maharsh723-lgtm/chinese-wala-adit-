@@ -9967,7 +9967,33 @@ function initApp() {
                     const modal = document.getElementById("modalPOSSelectPayment");
                     if (modal) modal.style.display = "none";
                     
-                    if (method === 'UPI') {
+                    if (method === 'Split') {
+                        let subtotal = 0;
+                        posCart.forEach(item => {
+                            let itemPrice = item.price;
+                            (item.modifiers || []).forEach(modName => {
+                                const modInfo = posModifiers.find(m => m.name === modName);
+                                if (modInfo) itemPrice += modInfo.price;
+                            });
+                            subtotal += itemPrice * item.quantity;
+                        });
+                        let discount = 0;
+                        if (posAppliedCoupon) {
+                            if (posAppliedCoupon.discountType === 'percent') discount = subtotal * (posAppliedCoupon.discountValue / 100);
+                            else discount = posAppliedCoupon.discountValue;
+                        }
+                        const grandTotal = Math.max(0, subtotal - discount);
+                        
+                        const cashAmountStr = prompt(`Total is ₹${grandTotal.toFixed(2)}. How much was paid in Cash?`);
+                        if (cashAmountStr === null) return; // Cancelled
+                        const cashAmount = parseFloat(cashAmountStr);
+                        if (isNaN(cashAmount) || cashAmount < 0 || cashAmount > grandTotal) {
+                            alert("Invalid cash amount entered.");
+                            return;
+                        }
+                        const upiAmount = grandTotal - cashAmount;
+                        processPayment("Split", cashAmount, upiAmount);
+                    } else if (method === 'UPI') {
                         // Instead of immediately processing, trigger the sidebar UPI QR flow
                         const sidebarUpiBtn = document.querySelector(".pay-btn.upi");
                         if (sidebarUpiBtn) {
@@ -10085,7 +10111,7 @@ function initApp() {
         document.getElementById("modalPOSModifiers").style.display = "flex";
     }
 
-    async function processPayment(paymentMethod) {
+    async function processPayment(paymentMethod, splitCashAmount = 0, splitUpiAmount = 0) {
         if (posCart.length === 0) {
             alert("No items in the cart to settle!");
             return;
@@ -10136,6 +10162,8 @@ function initApp() {
             serviceCharge: serviceCharge,
             grandTotal: grandTotal,
             paymentMethod: paymentMethod,
+            splitCashAmount: splitCashAmount,
+            splitUpiAmount: splitUpiAmount,
             items: posCart,
             couponCode: posAppliedCoupon ? posAppliedCoupon.code : null,
             specialInstructions: document.getElementById("posOrderInstructions").value
@@ -10499,7 +10527,13 @@ function initApp() {
                     <span>₹${order.grandTotal.toFixed(2)}</span>
                 </div>
                 <div class="receipt-row" style="font-size:10px; margin-top:4px;">
-                    <span>Paid Via: ${order.paymentMethod}</span>
+                    ${order.paymentMethod === 'Split' ? 
+                        `<div style="display:flex; flex-direction:column; gap:2px;">
+                            <span>Paid Via: Split</span>
+                            <span>Cash: ₹${(order.splitCashAmount || 0).toFixed(2)} | UPI: ₹${(order.splitUpiAmount || 0).toFixed(2)}</span>
+                         </div>` : 
+                        `<span>Paid Via: ${order.paymentMethod}</span>`
+                    }
                     <span>Status: PAID</span>
                 </div>
                 

@@ -1095,7 +1095,7 @@ function computePLReportData(user, query) {
   
   try {
     const paymentSplit = db.prepare(`
-      SELECT paymentMethod, SUM(grandTotal) as total 
+      SELECT paymentMethod, SUM(grandTotal) as total, SUM(splitCashAmount) as totalSplitCash, SUM(splitUpiAmount) as totalSplitUpi
       FROM pos_orders 
       WHERE ${dateQuery} ${branchQuery.replace('branch_id', 'store')} AND status != 'Cancelled'
       GROUP BY paymentMethod
@@ -1103,7 +1103,10 @@ function computePLReportData(user, query) {
     
     paymentSplit.forEach(pm => {
       const methodStr = pm.paymentMethod ? pm.paymentMethod.toLowerCase() : '';
-      if (methodStr.includes('cash')) {
+      if (methodStr === 'split') {
+        cashInHand += (pm.totalSplitCash || 0);
+        bankBalance += (pm.totalSplitUpi || 0);
+      } else if (methodStr.includes('cash')) {
         cashInHand += pm.total;
       } else {
         bankBalance += pm.total;
@@ -4171,7 +4174,7 @@ app.post('/api/pos/orders/clear', authenticateToken, (req, res) => {
 app.post('/api/pos/orders', authenticateToken, (req, res) => {
   const {
     id, customerId, customerName, orderType, tableName = null, address = null,
-    subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
+    subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod, splitCashAmount, splitUpiAmount,
     items, couponCode = null, specialInstructions = null,
     customerPhone = null, utr = null, screenshot = null,
     bankName = null, upiId = null, notes = null
@@ -4204,16 +4207,19 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
     // Insert order record
     db.prepare(`
       INSERT INTO pos_orders (
-        id, date, time, customerId, customerName, orderType, tableName, address, 
-        subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod, status, store,
-        customerPhone, utr, screenshot, paymentStatus, bankName, upiId, adminNotes
+        id, date, time, customerId, customerName, orderType, tableName, address, subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod, status, store,
+        customerPhone, utr, screenshot, paymentStatus, bankName, upiId, adminNotes, splitCashAmount, splitUpiAmount
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, 
+        ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?, ?, ?
+      )
     `).run(
       id, dateStr, timeStr, customerId, customerName, orderType, tableName, address, 
       subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod, orderStatus, store,
       customerPhone || null, utr || null, screenshot || null, payStatus,
-      bankName || null, upiId || null, notes || null
+      bankName || null, upiId || null, notes || null, splitCashAmount || 0, splitUpiAmount || 0
     );
 
     // Insert P&L transaction
