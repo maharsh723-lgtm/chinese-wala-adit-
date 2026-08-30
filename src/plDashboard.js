@@ -123,6 +123,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 1. KPI Cards
         document.getElementById("pl-kpi-total-sales").textContent = formatCurrency(s.totalSales);
+        if (document.getElementById("pl-kpi-cash-received")) document.getElementById("pl-kpi-cash-received").textContent = formatCurrency(s.cashInHand || 0);
+        if (document.getElementById("pl-kpi-online-received")) document.getElementById("pl-kpi-online-received").textContent = formatCurrency(s.bankBalance || 0);
         document.getElementById("pl-kpi-total-expenses").textContent = formatCurrency(s.totalExpenses);
         
         const netProfitEl = document.getElementById("pl-kpi-net-profit");
