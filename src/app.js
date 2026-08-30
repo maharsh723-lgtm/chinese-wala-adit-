@@ -10488,8 +10488,9 @@ function initApp() {
                 </div>
                 </div>
                 
-                <!-- KOT SECTION APPENDED TO BILL -->
-                <div class="kot-print-section" style="page-break-before: always; break-before: page; margin-top: 30px; padding-top: 15px; border-top: 2px dashed #000;">
+                <!-- KOT SECTION APPENDED TO BILL (CONTINUOUS PRINT) -->
+                <div style="text-align:center; margin-top: 30px; font-weight: bold; font-size: 12px; letter-spacing: 2px;">✂ --- TEAR HERE --- ✂</div>
+                <div class="kot-print-section" style="margin-top: 10px; padding-top: 20px; border-top: 2px dashed #000;">
                     <div style="text-align:center; font-weight: 900; font-size: 18px; margin-bottom: 4px;">BADI KATORI</div>
                     <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 12px;">KITCHEN ORDER TICKET</div>
                     
