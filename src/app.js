@@ -3611,11 +3611,28 @@ function initApp() {
         if (!tbody) return;
 
         let liveItems = [];
+        let foodCount = 0;
+        let bevCount = 0;
+        const bevCategories = ['Indian Coolers', 'Frappe', 'Hot Coffee Mix', 'Hot Tea', 'Milkshakes', 'Cheese Cake Shakes', 'Lassi', 'Beverages', 'Drinks', 'Coffee', 'Tea'];
+
         (posOrderItems || []).forEach(item => {
             const order = (posOrders || []).find(o => o.id === item.orderId);
             if (order) {
                 // If the user is a branch manager, only show their store
                 if (currentRole === "bm" && order.store !== currentStore) return;
+                
+                // Only count items sold today
+                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+                if (order.date === todayStr) {
+                    const qty = parseInt(item.quantity || item.qty || 1);
+                    const prod = (posProducts || []).find(p => p.id === item.productId);
+                    
+                    if (prod && bevCategories.includes(prod.category)) {
+                        bevCount += qty;
+                    } else {
+                        foodCount += qty;
+                    }
+                }
                 
                 liveItems.push({
                     ...item,
@@ -3626,6 +3643,13 @@ function initApp() {
                 });
             }
         });
+        
+        if (document.getElementById("live-sales-food-count")) {
+            document.getElementById("live-sales-food-count").textContent = foodCount;
+        }
+        if (document.getElementById("live-sales-bev-count")) {
+            document.getElementById("live-sales-bev-count").textContent = bevCount;
+        }
 
         // Sort newest first
         liveItems.sort((a, b) => new Date(b.orderTime) - new Date(a.orderTime));
