@@ -10489,30 +10489,46 @@ function initApp() {
                 </div>
                 
                 <!-- KOT SECTION APPENDED TO BILL (CONTINUOUS PRINT) -->
-                <div style="text-align:center; margin-top: 30px; font-weight: bold; font-size: 12px; letter-spacing: 2px;">✂ --- TEAR HERE --- ✂</div>
-                <div class="kot-print-section" style="margin-top: 10px; padding-top: 20px; border-top: 2px dashed #000;">
-                    <div style="text-align:center; font-weight: 900; font-size: 18px; margin-bottom: 4px;">BADI KATORI</div>
-                    <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 12px;">KITCHEN ORDER TICKET</div>
-                    
-                    <div style="text-align:center; margin-bottom:12px;">
-                        <span style="font-size: 20px; font-weight: 900; border: 2px solid #000; padding: 4px 12px; border-radius: 4px;">
-                            TOKEN: #${order.tokenNumber || order.dToken || order.tableName || order.id.substring(0,8)}
-                        </span>
-                    </div>
+                ${(function() {
+                    const paniPuriItems = order.items.filter(i => i.productName && i.productName.toLowerCase().includes('pani puri'));
+                    const mainItems = order.items.filter(i => !(i.productName && i.productName.toLowerCase().includes('pani puri')));
+                    let kotHtml = '';
 
-                    <div class="receipt-divider"></div>
-                    <div style="font-weight:700; margin-bottom:8px; font-size:13px; text-align:center;">ITEMS TO PREPARE</div>
-                    ${order.items.map(item => `
-                        <div class="receipt-item-row" style="margin-bottom: 6px;">
-                            <div class="receipt-item-top" style="font-size: 16px; font-weight: 900;">
-                                <span>[ ${item.quantity} ] x ${item.productName}</span>
+                    const generateKOT = (items, title) => {
+                        if (items.length === 0) return '';
+                        return `
+                            <div style="text-align:center; margin-top: 30px; font-weight: bold; font-size: 12px; letter-spacing: 2px;">✂ --- TEAR HERE --- ✂</div>
+                            <div class="kot-print-section" style="margin-top: 10px; padding-top: 20px; border-top: 2px dashed #000;">
+                                <div style="text-align:center; font-weight: 900; font-size: 18px; margin-bottom: 4px;">BADI KATORI</div>
+                                <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 12px;">${title}</div>
+                                
+                                <div style="text-align:center; margin-bottom:12px;">
+                                    <span style="font-size: 20px; font-weight: 900; border: 2px solid #000; padding: 4px 12px; border-radius: 4px;">
+                                        TOKEN: #${order.tokenNumber || order.dToken || order.tableName || order.id.substring(0,8)}
+                                    </span>
+                                </div>
+
+                                <div class="receipt-divider"></div>
+                                <div style="font-weight:700; margin-bottom:8px; font-size:13px; text-align:center;">ITEMS TO PREPARE</div>
+                                ${items.map(item => `
+                                    <div class="receipt-item-row" style="margin-bottom: 6px;">
+                                        <div class="receipt-item-top" style="font-size: 16px; font-weight: 900;">
+                                            <span>[ ${item.quantity} ] x ${item.productName}</span>
+                                        </div>
+                                        ${item.modifiers && item.modifiers.length > 0 ? `<div class="receipt-item-mods" style="font-size: 13px; margin-left: 20px; font-weight: bold;">+ ${item.modifiers.join(', ')}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                                <div class="receipt-divider"></div>
+                                <div style="text-align:center; font-size:10px;">--- End of ${title} ---</div>
                             </div>
-                            ${item.modifiers && item.modifiers.length > 0 ? `<div class="receipt-item-mods" style="font-size: 13px; margin-left: 20px; font-weight: bold;">+ ${item.modifiers.join(', ')}</div>` : ''}
-                        </div>
-                    `).join('')}
-                    <div class="receipt-divider"></div>
-                    <div style="text-align:center; font-size:10px;">--- End of KOT ---</div>
-                </div>
+                        `;
+                    };
+
+                    kotHtml += generateKOT(mainItems, "MAIN KOT");
+                    kotHtml += generateKOT(paniPuriItems, "PANI PURI KOT");
+
+                    return kotHtml;
+                })()}
 
             </div>
         `;
