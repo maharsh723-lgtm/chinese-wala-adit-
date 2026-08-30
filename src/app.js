@@ -3611,49 +3611,21 @@ function initApp() {
         if (!tbody) return;
 
         let liveItems = [];
-        let foodCount = 0;
-        let bevCount = 0;
-        const bevCategories = ['Indian Coolers', 'Frappe', 'Hot Coffee Mix', 'Hot Tea', 'Milkshakes', 'Cheese Cake Shakes', 'Lassi', 'Beverages', 'Drinks', 'Coffee', 'Tea'];
-
         (posOrderItems || []).forEach(item => {
             const order = (posOrders || []).find(o => o.id === item.orderId);
             if (order) {
                 // If the user is a branch manager, only show their store
                 if (currentRole === "bm" && order.store !== currentStore) return;
                 
-                // Only count items sold today
-                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
-                if (order.date === todayStr) {
-                    const qty = parseInt(item.quantity || item.qty || 1);
-                    const prod = (posProducts || []).find(p => p.id === item.productId);
-                    
-                    if (prod && bevCategories.includes(prod.category)) {
-                        bevCount += qty;
-                    } else {
-                        foodCount += qty;
-                    }
-                }
-
-                
-                const prod = (posProducts || []).find(p => p.id === item.productId);
-                
                 liveItems.push({
                     ...item,
                     orderTime: order.timestamp || (order.date + (order.time ? `T${order.time}` : '')),
                     orderNumber: order.orderNumber || order.id,
                     store: order.store,
-                    paymentMethod: order.paymentMethod || 'Cash',
-                    category: prod ? prod.category : 'Unknown'
+                    paymentMethod: order.paymentMethod || 'Cash'
                 });
             }
         });
-        
-        if (document.getElementById("live-sales-food-count")) {
-            document.getElementById("live-sales-food-count").textContent = foodCount;
-        }
-        if (document.getElementById("live-sales-bev-count")) {
-            document.getElementById("live-sales-bev-count").textContent = bevCount;
-        }
 
         // Sort newest first
         liveItems.sort((a, b) => new Date(b.orderTime) - new Date(a.orderTime));
@@ -3681,7 +3653,6 @@ function initApp() {
                 <td><span class="pill-badge" style="background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border);">${item.store || 'Unknown'}</span></td>
                 <td style="font-weight: 700; color: var(--orange-primary);">#${item.orderNumber}</td>
                 <td><span class="pill-badge" style="background: ${paymentBadgeBg}; color: ${paymentBadgeColor}; border: 1px solid ${paymentBadgeColor};">${item.paymentMethod}</span></td>
-                <td><span style="font-size:0.85rem; color: var(--text-secondary);">${item.category || 'Unknown'}</span></td>
                 <td style="font-weight: 600;">${item.productName || item.name || 'Unknown Item'}</td>
                 <td style="text-align:center;"><span style="display:inline-block; padding: 2px 8px; background: rgba(16, 185, 129, 0.1); color: var(--success); border-radius: 4px; font-weight:700;">x${item.quantity || item.qty || 1}</span></td>
                 <td style="text-align:right; font-weight:700;">₹${((item.price || 0) * (item.quantity || item.qty || 1)).toLocaleString('en-IN')}</td>
