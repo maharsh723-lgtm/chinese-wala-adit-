@@ -10503,13 +10503,7 @@ function initApp() {
                     <span>Status: PAID</span>
                 </div>
                 
-                ${order.paymentMethod === 'UPI' || order.paymentMethod === 'UPI / QR' ? `
-                <div class="receipt-divider"></div>
-                <div style="text-align:center; margin-top: 10px;">
-                    <div style="font-size: 10px; font-weight: bold; margin-bottom: 4px;">SCAN TO PAY VIA UPI</div>
-                    <img src="upi_qr.jpg" alt="UPI QR" style="width: 140px; height: 140px; margin: 0 auto; display: block; filter: grayscale(100%);">
-                </div>
-                ` : ''}
+                <!-- UPI QR removed based on user request -->
 
                 <div class="receipt-divider"></div>
                 
