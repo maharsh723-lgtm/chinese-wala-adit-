@@ -4107,8 +4107,10 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
 
   const store = req.headers['x-store-name'] || req.user.store || 'VESU';
   const currentDate = new Date();
-  const dateStr = currentDate.toISOString().split('T')[0];
-  const timeStr = currentDate.toTimeString().split(' ')[0];
+  // Get IST offset time for accurate local logging (IST = UTC + 5:30)
+  const istDate = new Date(currentDate.getTime() + (330 * 60000));
+  const dateStr = istDate.toISOString().split('T')[0];
+  const timeStr = istDate.toISOString().split('T')[1].split('.')[0];
 
   try {
     const io = req.app.get('io');

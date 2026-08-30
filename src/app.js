@@ -3619,7 +3619,7 @@ function initApp() {
                 
                 liveItems.push({
                     ...item,
-                    orderTime: order.timestamp || order.date,
+                    orderTime: order.timestamp || (order.date + (order.time ? `T${order.time}` : '')),
                     orderNumber: order.orderNumber || order.id,
                     store: order.store,
                     paymentMethod: order.paymentMethod || 'Cash'
