@@ -3700,11 +3700,43 @@ function initApp() {
                 <td style="font-weight: 600;">${item.productName || item.name || 'Unknown Item'}</td>
                 <td style="text-align:center;"><span style="display:inline-block; padding: 2px 8px; background: rgba(16, 185, 129, 0.1); color: var(--success); border-radius: 4px; font-weight:700;">x${item.quantity || item.qty || 1}</span></td>
                 <td style="text-align:right; font-weight:700;">₹${((item.price || 0) * (item.quantity || item.qty || 1)).toLocaleString('en-IN')}</td>
-                <td style="text-align:center;"><button class="saas-btn saas-btn-danger" style="padding: 2px 6px; font-size: 0.75rem;" onclick="window.deletePOSOrder('${item.orderId}')">Delete Bill</button></td>
+                <td style="text-align:center; display: flex; gap: 4px; justify-content: center;">
+                    <button class="saas-btn" style="padding: 2px 6px; font-size: 0.75rem; background: var(--blue-primary);" onclick="window.reprintBill('${item.orderId}')">Reprint Bill</button>
+                    <button class="saas-btn" style="padding: 2px 6px; font-size: 0.75rem; background: var(--orange-primary);" onclick="window.reprintKOT('${item.orderId}')">Reprint KOT</button>
+                    <button class="saas-btn saas-btn-danger" style="padding: 2px 6px; font-size: 0.75rem;" onclick="window.deletePOSOrder('${item.orderId}')">Delete Bill</button>
+                </td>
             `;
             tbody.appendChild(row);
         });
     }
+
+    window.reprintBill = function(orderId) {
+        const order = posOrders.find(o => o.id === orderId);
+        if (!order) return alert("Order not found!");
+        if (!order.items) order.items = posOrderItems.filter(i => i.orderId === orderId);
+        const kot = posKitchenOrders.find(k => k.orderId === orderId);
+        if (kot) order.kotNumber = kot.kotNumber;
+        
+        renderGSTInvoice(order);
+        document.body.classList.add('print-bill-only');
+        document.body.classList.remove('print-kot-only');
+        window.print();
+        setTimeout(() => document.body.classList.remove('print-bill-only'), 500);
+    };
+
+    window.reprintKOT = function(orderId) {
+        const order = posOrders.find(o => o.id === orderId);
+        if (!order) return alert("Order not found!");
+        if (!order.items) order.items = posOrderItems.filter(i => i.orderId === orderId);
+        const kot = posKitchenOrders.find(k => k.orderId === orderId);
+        if (kot) order.kotNumber = kot.kotNumber;
+
+        renderGSTInvoice(order);
+        document.body.classList.add('print-kot-only');
+        document.body.classList.remove('print-bill-only');
+        window.print();
+        setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
+    };
 
     window.deletePOSOrder = async function(orderId) {
         if (!confirm("Are you sure you want to delete this bill? This will remove the entire order.")) return;
