@@ -5731,6 +5731,41 @@ function initApp() {
         });
     }
 
+    // === CLEAR LIVE SALES STREAM SUBMISSION ===
+    const btnClearLiveStream = document.getElementById("btnClearLiveStream");
+    if (btnClearLiveStream) {
+        btnClearLiveStream.addEventListener("click", async () => {
+            const targetStore = currentRole === "owner" ? "" : currentStore; // Empty string means clear all for owner
+            const confirmMsg = currentRole === "owner"
+                ? `Are you sure you want to clear the Live Sales Stream (POS orders) for ALL outlets? This cannot be undone.`
+                : `Are you sure you want to clear the Live Sales Stream (POS orders) for this outlet (${targetStore})? This cannot be undone.`;
+            
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/pos/orders/clear`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`
+                    },
+                    body: JSON.stringify({ store: targetStore })
+                });
+
+                if (res.ok) {
+                    alert("Live Sales Stream cleared successfully.");
+                    await syncStateFromServer();
+                } else {
+                    const errData = await res.json();
+                    alert("Error: " + errData.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to clear live sales stream.");
+            }
+        });
+    }
+
     // === INVENTORY EDIT FORM SUBMISSION ===
     const editInventoryForm = document.getElementById("formEditInventory");
     if (editInventoryForm) {

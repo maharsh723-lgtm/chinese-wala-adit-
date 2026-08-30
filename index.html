@@ -2998,9 +2998,12 @@
                             <h1>Live Sales Stream</h1>
                             <p>Real-time feed of items being sold across all outlets.</p>
                         </div>
-                        <div class="screen-actions">
+                        <div class="screen-actions" style="display: flex; gap: 8px;">
                             <button class="saas-btn saas-btn-secondary" onclick="renderLiveSalesStream()">
                                 <i data-lucide="refresh-cw"></i> Refresh Feed
+                            </button>
+                            <button class="saas-btn" id="btnClearLiveStream" style="background: var(--pos-accent-red, #ef4444); border-color: var(--pos-accent-red, #ef4444); color: #ffffff; font-weight: 700;">
+                                <i data-lucide="trash-2"></i> Clear Stream
                             </button>
                         </div>
                     </div>

@@ -4073,6 +4073,29 @@ function processPosOrderInventoryConsumption(orderId, storeId, io) {
 }
 // -------------------------------------------------------------
 
+app.post('/api/pos/orders/clear', authenticateToken, (req, res) => {
+  try {
+    const { store } = req.body;
+    
+    db.exec('BEGIN TRANSACTION');
+    
+    if (store && req.user.role === 'bm') {
+      db.prepare('DELETE FROM pos_order_items WHERE orderId IN (SELECT id FROM pos_orders WHERE store = ?)').run(store);
+      db.prepare('DELETE FROM pos_orders WHERE store = ?').run(store);
+    } else {
+      db.prepare('DELETE FROM pos_order_items').run();
+      db.prepare('DELETE FROM pos_orders').run();
+    }
+    
+    db.exec('COMMIT');
+    res.json({ message: 'Live stream inventory cleared.' });
+  } catch (err) {
+    if (db.inTransaction) db.exec('ROLLBACK');
+    console.error('Error clearing POS orders:', err);
+    res.status(500).json({ error: 'Failed to clear live sales stream.' });
+  }
+});
+
 app.post('/api/pos/orders', authenticateToken, (req, res) => {
   const {
     id, customerId, customerName, orderType, tableName = null, address = null,
