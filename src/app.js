@@ -10496,18 +10496,18 @@ function initApp() {
                 ? `<div class="receipt-item-mods">+ ${item.modifiers.join(', ')}</div>`
                 : '';
                 
-            let itemPrice = item.price;
+            let itemPrice = parseFloat(item.price || 0);
             (item.modifiers || []).forEach(mName => {
                 const modInfo = posModifiers.find(m => m.name === mName);
-                if (modInfo) itemPrice += modInfo.price;
+                if (modInfo) itemPrice += parseFloat(modInfo.price || 0);
             });
-            const sub = itemPrice * item.quantity;
+            const sub = itemPrice * (parseInt(item.quantity) || 1);
             
             itemsHtml += `
                 <div class="receipt-item-row">
                     <div class="receipt-item-top">
-                        <span>${item.productName} (x${item.quantity}) @ ₹${itemPrice.toFixed(2)}</span>
-                        <span>₹${sub.toFixed(2)}</span>
+                        <span>${item.productName} (x${item.quantity}) @ ₹${(itemPrice || 0).toFixed(2)}</span>
+                        <span>₹${(sub || 0).toFixed(2)}</span>
                     </div>
                     ${modsLine}
                 </div>
@@ -10554,25 +10554,25 @@ function initApp() {
                 
                 <div class="receipt-row">
                     <span>Subtotal</span>
-                    <span>₹${order.subtotal.toFixed(2)}</span>
+                    <span>₹${(parseFloat(order.subtotal) || 0).toFixed(2)}</span>
                 </div>
                 ${order.discount > 0 ? `
                 <div class="receipt-row">
                     <span>Discount</span>
-                    <span>-₹${order.discount.toFixed(2)}</span>
+                    <span>-₹${(parseFloat(order.discount) || 0).toFixed(2)}</span>
                 </div>` : ''}
                 
                 <div class="receipt-divider"></div>
                 
                 <div class="receipt-row receipt-totals" style="font-size:14px;">
                     <span>GRAND TOTAL</span>
-                    <span>₹${order.grandTotal.toFixed(2)}</span>
+                    <span>₹${(parseFloat(order.grandTotal) || 0).toFixed(2)}</span>
                 </div>
                 <div class="receipt-row" style="font-size:10px; margin-top:4px;">
                     ${order.paymentMethod === 'Split' ? 
                         `<div style="display:flex; flex-direction:column; gap:2px;">
                             <span>Paid Via: Split</span>
-                            <span>Cash: ₹${(order.splitCashAmount || 0).toFixed(2)} | UPI: ₹${(order.splitUpiAmount || 0).toFixed(2)}</span>
+                            <span>Cash: ₹${(parseFloat(order.splitCashAmount) || 0).toFixed(2)} | UPI: ₹${(parseFloat(order.splitUpiAmount) || 0).toFixed(2)}</span>
                          </div>` : 
                         `<span>Paid Via: ${order.paymentMethod}</span>`
                     }
