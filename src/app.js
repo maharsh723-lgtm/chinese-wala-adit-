@@ -10129,17 +10129,11 @@ function initApp() {
             const invoiceModal = document.getElementById("modalPOSInvoice");
             if (invoiceModal) {
                 invoiceModal.style.display = "flex";
-                // Automatically trigger print dialog for Bill and KOT sequentially
+                // Automatically trigger print dialog once for both Bill and KOT
                 setTimeout(() => {
-                    document.body.classList.add('print-bill-only');
-                    document.body.classList.remove('print-kot-only');
+                    // Do not add 'print-bill-only' or 'print-kot-only' classes
+                    // This way both the bill and the KOT will be printed together in a single job
                     window.print();
-                    setTimeout(() => {
-                        document.body.classList.remove('print-bill-only');
-                        document.body.classList.add('print-kot-only');
-                        window.print();
-                        setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
-                    }, 1000);
                 }, 500);
             }
             
@@ -10211,17 +10205,11 @@ function initApp() {
             const invoiceModal = document.getElementById("modalPOSInvoice");
             if (invoiceModal) {
                 invoiceModal.style.display = "flex";
-                // Automatically trigger print dialog for Bill and KOT sequentially
+                // Automatically trigger print dialog once for both Bill and KOT
                 setTimeout(() => {
-                    document.body.classList.add('print-bill-only');
-                    document.body.classList.remove('print-kot-only');
+                    // Do not add 'print-bill-only' or 'print-kot-only' classes
+                    // This way both the bill and the KOT will be printed together in a single job
                     window.print();
-                    setTimeout(() => {
-                        document.body.classList.remove('print-bill-only');
-                        document.body.classList.add('print-kot-only');
-                        window.print();
-                        setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
-                    }, 1000);
                 }, 500);
             }
             
