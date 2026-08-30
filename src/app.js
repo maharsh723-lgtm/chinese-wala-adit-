@@ -3713,7 +3713,12 @@ function initApp() {
     window.reprintBill = function(orderId) {
         const order = posOrders.find(o => o.id === orderId);
         if (!order) return alert("Order not found!");
-        if (!order.items) order.items = posOrderItems.filter(i => i.orderId === orderId);
+        if (!order.items) {
+            order.items = posOrderItems.filter(i => i.orderId === orderId).map(i => ({
+                ...i,
+                modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
+            }));
+        }
         const kot = posKitchenOrders.find(k => k.orderId === orderId);
         if (kot) order.kotNumber = kot.kotNumber;
         
@@ -3727,7 +3732,12 @@ function initApp() {
     window.reprintKOT = function(orderId) {
         const order = posOrders.find(o => o.id === orderId);
         if (!order) return alert("Order not found!");
-        if (!order.items) order.items = posOrderItems.filter(i => i.orderId === orderId);
+        if (!order.items) {
+            order.items = posOrderItems.filter(i => i.orderId === orderId).map(i => ({
+                ...i,
+                modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
+            }));
+        }
         const kot = posKitchenOrders.find(k => k.orderId === orderId);
         if (kot) order.kotNumber = kot.kotNumber;
 
