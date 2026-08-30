@@ -3700,15 +3700,35 @@ function initApp() {
                 <td style="font-weight: 600;">${item.productName || item.name || 'Unknown Item'}</td>
                 <td style="text-align:center;"><span style="display:inline-block; padding: 2px 8px; background: rgba(16, 185, 129, 0.1); color: var(--success); border-radius: 4px; font-weight:700;">x${item.quantity || item.qty || 1}</span></td>
                 <td style="text-align:right; font-weight:700;">₹${((item.price || 0) * (item.quantity || item.qty || 1)).toLocaleString('en-IN')}</td>
-                <td style="text-align:center; display: flex; gap: 4px; justify-content: center;">
-                    <button class="saas-btn" style="padding: 2px 6px; font-size: 0.75rem; background: var(--blue-primary);" onclick="window.reprintBill('${item.orderId}')">Reprint Bill</button>
-                    <button class="saas-btn" style="padding: 2px 6px; font-size: 0.75rem; background: var(--orange-primary);" onclick="window.reprintKOT('${item.orderId}')">Reprint KOT</button>
-                    <button class="saas-btn saas-btn-danger" style="padding: 2px 6px; font-size: 0.75rem;" onclick="window.deletePOSOrder('${item.orderId}')">Delete Bill</button>
+                <td style="text-align:center;">
+                    <div class="pos-live-actions" style="display: flex; gap: 4px; justify-content: center;">
+                        <button class="saas-btn saas-btn-primary" style="padding:4px 8px; font-size:0.75rem; background:#3b82f6; color:#fff;" onclick="window.showBill('${item.orderId}')">Show Bill</button>
+                        <button class="saas-btn" style="padding: 2px 6px; font-size: 0.75rem; background: var(--blue-primary);" onclick="window.reprintBill('${item.orderId}')">Reprint Bill</button>
+                        <button class="saas-btn" style="padding: 2px 6px; font-size: 0.75rem; background: var(--orange-primary);" onclick="window.reprintKOT('${item.orderId}')">Reprint KOT</button>
+                        <button class="saas-btn saas-btn-danger" style="padding: 2px 6px; font-size: 0.75rem;" onclick="window.deletePOSOrder('${item.orderId}')">Delete Bill</button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(row);
         });
     }
+
+    window.showBill = function(orderId) {
+        const order = posOrders.find(o => o.id === orderId);
+        if (!order) return alert("Order not found!");
+        if (!order.items) {
+            order.items = posOrderItems.filter(i => i.orderId === orderId).map(i => ({
+                ...i,
+                modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
+            }));
+        }
+        const kot = posKitchenOrders.find(k => k.orderId === orderId);
+        if (kot) order.kotNumber = kot.kotNumber;
+        
+        renderGSTInvoice(order);
+        const invoiceModal = document.getElementById("modalPOSInvoice");
+        if (invoiceModal) invoiceModal.style.display = "flex";
+    };
 
     window.reprintBill = function(orderId) {
         const order = posOrders.find(o => o.id === orderId);
@@ -3758,8 +3778,8 @@ function initApp() {
         }, 500);
     };
 
-    window.deletePOSOrder = async function(orderId) {
-        if (!confirm("Are you sure you want to delete this bill? This will remove the entire order.")) return;
+    window.deletePOSOrder = async function(orderId, skipConfirm = false) {
+        if (!skipConfirm && !confirm("Are you sure you want to delete this bill? This will remove the entire order.")) return;
         try {
             const res = await fetch(`/api/pos/orders/${orderId}`, {
                 method: 'DELETE',
@@ -9890,6 +9910,53 @@ function initApp() {
             pdfBtn.dataset.listenerBound = "true";
             pdfBtn.addEventListener("click", () => {
                 downloadReceiptPDF();
+            });
+        }
+
+        const editBillBtn = document.getElementById("btnEditBillBtn");
+        if (editBillBtn && !editBillBtn.dataset.listenerBound) {
+            editBillBtn.dataset.listenerBound = "true";
+            editBillBtn.addEventListener("click", () => {
+                const order = window.activeReceiptOrder;
+                if (!order) return;
+                if (!confirm("Editing this bill will load its items into the cart and DELETE the original bill so you can re-settle it. Continue?")) return;
+                
+                // 1. Move items to cart
+                posCart = order.items.map(i => ({
+                    productId: i.productId,
+                    productName: i.productName,
+                    price: parseFloat(i.price) || 0,
+                    quantity: parseInt(i.quantity) || 1,
+                    modifiers: [...(i.modifiers || [])],
+                    instructions: i.instructions || ''
+                }));
+                
+                // 2. Set order type and customer
+                posSelectedOrderType = order.orderType || 'Dine-In';
+                if (order.customerId) {
+                    const custObj = posCustomers.find(c => c.id === order.customerId);
+                    if (custObj) {
+                        posSelectedCustomer = custObj;
+                    } else if (order.customerName) {
+                        posSelectedCustomer = { name: order.customerName, phone: order.customerPhone || '' };
+                    }
+                } else if (order.customerName) {
+                    posSelectedCustomer = { name: order.customerName, phone: order.customerPhone || '' };
+                }
+                
+                // 3. Clear coupons etc
+                posAppliedCoupon = null;
+                const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
+                
+                // 4. Close modal
+                const modal = document.getElementById('modalPOSInvoice');
+                if (modal) modal.style.display = 'none';
+                
+                // 5. Delete original bill from DB
+                window.deletePOSOrder(order.id, true); // true = skip confirm
+                
+                syncCartStateAndUI();
+                showToast("Bill loaded for editing!");
             });
         }
 
