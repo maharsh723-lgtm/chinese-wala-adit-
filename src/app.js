@@ -14344,6 +14344,16 @@ window.fetchAndRenderPnL = async function() {
                     <td style="text-align:right;">POS Sales</td>
                     <td style="text-align:right;">₹${data.summary.totalSales.toLocaleString('en-IN')}</td>
                 </tr>
+                <tr style="font-size:0.85em; color:#666;">
+                    <td style="padding-left:30px;">└ Cash Received</td>
+                    <td style="text-align:right;"></td>
+                    <td style="text-align:right;">₹${(data.summary.cashInHand || 0).toLocaleString('en-IN')}</td>
+                </tr>
+                <tr style="font-size:0.85em; color:#666;">
+                    <td style="padding-left:30px;">└ Online / Bank Received</td>
+                    <td style="text-align:right;"></td>
+                    <td style="text-align:right;">₹${(data.summary.bankBalance || 0).toLocaleString('en-IN')}</td>
+                </tr>
                 <tr>
                     <td>Less: Cost of Goods Sold (COGS)</td>
                     <td style="text-align:right;">Inventory</td>

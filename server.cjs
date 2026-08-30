@@ -1074,9 +1074,30 @@ function computePLReportData(user, query) {
     `).get(...sqlParams).total || (totalExpenses * 0.05);
   } catch (e) {}
 
-  // Cash & Bank balances
-  const cashInHand = 75000 + (totalSales * 0.4) - (totalExpenses * 0.3); // baseline + cash receipts
-  const bankBalance = 245000 + (totalSales * 0.6) - (totalExpenses * 0.7);
+  // Cash & Bank balances (Calculated from POS Orders)
+  let cashInHand = 0;
+  let bankBalance = 0;
+  
+  try {
+    const paymentSplit = db.prepare(`
+      SELECT paymentMethod, SUM(grandTotal) as total 
+      FROM pos_orders 
+      WHERE ${dateQuery} ${branchQuery.replace('branch_id', 'store')} AND status != 'Cancelled'
+      GROUP BY paymentMethod
+    `).all(...sqlParams);
+    
+    paymentSplit.forEach(pm => {
+      const methodStr = pm.paymentMethod ? pm.paymentMethod.toLowerCase() : '';
+      if (methodStr.includes('cash')) {
+        cashInHand += pm.total;
+      } else {
+        bankBalance += pm.total;
+      }
+    });
+  } catch (e) {
+    cashInHand = 0;
+    bankBalance = 0;
+  }
 
   // Dynamic Growth calculation vs previous period of equal length
   let prevSalesVal = 0;
