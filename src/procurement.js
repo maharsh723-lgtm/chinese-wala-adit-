@@ -223,16 +223,13 @@
             <i data-lucide="activity"></i> Stock Monitor
           </button>
           <button class="proc-tab-btn" data-tab="orders">
-            <i data-lucide="file-spreadsheet"></i> Purchase Orders
+            <i data-lucide="file-spreadsheet"></i> Drafts & Purchase Orders
           </button>
           <button class="proc-tab-btn" data-tab="suppliers">
             <i data-lucide="users"></i> Suppliers
           </button>
           <button class="proc-tab-btn" data-tab="reports">
             <i data-lucide="pie-chart"></i> Spending Reports
-          </button>
-          <button class="proc-tab-btn" data-tab="whatsapp-logs">
-            <i data-lucide="message-square"></i> WhatsApp Log
           </button>
         </div>
 
