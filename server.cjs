@@ -4316,6 +4316,22 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
       processPosOrderInventoryConsumption(id, store, io);
     }
 
+    // --- TELEGRAM NOTIFICATION ---
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+    const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+    if (telegramToken && telegramChatId) {
+      const itemsListStr = items.map(i => `${i.quantity}x ${i.productName}`).join('\n');
+      const msg = `🟢 *New Order Placed!*\n\n*Store:* ${store}\n*Type:* ${orderType}\n*Amount:* ₹${grandTotal}\n*Payment:* ${paymentMethod}\n\n*Items:*\n${itemsListStr}`;
+      
+      const url = `https://api.telegram.org/bot${telegramToken}/sendMessage`;
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: telegramChatId, text: msg, parse_mode: 'Markdown' })
+      }).catch(err => console.error('[Telegram New Order Error]:', err));
+    }
+    // -----------------------------
+
     res.json({
       success: true,
       message: 'Order created successfully',
