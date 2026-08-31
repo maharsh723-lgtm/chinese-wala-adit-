@@ -10312,9 +10312,9 @@ function initApp() {
         try {
             if (posEditingOrder) {
                 try {
-                    await fetch(`/api/pos/orders/${posEditingOrder.id}`, {
+                    await fetch(`${API_BASE}/api/pos/orders/${posEditingOrder.id}`, {
                         method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}` }
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}` }
                     });
                 } catch(e) {}
             }
@@ -10390,6 +10390,7 @@ function initApp() {
             }
             
             posCart = [];
+            posEditingOrder = null;
             posAppliedCoupon = null;
             const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
             const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
@@ -14370,10 +14371,14 @@ function initApp() {
             } else {
                 posSelectedCustomer = 'cust-1';
             }
+            if (order.tableName) {
+                posSelectedTable = order.tableName;
+            }
             
             // 3. Clear coupons etc
             posAppliedCoupon = null;
             const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
+            const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
             
             // 4. Close modal
             const modal = document.getElementById('modalPOSInvoice');
@@ -14391,14 +14396,39 @@ function initApp() {
                 navigateToScreen("billing");
             }
             
-            if (typeof syncCartStateAndUI === 'function') {
-                syncCartStateAndUI();
+            // Update order type tabs in UI
+            const serviceTabs = document.querySelectorAll(".order-type-tab");
+            serviceTabs.forEach(t => {
+                if (t.getAttribute("data-type") === posSelectedOrderType) {
+                    t.classList.add("active");
+                } else {
+                    t.classList.remove("active");
+                }
+            });
+            const dineIn = document.getElementById("dineInDetails");
+            const delivery = document.getElementById("deliveryDetails");
+            if (dineIn && delivery) {
+                if (posSelectedOrderType === 'Dine In') {
+                    dineIn.style.display = "block";
+                    delivery.style.display = "none";
+                } else if (posSelectedOrderType === 'Delivery') {
+                    dineIn.style.display = "none";
+                    delivery.style.display = "block";
+                } else {
+                    dineIn.style.display = "none";
+                    delivery.style.display = "none";
+                }
             }
             
+            // Re-render billing components
+            if (typeof renderCustomerDropdown === 'function') renderCustomerDropdown();
+            if (typeof renderTableDropdown === 'function') renderTableDropdown();
+            if (typeof syncCartStateAndUI === 'function') syncCartStateAndUI();
+            
             if (typeof showToast === 'function') {
-                showToast("Bill loaded for editing! You can change items and pick any payment method to settle.");
+                showToast("Bill loaded for editing! You can modify items and settle to update the bill.");
             } else {
-                alert("Bill loaded for editing! You can change items and pick any payment method to settle.");
+                alert("Bill loaded for editing! You can modify items and settle to update the bill.");
             }
         });
     }
