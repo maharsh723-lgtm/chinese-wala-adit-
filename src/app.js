@@ -9913,53 +9913,6 @@ function initApp() {
             });
         }
 
-        const editBillBtn = document.getElementById("btnEditBillBtn");
-        if (editBillBtn && !editBillBtn.dataset.listenerBound) {
-            editBillBtn.dataset.listenerBound = "true";
-            editBillBtn.addEventListener("click", () => {
-                const order = window.activeReceiptOrder;
-                if (!order) return;
-                if (!confirm("Editing this bill will load its items into the cart and DELETE the original bill so you can re-settle it. Continue?")) return;
-                
-                // 1. Move items to cart
-                posCart = order.items.map(i => ({
-                    productId: i.productId,
-                    productName: i.productName,
-                    price: parseFloat(i.price) || 0,
-                    quantity: parseInt(i.quantity) || 1,
-                    modifiers: [...(i.modifiers || [])],
-                    instructions: i.instructions || ''
-                }));
-                
-                // 2. Set order type and customer
-                posSelectedOrderType = order.orderType || 'Dine-In';
-                if (order.customerId) {
-                    const custObj = posCustomers.find(c => c.id === order.customerId);
-                    if (custObj) {
-                        posSelectedCustomer = custObj;
-                    } else if (order.customerName) {
-                        posSelectedCustomer = { name: order.customerName, phone: order.customerPhone || '' };
-                    }
-                } else if (order.customerName) {
-                    posSelectedCustomer = { name: order.customerName, phone: order.customerPhone || '' };
-                }
-                
-                // 3. Clear coupons etc
-                posAppliedCoupon = null;
-                const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
-                
-                // 4. Close modal
-                const modal = document.getElementById('modalPOSInvoice');
-                if (modal) modal.style.display = 'none';
-                
-                // 5. Delete original bill from DB
-                window.deletePOSOrder(order.id, true); // true = skip confirm
-                
-                syncCartStateAndUI();
-                navigateToScreen("pos");
-                showToast("Bill loaded for editing!");
-            });
-        }
 
         const whatsappBtn = document.getElementById("btnWhatsAppReceiptBtn");
         if (whatsappBtn && !whatsappBtn.dataset.listenerBound) {
@@ -14341,6 +14294,67 @@ function initApp() {
                 renderAiProcurementScreen();
             };
         }
+    }
+
+    const editBillBtn = document.getElementById("btnEditBillBtn");
+    if (editBillBtn && !editBillBtn.dataset.listenerBound) {
+        editBillBtn.dataset.listenerBound = "true";
+        editBillBtn.addEventListener("click", () => {
+            const order = window.activeReceiptOrder;
+            if (!order) return;
+            if (!confirm("Editing this bill will load its items into the cart and DELETE the original bill so you can re-settle it. Continue?")) return;
+            
+            // 1. Move items to cart
+            posCart = order.items.map(i => ({
+                productId: i.productId,
+                productName: i.productName,
+                price: parseFloat(i.price) || 0,
+                quantity: parseInt(i.quantity) || 1,
+                modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : [...(i.modifiers || [])],
+                instructions: i.instructions || ''
+            }));
+            
+            // 2. Set order type and customer
+            posSelectedOrderType = order.orderType || 'Dine In';
+            if (order.customerId) {
+                const custObj = (typeof posCustomers !== 'undefined' ? posCustomers : []).find(c => c.id === order.customerId);
+                if (custObj) {
+                    posSelectedCustomer = custObj;
+                } else if (order.customerName) {
+                    posSelectedCustomer = { name: order.customerName, phone: order.customerPhone || '' };
+                }
+            } else if (order.customerName) {
+                posSelectedCustomer = { name: order.customerName, phone: order.customerPhone || '' };
+            }
+            
+            // 3. Clear coupons etc
+            posAppliedCoupon = null;
+            const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
+            
+            // 4. Close modal
+            const modal = document.getElementById('modalPOSInvoice');
+            if (modal) modal.style.display = 'none';
+            
+            // 5. Delete original bill from DB
+            if (typeof window.deletePOSOrder === 'function') {
+                window.deletePOSOrder(order.id, true); // true = skip confirm
+            }
+            
+            // 6. Sync cart and switch screens
+            try {
+                localStorage.setItem("pos_cart", JSON.stringify(posCart));
+            } catch (e) {}
+            
+            if (typeof navigateToScreen === 'function') {
+                navigateToScreen("billing");
+            }
+            
+            if (typeof showToast === 'function') {
+                showToast("Bill loaded for editing!");
+            } else {
+                alert("Bill loaded for editing!");
+            }
+        });
     }
 
     window.bk_state = {
