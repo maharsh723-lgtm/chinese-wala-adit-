@@ -166,8 +166,16 @@ function initApp() {
     let posCart = [];
     
     function loadCartFromStorage() {
-        localStorage.removeItem("pos_cart");
-        posCart = [];
+        try {
+            const saved = localStorage.getItem("pos_cart");
+            if (saved) {
+                posCart = JSON.parse(saved);
+            } else {
+                posCart = [];
+            }
+        } catch (e) {
+            posCart = [];
+        }
     }
     loadCartFromStorage();
 
