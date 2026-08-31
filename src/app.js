@@ -10250,7 +10250,8 @@ function initApp() {
         const orderPayload = {
             id: orderId,
             customerId: posSelectedCustomer,
-            customerName: activeCust.name,
+            customerName: activeCust?.name || (posEditingOrder?.customerName) || 'Walk-in Guest',
+            customerPhone: enteredPhone || (activeCust?.phone) || (posEditingOrder?.customerPhone) || '',
             orderType: posSelectedOrderType,
             tableName: posSelectedOrderType === 'Dine In' ? posSelectedTable : null,
             address: posSelectedOrderType === 'Delivery' ? document.getElementById("posDeliveryAddress").value : null,
@@ -10340,8 +10341,8 @@ function initApp() {
                 id: result.order.id,
                 date: posEditingOrder ? posEditingOrder.date : result.order.date,
                 time: posEditingOrder ? posEditingOrder.time : result.order.time,
-                customerName: activeCust.name,
-                customerPhone: activeCust.phone,
+                customerName: activeCust?.name || (posEditingOrder?.customerName) || 'Walk-in Guest',
+                customerPhone: enteredPhone || (activeCust?.phone) || (posEditingOrder?.customerPhone) || '',
                 orderType: posSelectedOrderType,
                 tableName: orderPayload.tableName,
                 subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
@@ -10409,8 +10410,8 @@ function initApp() {
                 id: orderId,
                 date: new Date().toISOString().split('T')[0],
                 time: new Date().toTimeString().split(' ')[0],
-                customerName: activeCust.name,
-                customerPhone: activeCust.phone,
+                customerName: activeCust?.name || (posEditingOrder?.customerName) || 'Walk-in Guest',
+                customerPhone: enteredPhone || (activeCust?.phone) || (posEditingOrder?.customerPhone) || '',
                 orderType: posSelectedOrderType,
                 tableName: orderPayload.tableName,
                 subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
@@ -14358,14 +14359,16 @@ function initApp() {
             // 2. Set order type and customer
             posSelectedOrderType = order.orderType || 'Dine In';
             if (order.customerId) {
-                const custObj = (typeof posCustomers !== 'undefined' ? posCustomers : []).find(c => c.id === order.customerId);
-                if (custObj) {
-                    posSelectedCustomer = custObj;
-                } else if (order.customerName) {
-                    posSelectedCustomer = { name: order.customerName, phone: order.customerPhone || '' };
-                }
+                posSelectedCustomer = order.customerId;
             } else if (order.customerName) {
-                posSelectedCustomer = { name: order.customerName, phone: order.customerPhone || '' };
+                const existingCust = (typeof posCustomers !== 'undefined' ? posCustomers : []).find(c => c.name === order.customerName);
+                if (existingCust) {
+                    posSelectedCustomer = existingCust.id;
+                } else {
+                    posSelectedCustomer = 'cust-1';
+                }
+            } else {
+                posSelectedCustomer = 'cust-1';
             }
             
             // 3. Clear coupons etc
@@ -14388,10 +14391,14 @@ function initApp() {
                 navigateToScreen("billing");
             }
             
+            if (typeof syncCartStateAndUI === 'function') {
+                syncCartStateAndUI();
+            }
+            
             if (typeof showToast === 'function') {
-                showToast("Bill loaded for editing!");
+                showToast("Bill loaded for editing! You can change items and pick any payment method to settle.");
             } else {
-                alert("Bill loaded for editing!");
+                alert("Bill loaded for editing! You can change items and pick any payment method to settle.");
             }
         });
     }
