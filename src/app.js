@@ -3664,7 +3664,7 @@ function initApp() {
                 // If the user is a branch manager, only show their store
                 if (currentRole === "bm" && order.store !== currentStore) return;
                 
-                // Only count items sold today
+                // Live Stream should only show TODAY's items
                 if (order.date === todayStr || (order.timestamp && order.timestamp.startsWith(todayStr))) {
                     const qty = parseInt(item.quantity || item.qty || 1);
                     const prod = (posProducts || []).find(p => p.id === item.productId);
@@ -3674,15 +3674,15 @@ function initApp() {
                     } else {
                         foodCount += qty;
                     }
+                    
+                    liveItems.push({
+                        ...item,
+                        orderTime: order.timestamp || (order.date + (order.time ? `T${order.time}` : '')),
+                        orderNumber: order.orderNumber || order.id,
+                        store: order.store,
+                        paymentMethod: order.paymentMethod || 'Cash'
+                    });
                 }
-                
-                liveItems.push({
-                    ...item,
-                    orderTime: order.timestamp || (order.date + (order.time ? `T${order.time}` : '')),
-                    orderNumber: order.orderNumber || order.id,
-                    store: order.store,
-                    paymentMethod: order.paymentMethod || 'Cash'
-                });
             }
         });
         
