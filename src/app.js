@@ -3642,6 +3642,20 @@ function initApp() {
         let liveItems = [];
         let foodCount = 0;
         let bevCount = 0;
+        let billCount = 0;
+        const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+        
+        // Count today's bills
+        (posOrders || []).forEach(order => {
+            if (currentRole === "bm" && order.store !== currentStore) return;
+            // posOrders has either timestamp or date. We can check timestamp or order.date.
+            // When fetched from /api/pos/orders/today, it only returns today's orders anyway.
+            // But just to be safe, check if timestamp starts with todayStr or date is todayStr
+            if (order.date === todayStr || (order.timestamp && order.timestamp.startsWith(todayStr))) {
+                billCount++;
+            }
+        });
+        
         const bevCategories = ['Indian Coolers', 'Frappe', 'Hot Coffee Mix', 'Hot Tea', 'Milkshakes', 'Cheese Cake Shakes', 'Lassi', 'Beverages', 'Drinks', 'Coffee', 'Tea'];
 
         (posOrderItems || []).forEach(item => {
@@ -3651,8 +3665,7 @@ function initApp() {
                 if (currentRole === "bm" && order.store !== currentStore) return;
                 
                 // Only count items sold today
-                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
-                if (order.date === todayStr) {
+                if (order.date === todayStr || (order.timestamp && order.timestamp.startsWith(todayStr))) {
                     const qty = parseInt(item.quantity || item.qty || 1);
                     const prod = (posProducts || []).find(p => p.id === item.productId);
                     
@@ -3678,6 +3691,9 @@ function initApp() {
         }
         if (document.getElementById("live-sales-bev-count")) {
             document.getElementById("live-sales-bev-count").textContent = bevCount;
+        }
+        if (document.getElementById("live-sales-bill-count")) {
+            document.getElementById("live-sales-bill-count").textContent = billCount;
         }
 
         // Sort newest first
