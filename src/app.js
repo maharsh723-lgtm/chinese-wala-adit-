@@ -164,6 +164,7 @@ function initApp() {
     
     // POS Cart State
     let posCart = [];
+    let posEditingOrder = null;
     
     function loadCartFromStorage() {
         try {
@@ -10228,7 +10229,7 @@ function initApp() {
         }
         
         const grandTotal = Math.max(0, subtotal + tax + serviceCharge - discount);
-        const orderId = 'order-' + Date.now();
+        const orderId = posEditingOrder ? posEditingOrder.id : 'order-' + Date.now();
         
         const orderPayload = {
             id: orderId,
@@ -10292,6 +10293,15 @@ function initApp() {
         }
 
         try {
+            if (posEditingOrder) {
+                try {
+                    await fetch(`/api/pos/orders/${posEditingOrder.id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}` }
+                    });
+                } catch(e) {}
+            }
+
             const response = await fetch(`${API_BASE}/api/pos/orders`, {
                 method: 'POST',
                 headers: {
@@ -10312,17 +10322,23 @@ function initApp() {
             
             const orderObj = {
                 id: result.order.id,
-                date: result.order.date,
-                time: result.order.time,
+                date: posEditingOrder ? posEditingOrder.date : result.order.date,
+                time: posEditingOrder ? posEditingOrder.time : result.order.time,
                 customerName: activeCust.name,
                 customerPhone: activeCust.phone,
                 orderType: posSelectedOrderType,
                 tableName: orderPayload.tableName,
                 subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
                 items: posCart,
-                kotNumber: result.order.kotNumber,
+                kotNumber: posEditingOrder ? posEditingOrder.orderNumber : result.order.kotNumber,
                 tokenNumber: posNextToken
             };
+            
+            // If editing, remove the old one locally
+            if (posEditingOrder) {
+                posOrders = posOrders.filter(o => o.id !== posEditingOrder.id);
+                posOrderItems = posOrderItems.filter(i => i.orderId !== posEditingOrder.id);
+            }
             
             // Push locally to update Live Sales Stream instantly
             posOrders.push({
@@ -10414,6 +10430,7 @@ function initApp() {
             posAppliedCoupon = null;
             const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
             const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
+            posEditingOrder = null;
             syncCartStateAndUI();
             incrementToken();
         }
@@ -14310,7 +14327,7 @@ function initApp() {
         editBillBtn.addEventListener("click", () => {
             const order = window.activeReceiptOrder;
             if (!order) return;
-            if (!confirm("Editing this bill will load its items into the cart and DELETE the original bill so you can re-settle it. Continue?")) return;
+            // No confirmation needed since we don't delete immediately anymore.
             
             // 1. Move items to cart
             posCart = order.items.map(i => ({
@@ -14343,10 +14360,8 @@ function initApp() {
             const modal = document.getElementById('modalPOSInvoice');
             if (modal) modal.style.display = 'none';
             
-            // 5. Delete original bill from DB
-            if (typeof window.deletePOSOrder === 'function') {
-                window.deletePOSOrder(order.id, true); // true = skip confirm
-            }
+            // 5. Track editing order so we can overwrite it on checkout
+            posEditingOrder = order;
             
             // 6. Sync cart and switch screens
             try {
@@ -14361,6 +14376,20 @@ function initApp() {
                 showToast("Bill loaded for editing!");
             } else {
                 alert("Bill loaded for editing!");
+            }
+        });
+    }
+
+    const deleteBillBtn = document.getElementById("btnDeleteBillBtn");
+    if (deleteBillBtn && !deleteBillBtn.dataset.listenerBound) {
+        deleteBillBtn.dataset.listenerBound = "true";
+        deleteBillBtn.addEventListener("click", () => {
+            const order = window.activeReceiptOrder;
+            if (!order) return;
+            if (typeof window.deletePOSOrder === 'function') {
+                window.deletePOSOrder(order.id, false); // false = ask for confirm
+                const modal = document.getElementById('modalPOSInvoice');
+                if (modal) modal.style.display = 'none';
             }
         });
     }
