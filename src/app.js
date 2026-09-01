@@ -3749,25 +3749,25 @@ function initApp() {
                 ? bill.items.map(i => `<span style="display:inline-block; margin:2px; padding:2px 6px; background:var(--bg-hover); border-radius:4px; font-size:0.8rem; color:var(--text-primary);"><b>${i.productName || i.name || 'Item'}</b> (x${i.quantity || i.qty || 1})</span>`).join(' ')
                 : '<span style="color:var(--text-tertiary); font-size:0.8rem;">No items logged</span>';
 
-            const tableOrType = bill.tableName ? `${bill.orderType} • Table ${bill.tableName}` : bill.orderType;
-
             row.innerHTML = `
-                <td><span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">${timeStr}</span></td>
-                <td><span class="pill-badge" style="background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border);">${bill.store || 'Unknown'}</span></td>
-                <td style="font-weight: 800; color: var(--orange-primary); font-size: 0.95rem;">${bill.tokenNumber}</td>
-                <td>
-                    <div style="font-weight: 700; font-size:0.9rem;">${bill.customerName}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-tertiary);">${tableOrType}</div>
+                <td style="white-space: nowrap;"><span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">${timeStr}</span></td>
+                <td><span class="pill-badge" style="background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border); font-size:0.75rem;">${bill.store || 'Unknown'}</span></td>
+                <td style="font-weight: 800; color: var(--orange-primary); font-size: 1rem; white-space:nowrap;">${bill.tokenNumber}</td>
+                <td style="min-width: 140px;">
+                    <div style="font-weight: 700; font-size:0.88rem; color: var(--text-primary);">${bill.customerName}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-tertiary); margin-top:2px;">${tableOrType}</div>
                 </td>
-                <td style="max-width: 280px;">${itemsSummaryHtml}</td>
-                <td><span class="pill-badge" style="background: ${paymentBadgeBg}; color: ${paymentBadgeColor}; border: 1px solid ${paymentBadgeColor}; font-weight:700;">${bill.paymentMethod}</span></td>
-                <td style="text-align:right; font-weight:800; font-size: 1rem; color: var(--text-primary);">₹${bill.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td style="text-align:center;">
-                    <div class="pos-live-actions" style="display: flex; gap: 4px; justify-content: center; flex-wrap: nowrap;">
-                        <button class="saas-btn saas-btn-primary" style="padding:4px 8px; font-size:0.75rem; background:#3b82f6; color:#fff;" onclick="window.showBill('${bill.id}')">View</button>
-                        <button class="saas-btn" style="padding: 4px 6px; font-size: 0.75rem; background: var(--blue-primary);" onclick="window.reprintBill('${bill.id}')">Print</button>
-                        <button class="saas-btn" style="padding: 4px 6px; font-size: 0.75rem; background: var(--orange-primary);" onclick="window.reprintKOT('${bill.id}')">KOT</button>
-                        <button class="saas-btn saas-btn-danger" style="padding: 4px 6px; font-size: 0.75rem;" onclick="window.deletePOSOrder('${bill.id}')">Delete</button>
+                <td style="min-width: 220px; max-width: 320px; white-space: normal;">
+                    <div style="display:flex; flex-wrap:wrap; gap:4px;">${itemsSummaryHtml}</div>
+                </td>
+                <td style="white-space: nowrap;"><span class="pill-badge" style="background: ${paymentBadgeBg}; color: ${paymentBadgeColor}; border: 1px solid ${paymentBadgeColor}; font-weight:700; font-size:0.78rem;">${bill.paymentMethod}</span></td>
+                <td style="text-align:right; font-weight:800; font-size: 0.95rem; color: var(--text-primary); white-space: nowrap;">₹${bill.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td style="text-align:center; white-space: nowrap;">
+                    <div class="pos-live-actions" style="display: inline-flex; gap: 6px; align-items: center; justify-content: center;">
+                        <button type="button" class="saas-btn" style="padding:4px 8px; font-size:0.75rem; background:#3b82f6; color:#fff; border:none; border-radius:4px; font-weight:700; cursor:pointer;" onclick="window.showBill('${bill.id}')">View</button>
+                        <button type="button" class="saas-btn" style="padding:4px 8px; font-size:0.75rem; background:#10b981; color:#fff; border:none; border-radius:4px; font-weight:700; cursor:pointer;" onclick="window.reprintBill('${bill.id}')">Print</button>
+                        <button type="button" class="saas-btn" style="padding:4px 8px; font-size:0.75rem; background:#f59e0b; color:#fff; border:none; border-radius:4px; font-weight:700; cursor:pointer;" onclick="window.reprintKOT('${bill.id}')">KOT</button>
+                        <button type="button" class="saas-btn saas-btn-danger" style="padding:4px 8px; font-size:0.75rem; background:#ef4444; color:#fff; border:none; border-radius:4px; font-weight:700; cursor:pointer;" onclick="window.deletePOSOrder('${bill.id}')">Delete</button>
                     </div>
                 </td>
             `;
