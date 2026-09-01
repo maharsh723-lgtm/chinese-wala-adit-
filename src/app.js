@@ -3665,53 +3665,53 @@ function initApp() {
         const tbody = document.getElementById("liveSalesFeedBody");
         if (!tbody) return;
 
-        let liveItems = [];
+        let liveBills = [];
         let foodCount = 0;
         let bevCount = 0;
         let billCount = 0;
         const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
-        
-        // Count today's bills
-        (posOrders || []).forEach(order => {
-            if (currentRole === "bm" && order.store !== currentStore) return;
-            // posOrders has either timestamp or date. We can check timestamp or order.date.
-            // When fetched from /api/pos/orders/today, it only returns today's orders anyway.
-            // But just to be safe, check if timestamp starts with todayStr or date is todayStr
-            if (order.date === todayStr || (order.timestamp && order.timestamp.startsWith(todayStr))) {
-                billCount++;
-            }
-        });
-        
         const bevCategories = ['Indian Coolers', 'Frappe', 'Hot Coffee Mix', 'Hot Tea', 'Milkshakes', 'Cheese Cake Shakes', 'Lassi', 'Beverages', 'Drinks', 'Coffee', 'Tea'];
 
-        (posOrderItems || []).forEach(item => {
-            const order = (posOrders || []).find(o => o.id === item.orderId);
-            if (order) {
-                // If the user is a branch manager, only show their store
-                if (currentRole === "bm" && order.store !== currentStore) return;
-                
-                // Live Stream should only show TODAY's items
-                if (order.date === todayStr || (order.timestamp && order.timestamp.startsWith(todayStr))) {
-                    const qty = parseInt(item.quantity || item.qty || 1);
-                    const prod = (posProducts || []).find(p => p.id === item.productId);
-                    
-                    if (prod && bevCategories.includes(prod.category)) {
-                        bevCount += qty;
-                    } else {
-                        foodCount += qty;
-                    }
-                    
-                    liveItems.push({
-                        ...item,
-                        orderTime: order.timestamp || (order.date + (order.time ? `T${order.time}` : '')),
-                        orderNumber: order.orderNumber || order.id,
-                        store: order.store,
-                        paymentMethod: order.paymentMethod || 'Cash'
-                    });
-                }
+        // Process orders for today
+        (posOrders || []).forEach(order => {
+            if (currentRole === "bm" && order.store !== currentStore) return;
+            
+            const isToday = order.date === todayStr || (order.timestamp && order.timestamp.startsWith(todayStr));
+            if (!isToday) return;
+
+            billCount++;
+
+            // Gather items for this order
+            let items = order.items;
+            if (!items || !Array.isArray(items) || items.length === 0) {
+                items = (posOrderItems || []).filter(i => i.orderId === order.id);
             }
+
+            // Count food and beverages
+            (items || []).forEach(item => {
+                const qty = parseInt(item.quantity || item.qty || 1);
+                const prod = (posProducts || []).find(p => p.id === item.productId);
+                if (prod && bevCategories.includes(prod.category)) {
+                    bevCount += qty;
+                } else {
+                    foodCount += qty;
+                }
+            });
+
+            liveBills.push({
+                id: order.id,
+                orderTime: order.timestamp || (order.date + (order.time ? `T${order.time}` : '')),
+                tokenNumber: order.tokenNumber !== undefined && order.tokenNumber !== null ? `#${String(order.tokenNumber).padStart(2, '0')}` : (order.kotNumber || `#${order.orderNumber || order.id}`),
+                store: order.store || 'VESU',
+                orderType: order.orderType || 'Dine In',
+                tableName: order.tableName,
+                customerName: order.customerName || 'Walk-in Guest',
+                paymentMethod: order.paymentMethod || 'Cash',
+                grandTotal: parseFloat(order.grandTotal) || parseFloat(order.total) || 0,
+                items: items || []
+            });
         });
-        
+
         if (document.getElementById("live-sales-food-count")) {
             document.getElementById("live-sales-food-count").textContent = foodCount;
         }
@@ -3723,40 +3723,51 @@ function initApp() {
         }
 
         // Sort newest first
-        liveItems.sort((a, b) => new Date(b.orderTime) - new Date(a.orderTime));
+        liveBills.sort((a, b) => new Date(b.orderTime) - new Date(a.orderTime));
         
-        // Take top 100 to not overwhelm the UI
-        liveItems = liveItems.slice(0, 100);
+        // Take top 100
+        liveBills = liveBills.slice(0, 100);
 
         tbody.innerHTML = "";
-        if (liveItems.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--text-tertiary);">No recent sales.</td></tr>`;
+        if (liveBills.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-tertiary);">No sales bills recorded today.</td></tr>`;
             return;
         }
 
-        liveItems.forEach(item => {
+        liveBills.forEach(bill => {
             const row = document.createElement("tr");
             
-            const t = new Date(item.orderTime);
-            const timeStr = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const t = new Date(bill.orderTime);
+            const timeStr = isNaN(t.getTime()) ? (bill.orderTime || '--:--') : t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             
-            let paymentBadgeColor = item.paymentMethod.toLowerCase().includes('cash') ? 'var(--orange-primary)' : 'var(--success)';
-            let paymentBadgeBg = item.paymentMethod.toLowerCase().includes('cash') ? 'rgba(249, 115, 22, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+            const paymentLower = (bill.paymentMethod || '').toLowerCase();
+            let paymentBadgeColor = paymentLower.includes('cash') ? 'var(--orange-primary)' : 'var(--success)';
+            let paymentBadgeBg = paymentLower.includes('cash') ? 'rgba(249, 115, 22, 0.1)' : 'rgba(16, 185, 129, 0.1)';
             
+            // Build items summary chip/text
+            const itemsSummaryHtml = (bill.items && bill.items.length > 0)
+                ? bill.items.map(i => `<span style="display:inline-block; margin:2px; padding:2px 6px; background:var(--bg-hover); border-radius:4px; font-size:0.8rem; color:var(--text-primary);"><b>${i.productName || i.name || 'Item'}</b> (x${i.quantity || i.qty || 1})</span>`).join(' ')
+                : '<span style="color:var(--text-tertiary); font-size:0.8rem;">No items logged</span>';
+
+            const tableOrType = bill.tableName ? `${bill.orderType} • Table ${bill.tableName}` : bill.orderType;
+
             row.innerHTML = `
                 <td><span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">${timeStr}</span></td>
-                <td><span class="pill-badge" style="background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border);">${item.store || 'Unknown'}</span></td>
-                <td style="font-weight: 700; color: var(--orange-primary);">#${item.orderNumber}</td>
-                <td><span class="pill-badge" style="background: ${paymentBadgeBg}; color: ${paymentBadgeColor}; border: 1px solid ${paymentBadgeColor};">${item.paymentMethod}</span></td>
-                <td style="font-weight: 600;">${item.productName || item.name || 'Unknown Item'}</td>
-                <td style="text-align:center;"><span style="display:inline-block; padding: 2px 8px; background: rgba(16, 185, 129, 0.1); color: var(--success); border-radius: 4px; font-weight:700;">x${item.quantity || item.qty || 1}</span></td>
-                <td style="text-align:right; font-weight:700;">₹${((item.price || 0) * (item.quantity || item.qty || 1)).toLocaleString('en-IN')}</td>
+                <td><span class="pill-badge" style="background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border);">${bill.store || 'Unknown'}</span></td>
+                <td style="font-weight: 800; color: var(--orange-primary); font-size: 0.95rem;">${bill.tokenNumber}</td>
+                <td>
+                    <div style="font-weight: 700; font-size:0.9rem;">${bill.customerName}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-tertiary);">${tableOrType}</div>
+                </td>
+                <td style="max-width: 280px;">${itemsSummaryHtml}</td>
+                <td><span class="pill-badge" style="background: ${paymentBadgeBg}; color: ${paymentBadgeColor}; border: 1px solid ${paymentBadgeColor}; font-weight:700;">${bill.paymentMethod}</span></td>
+                <td style="text-align:right; font-weight:800; font-size: 1rem; color: var(--text-primary);">₹${bill.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td style="text-align:center;">
-                    <div class="pos-live-actions" style="display: flex; gap: 4px; justify-content: center;">
-                        <button class="saas-btn saas-btn-primary" style="padding:4px 8px; font-size:0.75rem; background:#3b82f6; color:#fff;" onclick="window.showBill('${item.orderId}')">Show Bill</button>
-                        <button class="saas-btn" style="padding: 2px 6px; font-size: 0.75rem; background: var(--blue-primary);" onclick="window.reprintBill('${item.orderId}')">Reprint Bill</button>
-                        <button class="saas-btn" style="padding: 2px 6px; font-size: 0.75rem; background: var(--orange-primary);" onclick="window.reprintKOT('${item.orderId}')">Reprint KOT</button>
-                        <button class="saas-btn saas-btn-danger" style="padding: 2px 6px; font-size: 0.75rem;" onclick="window.deletePOSOrder('${item.orderId}')">Delete Bill</button>
+                    <div class="pos-live-actions" style="display: flex; gap: 4px; justify-content: center; flex-wrap: nowrap;">
+                        <button class="saas-btn saas-btn-primary" style="padding:4px 8px; font-size:0.75rem; background:#3b82f6; color:#fff;" onclick="window.showBill('${bill.id}')">View</button>
+                        <button class="saas-btn" style="padding: 4px 6px; font-size: 0.75rem; background: var(--blue-primary);" onclick="window.reprintBill('${bill.id}')">Print</button>
+                        <button class="saas-btn" style="padding: 4px 6px; font-size: 0.75rem; background: var(--orange-primary);" onclick="window.reprintKOT('${bill.id}')">KOT</button>
+                        <button class="saas-btn saas-btn-danger" style="padding: 4px 6px; font-size: 0.75rem;" onclick="window.deletePOSOrder('${bill.id}')">Delete</button>
                     </div>
                 </td>
             `;
