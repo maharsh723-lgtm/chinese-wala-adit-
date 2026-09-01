@@ -4256,6 +4256,7 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
     const isUpiPayment = (paymentMethod === 'UPI' || paymentMethod === 'UPI / QR' || paymentMethod === 'Bank Transfer / UPI QR');
     // POS orders are immediately considered Completed & Verified because the cashier manually confirms them on the spot.
     const orderStatus = 'Completed'; 
+    const payStatus = 'Verified';
     try { db.exec("ALTER TABLE pos_orders ADD COLUMN tokenNumber INTEGER DEFAULT 0"); } catch(e){}
 
     // Insert order record
