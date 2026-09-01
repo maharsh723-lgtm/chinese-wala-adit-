@@ -492,6 +492,32 @@ function initApp() {
                 posStockMovement = data.posStockMovement || [];
                 topSellingByStore = data.topSellingByStore || {};
 
+                // Restore/Sync Next Token from today's highest order token
+                try {
+                    const todayDateStr = new Date().toISOString().split('T')[0];
+                    const storeOrders = (posOrders || []).filter(o => o.store === getPOSStore() && (o.date === todayDateStr || (o.timestamp && o.timestamp.startsWith(todayDateStr))));
+                    let maxTokenFound = 0;
+                    storeOrders.forEach(o => {
+                        let tok = 0;
+                        if (o.tokenNumber !== undefined && o.tokenNumber !== null) {
+                            tok = parseInt(o.tokenNumber) || 0;
+                        } else if (o.kotNumber) {
+                            const match = o.kotNumber.match(/\d+/);
+                            if (match) tok = parseInt(match[0]) || 0;
+                        }
+                        if (tok > maxTokenFound) maxTokenFound = tok;
+                    });
+                    
+                    const savedLocal = parseInt(localStorage.getItem("pos_next_token") || "0");
+                    if (maxTokenFound > 0 && maxTokenFound >= savedLocal) {
+                        posNextToken = (maxTokenFound + 1) % 100;
+                        localStorage.setItem("pos_next_token", posNextToken.toString());
+                    }
+                    syncTokenUI();
+                } catch(e) {
+                    console.error("Token sync error:", e);
+                }
+
                 // Sync logged-in user with latest db record
                 const cachedUser = getSafeLocalStorage("bk_logged_in_user", null);
                 const targetId = cachedUser ? cachedUser.id : (currentUser ? currentUser.id : "EMP104");

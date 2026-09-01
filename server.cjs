@@ -4202,24 +4202,25 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
     const isUpiPayment = (paymentMethod === 'UPI' || paymentMethod === 'UPI / QR' || paymentMethod === 'Bank Transfer / UPI QR');
     // POS orders are immediately considered Completed & Verified because the cashier manually confirms them on the spot.
     const orderStatus = 'Completed'; 
-    const payStatus = 'Verified';
+    try { db.exec("ALTER TABLE pos_orders ADD COLUMN tokenNumber INTEGER DEFAULT 0"); } catch(e){}
 
     // Insert order record
     db.prepare(`
       INSERT INTO pos_orders (
         id, date, time, customerId, customerName, orderType, tableName, address, subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod, status, store,
-        customerPhone, utr, screenshot, paymentStatus, bankName, upiId, adminNotes, splitCashAmount, splitUpiAmount
+        customerPhone, utr, screenshot, paymentStatus, bankName, upiId, adminNotes, splitCashAmount, splitUpiAmount, tokenNumber
       )
       VALUES (
         ?, ?, ?, ?, ?, ?, ?, ?, 
         ?, ?, ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )
     `).run(
       id, dateStr, timeStr, customerId, customerName, orderType, tableName, address, 
       subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod, orderStatus, store,
       customerPhone || null, utr || null, screenshot || null, payStatus,
-      bankName || null, upiId || null, notes || null, splitCashAmount || 0, splitUpiAmount || 0
+      bankName || null, upiId || null, notes || null, splitCashAmount || 0, splitUpiAmount || 0,
+      req.body.tokenNumber !== undefined ? parseInt(req.body.tokenNumber) : 0
     );
 
     // Insert P&L transaction
