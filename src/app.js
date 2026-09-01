@@ -10407,45 +10407,11 @@ function initApp() {
         };
         orderPayload.tokenNumber = posNextToken;
 
-        const isOnline = navigator.onLine;
-        
-        if (!isOnline) {
-            let offlineQueue = JSON.parse(localStorage.getItem("pos_offline_orders") || "[]");
-            offlineQueue.push(orderPayload);
-            localStorage.setItem("pos_offline_orders", JSON.stringify(offlineQueue));
-            
-            showToast("OFFLINE MODE: Order saved in local queue. Will sync when online.");
-            deductLocalInventory(posCart);
-            
-            const orderObj = {
-                id: orderId,
-                date: new Date().toISOString().split('T')[0],
-                time: new Date().toTimeString().split(' ')[0],
-                customerName: activeCust.name,
-                customerPhone: activeCust.phone,
-                orderType: posSelectedOrderType,
-                tableName: orderPayload.tableName,
-                subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
-                items: posCart,
-                tokenNumber: posNextToken
-            };
-            renderGSTInvoice(orderObj);
-            
-            // Show the invoice modal
-            const invoiceModal = document.getElementById("modalPOSInvoice");
-            if (invoiceModal) {
-                invoiceModal.style.display = "flex";
-                setTimeout(() => window.print(), 500);
-            }
-            
-            posCart = [];
-            posAppliedCoupon = null;
-            const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
-            const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
-            syncCartStateAndUI();
-            incrementToken();
+        if (window._isPlacingOrder) {
+            console.warn("Order placement already in progress.");
             return;
         }
+        window._isPlacingOrder = true;
 
         try {
             if (posEditingOrder) {
@@ -10467,13 +10433,12 @@ function initApp() {
                 },
                 body: JSON.stringify(orderPayload)
             });
+            
             if (!response.ok) {
                 const errText = await response.text();
-                throw new Error(`Order placement API returned error code ${response.status}. Details: ${errText}`);
+                throw new Error(`Server returned error code ${response.status}. Details: ${errText}`);
             }
             const result = await response.json();
-            
-            // Removed syncStateFromServer() to prevent a heavy extra request on every order placement
             
             const orderObj = {
                 id: result.order.id,
@@ -10489,13 +10454,13 @@ function initApp() {
                 tokenNumber: posNextToken
             };
             
-            // If editing, remove the old one locally
+            // If editing, remove old local entries
             if (posEditingOrder) {
                 posOrders = posOrders.filter(o => o.id !== posEditingOrder.id);
                 posOrderItems = posOrderItems.filter(i => i.orderId !== posEditingOrder.id);
             }
             
-            // Push locally to update Live Sales Stream instantly
+            // Push to local list for immediate display
             posOrders.push({
                 id: result.order.id,
                 timestamp: result.order.date + 'T' + result.order.time,
@@ -10536,59 +10501,10 @@ function initApp() {
             incrementToken();
             
         } catch (err) {
-            console.error("Online order failed. Saving offline.", err);
-            alert("Order Error: " + err.message + "\nSaving locally to sync later.");
-            
-            let offlineQueue = JSON.parse(localStorage.getItem("pos_offline_orders") || "[]");
-            offlineQueue.push(orderPayload);
-            localStorage.setItem("pos_offline_orders", JSON.stringify(offlineQueue));
-            
-            deductLocalInventory(posCart);
-            
-            const orderObj = {
-                id: orderId,
-                date: new Date().toISOString().split('T')[0],
-                time: new Date().toTimeString().split(' ')[0],
-                customerName: activeCust?.name || (posEditingOrder?.customerName) || 'Walk-in Guest',
-                customerPhone: enteredPhone || (activeCust?.phone) || (posEditingOrder?.customerPhone) || '',
-                orderType: posSelectedOrderType,
-                tableName: orderPayload.tableName,
-                subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
-                items: posCart,
-                tokenNumber: posNextToken
-            };
-
-            posOrders.push({
-                id: orderId,
-                timestamp: orderObj.date + 'T' + orderObj.time,
-                orderNumber: posNextToken,
-                store: getPOSStore(),
-                paymentMethod: paymentMethod
-            });
-            posCart.forEach(item => {
-                posOrderItems.push({
-                    orderId: orderId,
-                    productId: item.productId,
-                    productName: item.productName || item.name,
-                    quantity: item.quantity,
-                    price: item.price,
-                    modifiers: typeof item.modifiers === 'string' ? item.modifiers : JSON.stringify(item.modifiers || []),
-                    instructions: item.instructions || ''
-                });
-            });
-            if (currentActiveScreen === "live-sales-stream" && typeof window.renderLiveSalesStream === "function") {
-                window.renderLiveSalesStream();
-            }
-
-            renderGSTInvoice(orderObj);
-            
-            posCart = [];
-            posAppliedCoupon = null;
-            const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
-            const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
-            posEditingOrder = null;
-            syncCartStateAndUI();
-            incrementToken();
+            console.error("Order placement failed:", err);
+            alert("Network/Server Error: Could not save order to server.\nPlease check your WiFi connection and try again.\n\nDetails: " + err.message);
+        } finally {
+            window._isPlacingOrder = false;
         }
     }
 
