@@ -9262,10 +9262,11 @@ function initApp() {
         const tax = 0;
         const serviceCharge = 0;
         
-        let discount = 0;
+        // 20% flat discount on overall bill
+        let discount = Math.round(subtotal * 0.20 * 100) / 100;
         if (posAppliedCoupon) {
             if (posAppliedCoupon.discountType === 'percent') {
-                discount = subtotal * (posAppliedCoupon.discountValue / 100);
+                discount = Math.round(subtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
             } else {
                 discount = posAppliedCoupon.discountValue;
             }
@@ -9290,11 +9291,9 @@ function initApp() {
         updateTotalsDOM("posTax", `₹${tax.toFixed(2)}`);
         
         const discountRow = document.getElementById("posDiscountRow");
-        if (discount > 0) {
-            if (discountRow) discountRow.style.display = 'flex';
+        if (discountRow) {
+            discountRow.style.display = 'flex';
             updateTotalsDOM("posDiscount", `-₹${discount.toFixed(2)}`);
-        } else {
-            if (discountRow) discountRow.style.display = 'none';
         }
         
         document.getElementById("posServiceChargeRow") && (document.getElementById("posServiceChargeRow").style.display = 'none');
@@ -10075,9 +10074,9 @@ function initApp() {
                             });
                             subtotal += itemPrice * item.quantity;
                         });
-                        let discount = 0;
+                        let discount = Math.round(subtotal * 0.20 * 100) / 100;
                         if (posAppliedCoupon) {
-                            if (posAppliedCoupon.discountType === 'percent') discount = subtotal * (posAppliedCoupon.discountValue / 100);
+                            if (posAppliedCoupon.discountType === 'percent') discount = Math.round(subtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
                             else discount = posAppliedCoupon.discountValue;
                         }
                         const grandTotal = Math.max(0, subtotal - discount);
@@ -10235,10 +10234,10 @@ function initApp() {
         const tax = 0;
         const serviceCharge = 0;
         
-        let discount = 0;
+        let discount = Math.round(subtotal * 0.20 * 100) / 100;
         if (posAppliedCoupon) {
             if (posAppliedCoupon.discountType === 'percent') {
-                discount = subtotal * (posAppliedCoupon.discountValue / 100);
+                discount = Math.round(subtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
             } else {
                 discount = posAppliedCoupon.discountValue;
             }
