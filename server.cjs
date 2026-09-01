@@ -4171,6 +4171,60 @@ app.post('/api/pos/orders/clear', authenticateToken, (req, res) => {
   }
 });
 
+// API: Clear/Empty P&L Statement Automation & Transactions
+app.post('/api/pl/clear', authenticateToken, (req, res) => {
+  try {
+    const { store } = req.body;
+    db.exec('BEGIN TRANSACTION');
+    
+    if (store && store !== 'All' && req.user.role === 'bm') {
+      db.prepare('DELETE FROM transactions WHERE branch_id = ?').run(store);
+      db.prepare('DELETE FROM sales_returns WHERE store = ?').run(store);
+      db.prepare('DELETE FROM expenses WHERE store = ?').run(store);
+      db.prepare('DELETE FROM pos_order_items WHERE orderId IN (SELECT id FROM pos_orders WHERE store = ?)').run(store);
+      db.prepare('DELETE FROM pos_orders WHERE store = ?').run(store);
+    } else {
+      db.prepare('DELETE FROM transactions').run();
+      db.prepare('DELETE FROM sales_returns').run();
+      db.prepare('DELETE FROM expenses').run();
+      db.prepare('DELETE FROM pos_order_items').run();
+      db.prepare('DELETE FROM pos_orders').run();
+    }
+    
+    db.exec('COMMIT');
+    res.json({ success: true, message: 'P&L Statement data cleared successfully.' });
+  } catch (err) {
+    if (db.inTransaction) db.exec('ROLLBACK');
+    console.error('Error clearing P&L data:', err);
+    res.status(500).json({ error: 'Failed to clear P&L data.' });
+  }
+});
+
+// API: Clear/Empty Item Sales Analytics data
+app.post('/api/item-sales/clear', authenticateToken, (req, res) => {
+  try {
+    const { store } = req.body;
+    db.exec('BEGIN TRANSACTION');
+    
+    if (store && store !== 'All' && req.user.role === 'bm') {
+      db.prepare('DELETE FROM product_sales WHERE store = ?').run(store);
+      db.prepare('DELETE FROM pos_order_items WHERE orderId IN (SELECT id FROM pos_orders WHERE store = ?)').run(store);
+      db.prepare('DELETE FROM pos_orders WHERE store = ?').run(store);
+    } else {
+      db.prepare('DELETE FROM product_sales').run();
+      db.prepare('DELETE FROM pos_order_items').run();
+      db.prepare('DELETE FROM pos_orders').run();
+    }
+    
+    db.exec('COMMIT');
+    res.json({ success: true, message: 'Item Sales Analytics data cleared successfully.' });
+  } catch (err) {
+    if (db.inTransaction) db.exec('ROLLBACK');
+    console.error('Error clearing item sales data:', err);
+    res.status(500).json({ error: 'Failed to clear Item Sales Analytics data.' });
+  }
+});
+
 app.post('/api/pos/orders', authenticateToken, (req, res) => {
   const {
     id, customerId, customerName, orderType, tableName = null, address = null,

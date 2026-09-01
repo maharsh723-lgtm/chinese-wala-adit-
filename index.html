@@ -2012,10 +2012,15 @@
                     </div>
 
                     <!-- Layout: Tabs -->
-                    <div style="display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
-                        <button class="saas-btn saas-btn-secondary active" id="btnItemAnalyticsOverviewTab" style="font-weight:800;">Items Overview</button>
-                        <button class="saas-btn saas-btn-secondary" id="btnItemAnalyticsTopBottomTab" style="font-weight:800;">Top/Bottom Performers</button>
-                        <button class="saas-btn saas-btn-secondary" id="btnItemAnalyticsReportsTab" style="font-weight:800;">Reports & Exports</button>
+                    <div style="display: flex; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <button class="saas-btn saas-btn-secondary active" id="btnItemAnalyticsOverviewTab" style="font-weight:800;">Items Overview</button>
+                            <button class="saas-btn saas-btn-secondary" id="btnItemAnalyticsTopBottomTab" style="font-weight:800;">Top/Bottom Performers</button>
+                            <button class="saas-btn saas-btn-secondary" id="btnItemAnalyticsReportsTab" style="font-weight:800;">Reports & Exports</button>
+                        </div>
+                        <button class="saas-btn saas-btn-danger" id="btnClearItemAnalytics" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 700;">
+                            <i data-lucide="trash-2"></i> Empty Data
+                        </button>
                     </div>
 
                     <!-- Viewport for active analytics tab -->
@@ -3411,6 +3416,9 @@
                             </div>
                             <button class="saas-btn saas-btn-primary" onclick="window.openAccountingModal('modalAddPLAdjustment')">
                                 <i data-lucide="plus-circle"></i> Add Custom P&L Row
+                            </button>
+                            <button class="saas-btn saas-btn-danger" id="btnClearPLAutomation" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 700;">
+                                <i data-lucide="trash-2"></i> Empty Data
                             </button>
                         </div>
                     </div>
@@ -5049,6 +5057,9 @@
                                 </button>
                                 <button class="saas-btn saas-btn-secondary" style="padding: 6px 12px;" onclick="window.exportPLReport('csv')">
                                     <i data-lucide="download"></i> CSV
+                                </button>
+                                <button class="saas-btn saas-btn-danger" id="btnClearPLDashboard" style="padding: 6px 12px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 700;">
+                                    <i data-lucide="trash-2"></i> Empty Data
                                 </button>
                             </div>
                         </div>

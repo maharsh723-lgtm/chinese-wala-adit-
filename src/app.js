@@ -5954,6 +5954,119 @@ function initApp() {
         });
     }
 
+    // === CLEAR P&L STATEMENT AUTOMATION DATA ===
+    const btnClearPLAutomation = document.getElementById("btnClearPLAutomation");
+    if (btnClearPLAutomation) {
+        btnClearPLAutomation.addEventListener("click", async () => {
+            const targetStore = currentRole === "owner" ? "All" : currentStore;
+            const confirmMsg = currentRole === "owner"
+                ? `Are you sure you want to empty all P&L Automation data across ALL branches? This cannot be undone.`
+                : `Are you sure you want to empty all P&L Automation data for branch "${targetStore}"? This cannot be undone.`;
+            
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/pl/clear`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`
+                    },
+                    body: JSON.stringify({ store: targetStore })
+                });
+
+                if (res.ok) {
+                    alert("P&L Automation data emptied successfully.");
+                    await syncStateFromServer();
+                    if (typeof window.renderAccountingScreen === 'function') {
+                        window.renderAccountingScreen('pl-automation');
+                    }
+                } else {
+                    const errData = await res.json();
+                    alert("Error: " + (errData.error || "Failed to clear P&L data"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to empty P&L data.");
+            }
+        });
+    }
+
+    // === CLEAR PROFIT & LOSS MANAGEMENT DASHBOARD DATA ===
+    const btnClearPLDashboard = document.getElementById("btnClearPLDashboard");
+    if (btnClearPLDashboard) {
+        btnClearPLDashboard.addEventListener("click", async () => {
+            const branchSelect = document.getElementById("plBranchSelect");
+            const targetStore = currentRole === "owner" ? (branchSelect ? branchSelect.value : "All") : currentStore;
+            const confirmMsg = currentRole === "owner"
+                ? `Are you sure you want to empty Profit & Loss Statement data for branch: "${targetStore}"? This cannot be undone.`
+                : `Are you sure you want to empty Profit & Loss Statement data for this branch (${targetStore})? This cannot be undone.`;
+            
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/pl/clear`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`
+                    },
+                    body: JSON.stringify({ store: targetStore })
+                });
+
+                if (res.ok) {
+                    alert("Profit & Loss Statement data emptied successfully.");
+                    await syncStateFromServer();
+                    window.dispatchEvent(new CustomEvent('bk_order_placed'));
+                } else {
+                    const errData = await res.json();
+                    alert("Error: " + (errData.error || "Failed to clear P&L data"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to empty Profit & Loss Statement data.");
+            }
+        });
+    }
+
+    // === CLEAR ITEM SALES ANALYTICS DATA ===
+    const btnClearItemAnalytics = document.getElementById("btnClearItemAnalytics");
+    if (btnClearItemAnalytics) {
+        btnClearItemAnalytics.addEventListener("click", async () => {
+            const targetStore = currentRole === "owner" ? "All" : currentStore;
+            const confirmMsg = currentRole === "owner"
+                ? `Are you sure you want to empty Item Sales Analytics data across ALL branches? This cannot be undone.`
+                : `Are you sure you want to empty Item Sales Analytics data for branch "${targetStore}"? This cannot be undone.`;
+            
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/item-sales/clear`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`
+                    },
+                    body: JSON.stringify({ store: targetStore })
+                });
+
+                if (res.ok) {
+                    alert("Item Sales Analytics data emptied successfully.");
+                    await syncStateFromServer();
+                    if (typeof window.refreshItemSalesAnalytics === 'function') {
+                        window.refreshItemSalesAnalytics();
+                    }
+                } else {
+                    const errData = await res.json();
+                    alert("Error: " + (errData.error || "Failed to clear Item Sales data"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to empty Item Sales Analytics data.");
+            }
+        });
+    }
+
     // === INVENTORY EDIT FORM SUBMISSION ===
     const editInventoryForm = document.getElementById("formEditInventory");
     if (editInventoryForm) {
