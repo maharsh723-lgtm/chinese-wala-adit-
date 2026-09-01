@@ -3749,6 +3749,8 @@ function initApp() {
                 ? bill.items.map(i => `<span style="display:inline-block; margin:2px; padding:2px 6px; background:var(--bg-hover); border-radius:4px; font-size:0.8rem; color:var(--text-primary);"><b>${i.productName || i.name || 'Item'}</b> (x${i.quantity || i.qty || 1})</span>`).join(' ')
                 : '<span style="color:var(--text-tertiary); font-size:0.8rem;">No items logged</span>';
 
+            const tableOrType = bill.tableName ? `${bill.orderType} • Table ${bill.tableName}` : bill.orderType;
+
             row.innerHTML = `
                 <td style="white-space: nowrap;"><span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">${timeStr}</span></td>
                 <td><span class="pill-badge" style="background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border); font-size:0.75rem;">${bill.store || 'Unknown'}</span></td>
