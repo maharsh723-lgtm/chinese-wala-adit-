@@ -14251,21 +14251,31 @@ function initApp() {
                     const gst = Math.round(currentPoState.totalCost * 0.18 * 100) / 100;
                     const grandTotal = Math.round((currentPoState.totalCost + gst) * 100) / 100;
 
-                    // Trigger backend SMS to 9978673137
+                    // Trigger backend SMS & Telegram alert to Group
                     try {
                         const token = localStorage.getItem("bk_jwt_token");
+                        const procItems = (currentPoState.items || []).map(i => ({
+                            name: i.label || i.name,
+                            qty: i.suggestedRestock || i.qty || 1,
+                            unit: i.unit || 'units'
+                        }));
                         fetch(`${window.bk_state.API_BASE}/api/pos/requisitions/send-confirmation-sms`, {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
                                 "Authorization": `Bearer ${token}`
                             },
-                            body: JSON.stringify({ poId: currentPoState.poNumber, amount: grandTotal })
+                            body: JSON.stringify({ 
+                                poId: currentPoState.poNumber, 
+                                amount: grandTotal,
+                                branchName: currentStore || "VESU",
+                                items: procItems
+                            })
                         }).then(res => res.json())
-                          .then(data => console.log("AI Procurement SMS sent:", data))
-                          .catch(e => console.error("Error sending AI PO SMS:", e));
+                          .then(data => console.log("AI Procurement Telegram/SMS sent:", data))
+                          .catch(e => console.error("Error sending AI PO notification:", e));
                     } catch(e) {
-                        console.error("SMS fetch trigger failed:", e);
+                        console.error("Notification fetch trigger failed:", e);
                     }
 
                     alert("Payment successfully verified by AI Auditor. SMS order acceptance prompt sent to +91 99786 73137!");

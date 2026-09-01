@@ -2229,7 +2229,7 @@ app.get('/api/pos/requisitions', authenticateToken, (req, res) => {
 });
 
 app.post('/api/pos/requisitions/send-confirmation-sms', authenticateToken, async (req, res) => {
-  const { poId, amount } = req.body;
+  const { poId, amount, branchName, items } = req.body;
   const targetPhone = "9978673137";
   
   // Fast2SMS Fallback
@@ -2237,9 +2237,20 @@ app.post('/api/pos/requisitions/send-confirmation-sms', authenticateToken, async
   
   // Telegram Integration
   const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
-  const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+  const telegramChatId = process.env.TELEGRAM_CHAT_ID || '-5352187849';
   
-  const message = `BADI KATORI Smart Procurement: Requisition ${poId} for Rs ${parseFloat(amount).toFixed(2)} is paid. Please confirm order.`;
+  let itemDetails = '';
+  if (items && Array.isArray(items) && items.length > 0) {
+    itemDetails = '\n\n*📋 Items Ordered:*\n' + items.map(i => `• ${i.name || i.label} - ${i.qty || i.quantity || 1} ${i.unit || 'units'}`).join('\n');
+  }
+
+  const message = `🛍️ *SMART PROCUREMENT ORDER PAID*\n\n` +
+    `📌 *PO Number:* \`${poId}\`\n` +
+    `🏢 *Branch:* ${branchName || 'VESU Outlet'}\n` +
+    `💰 *Amount Paid:* ₹${parseFloat(amount).toFixed(2)}\n` +
+    `✅ *Payment Status:* Verified by AI Auditor` +
+    itemDetails +
+    `\n\n_Please confirm supplier dispatch and delivery schedule._`;
 
   try {
     let telegramResult = null;
@@ -2252,7 +2263,7 @@ app.post('/api/pos/requisitions/send-confirmation-sms', authenticateToken, async
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: telegramChatId, text: message })
+            body: JSON.stringify({ chat_id: telegramChatId, text: message, parse_mode: 'Markdown' })
         });
         telegramResult = await response.json();
         console.log(`[Requisition Telegram Response] PO: ${poId}`, telegramResult);
