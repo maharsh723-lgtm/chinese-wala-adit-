@@ -3961,10 +3961,9 @@ function initApp() {
         if (lblRev) lblRev.textContent = `Total Revenue (${dateLabelText})`;
 
         // Process orders
+        const filteredStoreOrders = [];
         (posOrders || []).forEach(order => {
             if (currentRole === "bm" && order.store !== currentStore) return;
-            
-            const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
             
             if (selectedLiveSalesFilterDate && selectedLiveSalesFilterDate !== 'ALL') {
                 const matches = (order.date === selectedLiveSalesFilterDate) || (order.timestamp && order.timestamp.startsWith(selectedLiveSalesFilterDate));
@@ -3992,30 +3991,50 @@ function initApp() {
                 }
             });
 
-            let billNumDisplay = '';
-            if (order.tokenNumber !== undefined && order.tokenNumber !== null && parseInt(order.tokenNumber) > 0) {
-                billNumDisplay = `#${order.tokenNumber}`;
-            } else if (order.kotNumber && order.kotNumber.startsWith('KOT-')) {
-                billNumDisplay = order.kotNumber;
-            } else if (order.orderNumber && !order.orderNumber.includes('order-')) {
-                billNumDisplay = order.orderNumber.startsWith('#') ? order.orderNumber : `#${order.orderNumber}`;
+            filteredStoreOrders.push({
+                order: order,
+                billAmount: billAmount,
+                items: items || [],
+                timeVal: new Date(order.timestamp || (order.date + (order.time ? `T${order.time}` : ''))).getTime() || 0
+            });
+        });
+
+        // Sort chronologically ascending to calculate uninterrupted sequential bill numbers
+        filteredStoreOrders.sort((a, b) => a.timeVal - b.timeVal);
+
+        // Find the lowest explicit token or base
+        let seqRunner = 109;
+        const firstWithTokenIdx = filteredStoreOrders.findIndex(item => item.order.tokenNumber && parseInt(item.order.tokenNumber) >= 100);
+        if (firstWithTokenIdx !== -1) {
+            const firstToken = parseInt(filteredStoreOrders[firstWithTokenIdx].order.tokenNumber);
+            seqRunner = Math.max(1, firstToken - firstWithTokenIdx);
+        }
+
+        filteredStoreOrders.forEach((item, idx) => {
+            const ord = item.order;
+            let finalTokenStr = '';
+            if (ord.tokenNumber !== undefined && ord.tokenNumber !== null && parseInt(ord.tokenNumber) >= 100) {
+                finalTokenStr = `#${ord.tokenNumber}`;
+                seqRunner = parseInt(ord.tokenNumber) + 1;
+            } else if (ord.orderNumber && !ord.orderNumber.includes('order-') && parseInt(ord.orderNumber.replace(/[^0-9]/g, '')) >= 100) {
+                finalTokenStr = ord.orderNumber.startsWith('#') ? ord.orderNumber : `#${ord.orderNumber}`;
+                seqRunner = parseInt(ord.orderNumber.replace(/[^0-9]/g, '')) + 1;
             } else {
-                const rawStr = String(order.id || order.orderNumber || '');
-                const digits = rawStr.match(/\d+$/);
-                billNumDisplay = digits ? `#${digits[0].slice(-3)}` : `#${rawStr.replace(/[^a-zA-Z0-9]/g, '').slice(-3)}`;
+                finalTokenStr = `#${seqRunner}`;
+                seqRunner++;
             }
 
             liveBills.push({
-                id: order.id,
-                orderTime: order.timestamp || (order.date + (order.time ? `T${order.time}` : '')),
-                tokenNumber: billNumDisplay,
-                store: order.store || 'VESU',
-                orderType: order.orderType || 'Dine In',
-                tableName: order.tableName,
-                customerName: order.customerName || 'Walk-in Guest',
-                paymentMethod: order.paymentMethod || 'Cash',
-                grandTotal: billAmount,
-                items: items || []
+                id: ord.id,
+                orderTime: ord.timestamp || (ord.date + (ord.time ? `T${ord.time}` : '')),
+                tokenNumber: finalTokenStr,
+                store: ord.store || 'VESU',
+                orderType: ord.orderType || 'Dine In',
+                tableName: ord.tableName,
+                customerName: ord.customerName || 'Walk-in Guest',
+                paymentMethod: ord.paymentMethod || 'Cash',
+                grandTotal: item.billAmount,
+                items: item.items
             });
         });
 
