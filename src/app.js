@@ -3818,27 +3818,64 @@ function initApp() {
         }
     });
 
-    // SCREEN 14: PRODUCT SALES MANAGEMENT
+    // SCREEN 14: PRODUCT SALES MANAGEMENT & LIVE SALES STREAM
+    let selectedLiveSalesFilterDate = getTodayDateStr(); // defaults to today, or specific date string, or 'ALL'
+
     window.renderLiveSalesStream = renderLiveSalesStream;
     function renderLiveSalesStream() {
         const tbody = document.getElementById("liveSalesFeedBody");
         if (!tbody) return;
 
+        const dateInput = document.getElementById("filterLiveSalesDate");
+        if (dateInput && !dateInput.value) {
+            dateInput.value = selectedLiveSalesFilterDate || getTodayDateStr();
+        }
+
         let liveBills = [];
         let foodCount = 0;
         let bevCount = 0;
         let billCount = 0;
-        const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+        let totalRevenue = 0;
+        const todayStr = getTodayDateStr();
         const bevCategories = ['Indian Coolers', 'Frappe', 'Hot Coffee Mix', 'Hot Tea', 'Milkshakes', 'Cheese Cake Shakes', 'Lassi', 'Beverages', 'Drinks', 'Coffee', 'Tea'];
 
-        // Process orders for today
+        // Update labels based on selected date
+        const lblFood = document.getElementById("lbl-live-sales-food");
+        const lblBev = document.getElementById("lbl-live-sales-bev");
+        const lblBills = document.getElementById("lbl-live-sales-bills");
+        const lblRev = document.getElementById("lbl-live-sales-rev");
+
+        let dateLabelText = "";
+        if (selectedLiveSalesFilterDate && selectedLiveSalesFilterDate !== 'ALL') {
+            if (selectedLiveSalesFilterDate === todayStr) {
+                dateLabelText = "Today";
+            } else {
+                const dObj = new Date(selectedLiveSalesFilterDate);
+                dateLabelText = isNaN(dObj.getTime()) ? selectedLiveSalesFilterDate : dObj.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+            }
+        } else {
+            dateLabelText = "All Dates";
+        }
+
+        if (lblFood) lblFood.textContent = `Food Sold (${dateLabelText})`;
+        if (lblBev) lblBev.textContent = `Beverages Sold (${dateLabelText})`;
+        if (lblBills) lblBills.textContent = `Total Bills (${dateLabelText})`;
+        if (lblRev) lblRev.textContent = `Total Revenue (${dateLabelText})`;
+
+        // Process orders
         (posOrders || []).forEach(order => {
             if (currentRole === "bm" && order.store !== currentStore) return;
             
-            const isToday = order.date === todayStr || (order.timestamp && order.timestamp.startsWith(todayStr));
-            if (!isToday) return;
+            const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
+            
+            if (selectedLiveSalesFilterDate && selectedLiveSalesFilterDate !== 'ALL') {
+                const matches = (order.date === selectedLiveSalesFilterDate) || (order.timestamp && order.timestamp.startsWith(selectedLiveSalesFilterDate));
+                if (!matches) return;
+            }
 
             billCount++;
+            const billAmount = parseFloat(order.grandTotal) || parseFloat(order.total) || 0;
+            totalRevenue += billAmount;
 
             // Gather items for this order
             let items = order.items;
@@ -3860,36 +3897,39 @@ function initApp() {
             liveBills.push({
                 id: order.id,
                 orderTime: order.timestamp || (order.date + (order.time ? `T${order.time}` : '')),
-                tokenNumber: order.tokenNumber !== undefined && order.tokenNumber !== null ? `#${String(order.tokenNumber).padStart(2, '0')}` : (order.kotNumber || `#${order.orderNumber || order.id}`),
+                tokenNumber: order.tokenNumber !== undefined && order.tokenNumber !== null ? `#${String(order.tokenNumber)}` : (order.kotNumber || `#${order.orderNumber || order.id}`),
                 store: order.store || 'VESU',
                 orderType: order.orderType || 'Dine In',
                 tableName: order.tableName,
                 customerName: order.customerName || 'Walk-in Guest',
                 paymentMethod: order.paymentMethod || 'Cash',
-                grandTotal: parseFloat(order.grandTotal) || parseFloat(order.total) || 0,
+                grandTotal: billAmount,
                 items: items || []
             });
         });
 
         if (document.getElementById("live-sales-food-count")) {
-            document.getElementById("live-sales-food-count").textContent = foodCount;
+            document.getElementById("live-sales-food-count").textContent = foodCount.toLocaleString('en-IN');
         }
         if (document.getElementById("live-sales-bev-count")) {
-            document.getElementById("live-sales-bev-count").textContent = bevCount;
+            document.getElementById("live-sales-bev-count").textContent = bevCount.toLocaleString('en-IN');
         }
         if (document.getElementById("live-sales-bill-count")) {
-            document.getElementById("live-sales-bill-count").textContent = billCount;
+            document.getElementById("live-sales-bill-count").textContent = billCount.toLocaleString('en-IN');
+        }
+        if (document.getElementById("live-sales-revenue-total")) {
+            document.getElementById("live-sales-revenue-total").textContent = `₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         }
 
         // Sort newest first
         liveBills.sort((a, b) => new Date(b.orderTime) - new Date(a.orderTime));
         
-        // Take top 100
-        liveBills = liveBills.slice(0, 100);
+        // Take top 200
+        liveBills = liveBills.slice(0, 200);
 
         tbody.innerHTML = "";
         if (liveBills.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-tertiary);">No sales bills recorded today.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 24px; color: var(--text-tertiary);">No sales bills recorded for ${dateLabelText}.</td></tr>`;
             return;
         }
 
@@ -3935,6 +3975,48 @@ function initApp() {
             tbody.appendChild(row);
         });
     }
+
+    // Initialize Live Sales Date Filter Event Listeners
+    document.addEventListener("DOMContentLoaded", () => {
+        const filterLiveDateInput = document.getElementById("filterLiveSalesDate");
+        if (filterLiveDateInput) {
+            filterLiveDateInput.value = getTodayDateStr();
+            filterLiveDateInput.addEventListener("change", (e) => {
+                selectedLiveSalesFilterDate = e.target.value;
+                renderLiveSalesStream();
+            });
+        }
+
+        const btnToday = document.getElementById("btnLiveSalesQuickToday");
+        if (btnToday) {
+            btnToday.addEventListener("click", () => {
+                const today = getTodayDateStr();
+                selectedLiveSalesFilterDate = today;
+                if (filterLiveDateInput) filterLiveDateInput.value = today;
+                renderLiveSalesStream();
+            });
+        }
+
+        const btnYesterday = document.getElementById("btnLiveSalesQuickYesterday");
+        if (btnYesterday) {
+            btnYesterday.addEventListener("click", () => {
+                const d = new Date();
+                d.setDate(d.getDate() - 1);
+                const yestStr = d.toLocaleDateString('en-CA');
+                selectedLiveSalesFilterDate = yestStr;
+                if (filterLiveDateInput) filterLiveDateInput.value = yestStr;
+                renderLiveSalesStream();
+            });
+        }
+
+        const btnAll = document.getElementById("btnLiveSalesQuickAll");
+        if (btnAll) {
+            btnAll.addEventListener("click", () => {
+                selectedLiveSalesFilterDate = 'ALL';
+                renderLiveSalesStream();
+            });
+        }
+    });
 
     window.showBill = function(orderId) {
         const order = posOrders.find(o => o.id === orderId);

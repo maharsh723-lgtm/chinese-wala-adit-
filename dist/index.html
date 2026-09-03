@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
     <script defer src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-  <script type="module" crossorigin src="./assets/index-D3ltfLq-.js"></script>
+  <script type="module" crossorigin src="./assets/index-D97Lng55.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-jnZL_ppJ.css">
 </head>
 <body>
@@ -2999,12 +2999,19 @@
 
                 <!-- SCREEN 14.5: LIVE SALES STREAM -->
                 <div class="app-screen" id="screen-live-sales-stream">
-                    <div class="screen-header-layout">
+                    <div class="screen-header-layout" style="margin-bottom:16px;">
                         <div class="screen-title-desc">
                             <h1>Live Sales Stream</h1>
-                            <p>Real-time feed of items being sold across all outlets.</p>
+                            <p>Real-time feed of sales bills & items sold across all outlets.</p>
                         </div>
-                        <div class="screen-actions" style="display: flex; gap: 8px;">
+                        <div class="screen-actions" style="display: flex; gap: 8px; align-items:center; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:6px; background:var(--bg-card); padding:4px 8px; border:1px solid var(--border); border-radius:var(--radius-md);">
+                                <label style="font-weight:700; font-size:0.82rem; color:var(--text-secondary); margin:0;">View Date:</label>
+                                <input type="date" id="filterLiveSalesDate" class="saas-input" style="width:140px; padding:4px 8px; font-weight:600; font-size:0.85rem;">
+                                <button type="button" class="saas-btn" id="btnLiveSalesQuickToday" style="padding:4px 8px; font-size:0.75rem; background:var(--bg-hover);">Today</button>
+                                <button type="button" class="saas-btn" id="btnLiveSalesQuickYesterday" style="padding:4px 8px; font-size:0.75rem; background:var(--bg-hover);">Yesterday</button>
+                                <button type="button" class="saas-btn" id="btnLiveSalesQuickAll" style="padding:4px 8px; font-size:0.75rem; background:var(--bg-hover);">All Dates</button>
+                            </div>
                             <button class="saas-btn saas-btn-secondary" onclick="renderLiveSalesStream()">
                                 <i data-lucide="refresh-cw"></i> Refresh Feed
                             </button>
@@ -3014,27 +3021,34 @@
                         </div>
                     </div>
 
-                    <div class="kpi-grid" style="margin-bottom: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                    <div class="kpi-grid" style="margin-bottom: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
                         <div class="kpi-card" style="border-left: 4px solid var(--blue-primary);">
                             <div class="kpi-header">
-                                <span>Food Items Sold (Today)</span>
+                                <span id="lbl-live-sales-food">Food Items Sold</span>
                                 <i data-lucide="utensils" style="color: var(--blue-primary);"></i>
                             </div>
                             <div class="kpi-value" id="live-sales-food-count">0</div>
                         </div>
                         <div class="kpi-card" style="border-left: 4px solid var(--orange-primary);">
                             <div class="kpi-header">
-                                <span>Beverages Sold (Today)</span>
+                                <span id="lbl-live-sales-bev">Beverages Sold</span>
                                 <i data-lucide="coffee" style="color: var(--orange-primary);"></i>
                             </div>
                             <div class="kpi-value" id="live-sales-bev-count">0</div>
                         </div>
                         <div class="kpi-card" style="border-left: 4px solid var(--green-primary, #10b981);">
                             <div class="kpi-header">
-                                <span>Total Bills (Today)</span>
+                                <span id="lbl-live-sales-bills">Total Bills</span>
                                 <i data-lucide="receipt" style="color: var(--green-primary, #10b981);"></i>
                             </div>
                             <div class="kpi-value" id="live-sales-bill-count">0</div>
+                        </div>
+                        <div class="kpi-card" style="border-left: 4px solid #8b5cf6;">
+                            <div class="kpi-header">
+                                <span id="lbl-live-sales-rev">Total Sales Amount</span>
+                                <i data-lucide="indian-rupee" style="color: #8b5cf6;"></i>
+                            </div>
+                            <div class="kpi-value" style="color:#8b5cf6;" id="live-sales-revenue-total">₹0.00</div>
                         </div>
                     </div>
 
