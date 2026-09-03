@@ -10663,11 +10663,14 @@ function initApp() {
 
             renderGSTInvoice(orderObj);
             
-            // Show the invoice modal
+            // Show the invoice modal and trigger print instantly without lag
             const invoiceModal = document.getElementById("modalPOSInvoice");
             if (invoiceModal) {
                 invoiceModal.style.display = "flex";
-                setTimeout(() => window.print(), 500);
+                // Instant browser print trigger
+                requestAnimationFrame(() => {
+                    setTimeout(() => window.print(), 50);
+                });
             }
             
             posCart = [];
