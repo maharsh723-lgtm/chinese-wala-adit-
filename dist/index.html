@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
     <script defer src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-  <script type="module" crossorigin src="./assets/index-D97Lng55.js"></script>
+  <script type="module" crossorigin src="./assets/index-TPYy8dHT.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-jnZL_ppJ.css">
 </head>
 <body>
@@ -3389,12 +3389,15 @@
                                     <h3 style="font-weight:800; margin:0;" id="dailyExpenseListHeading">Expenses for Selected Date</h3>
                                     <span style="font-size:0.8rem; color:var(--text-tertiary);" id="dailyExpenseActiveDateLabel">Showing: Today</span>
                                 </div>
-                                <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                                     <label style="font-weight:700; font-size:0.85rem; color:var(--text-secondary);">View Date:</label>
                                     <input type="date" id="filterExpenseDate" class="saas-input" style="width:145px; padding:6px 10px; font-weight:600;">
                                     <button type="button" class="saas-btn" id="btnExpenseQuickToday" style="padding:6px 10px; font-size:0.8rem; background:var(--bg-hover);">Today</button>
                                     <button type="button" class="saas-btn" id="btnExpenseQuickYesterday" style="padding:6px 10px; font-size:0.8rem; background:var(--bg-hover);">Yesterday</button>
                                     <button type="button" class="saas-btn" id="btnExpenseQuickAll" style="padding:6px 10px; font-size:0.8rem; background:var(--bg-hover);">All Dates</button>
+                                    <button type="button" class="saas-btn saas-btn-secondary" id="btnExportDailyExpensesExcel" style="padding:6px 12px; font-size:0.8rem; font-weight:700; display:inline-flex; align-items:center; gap:6px; background:#10b981; color:#fff; border:none; border-radius:6px; cursor:pointer;" onclick="window.exportDailyExpensesToExcel()">
+                                        <i data-lucide="download" style="width:15px; height:15px;"></i> Export Excel
+                                    </button>
                                 </div>
                                 <div style="font-weight:800; font-size:1.15rem; color:var(--danger); background:rgba(239, 68, 68, 0.1); padding:6px 12px; border-radius:6px; border:1px solid rgba(239, 68, 68, 0.2);">Total: ₹<span id="dailyExpenseTotalDisplay">0.00</span></div>
                             </div>

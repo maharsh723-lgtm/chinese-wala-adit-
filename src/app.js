@@ -3632,6 +3632,104 @@ function initApp() {
         if (modal) modal.style.display = "flex";
     };
 
+    window.exportDailyExpensesToExcel = function() {
+        // Collect filtered expenses based on current selection
+        let exportList = [...expenses];
+        if (currentRole === "bm") {
+            exportList = exportList.filter(e => e.store === currentStore);
+        }
+        
+        const todayStr = getTodayDateStr();
+        let fileDateSuffix = "all_dates";
+
+        if (selectedExpenseFilterDate && selectedExpenseFilterDate !== 'ALL') {
+            exportList = exportList.filter(e => e.date === selectedExpenseFilterDate);
+            fileDateSuffix = selectedExpenseFilterDate;
+        }
+
+        if (!exportList || exportList.length === 0) {
+            return alert("No expenses found to export for the selected date.");
+        }
+
+        // Sort by date then category
+        exportList.sort((a, b) => {
+            if (b.date !== a.date) return (b.date || '').localeCompare(a.date || '');
+            return (a.category || '').localeCompare(b.category || '');
+        });
+
+        // Format data rows
+        let grandTotal = 0;
+        const excelRows = exportList.map((exp, idx) => {
+            const amt = parseFloat(exp.amount) || 0;
+            grandTotal += amt;
+            return {
+                "Sr No": idx + 1,
+                "Date": exp.date || '--',
+                "Category": exp.category || 'General',
+                "Description / Note": exp.description || '-',
+                "Payment Method": exp.paymentMethod || 'Cash',
+                "Outlet / Store": exp.store || 'VESU',
+                "Added By": exp.addedBy || 'Staff',
+                "Amount (INR)": amt
+            };
+        });
+
+        // Add summary row
+        excelRows.push({
+            "Sr No": "",
+            "Date": "",
+            "Category": "TOTAL EXPENSES",
+            "Description / Note": "",
+            "Payment Method": "",
+            "Outlet / Store": "",
+            "Added By": "",
+            "Amount (INR)": grandTotal
+        });
+
+        const xlsxLib = window.XLSX || (typeof XLSX !== 'undefined' ? XLSX : null);
+        if (xlsxLib) {
+            const ws = xlsxLib.utils.json_to_sheet(excelRows);
+            // Column widths
+            ws['!cols'] = [
+                { wch: 8 },  // Sr No
+                { wch: 14 }, // Date
+                { wch: 25 }, // Category
+                { wch: 35 }, // Description
+                { wch: 18 }, // Payment Method
+                { wch: 16 }, // Outlet
+                { wch: 16 }, // Added By
+                { wch: 16 }  // Amount
+            ];
+            const wb = xlsxLib.utils.book_new();
+            xlsxLib.utils.book_append_sheet(wb, ws, "Daily Expenses");
+            xlsxLib.writeFile(wb, `Badi_Katori_Daily_Expenses_${fileDateSuffix}.xlsx`);
+        } else {
+            // CSV Fallback if XLSX library not globally ready
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Sr No,Date,Category,Description,Payment Method,Outlet,Added By,Amount (INR)\n";
+            excelRows.forEach(row => {
+                const rowValues = [
+                    row["Sr No"],
+                    `"${row["Date"]}"`,
+                    `"${row["Category"]}"`,
+                    `"${(row["Description / Note"] || "").replace(/"/g, '""')}"`,
+                    `"${row["Payment Method"]}"`,
+                    `"${row["Outlet / Store"]}"`,
+                    `"${row["Added By"]}"`,
+                    row["Amount (INR)"]
+                ];
+                csvContent += rowValues.join(",") + "\n";
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Badi_Katori_Daily_Expenses_${fileDateSuffix}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
     window.deleteExpense = async function(id) {
         if (!confirm("Are you sure you want to delete this expense?")) return;
         try {
