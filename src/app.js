@@ -4116,6 +4116,173 @@ function initApp() {
         }
     });
 
+    window.exportLiveSalesItemReportToExcel = function() {
+        // 1. Gather all filtered orders for the chosen date & active branch
+        let filteredOrders = (posOrders || []).filter(order => {
+            if (currentRole === "bm" && order.store !== currentStore) return false;
+            if (selectedLiveSalesFilterDate && selectedLiveSalesFilterDate !== 'ALL') {
+                return (order.date === selectedLiveSalesFilterDate) || (order.timestamp && order.timestamp.startsWith(selectedLiveSalesFilterDate));
+            }
+            return true;
+        });
+
+        if (filteredOrders.length === 0) {
+            return alert("No sales orders recorded to export for the selected date.");
+        }
+
+        const chosenStore = currentRole === "bm" ? currentStore : (getPOSStore() || 'VESU');
+        const reportDateStr = (selectedLiveSalesFilterDate && selectedLiveSalesFilterDate !== 'ALL') ? selectedLiveSalesFilterDate : 'ALL DATES';
+        
+        // Formatted display date (e.g. 01-08-2026 or DD-MM-YYYY)
+        let displayDate = reportDateStr;
+        if (reportDateStr !== 'ALL DATES') {
+            const parts = reportDateStr.split('-');
+            if (parts.length === 3) displayDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
+        // 2. Aggregate sales item quantities and revenue by Category and Item Name
+        const orderIds = new Set(filteredOrders.map(o => o.id));
+        const itemAgg = {}; // key: category -> { [itemName]: { code, qty, total, price } }
+
+        filteredOrders.forEach(order => {
+            let items = order.items;
+            if (!items || !Array.isArray(items) || items.length === 0) {
+                items = (posOrderItems || []).filter(i => i.orderId === order.id);
+            }
+
+            (items || []).forEach(item => {
+                const pName = item.productName || item.name || 'Unknown Item';
+                const pQty = parseInt(item.quantity || item.qty || 1);
+                const pPrice = parseFloat(item.price || 0);
+                const pTotal = pPrice * pQty;
+
+                // Lookup category & code from posProducts or fallback
+                const prod = (posProducts || []).find(p => p.id === item.productId || (p.name && p.name.toLowerCase() === pName.toLowerCase()));
+                const category = (prod && prod.category) ? prod.category : 'General Items';
+                
+                // Item code extraction or fallback
+                let codeVal = '';
+                if (prod && prod.code) {
+                    codeVal = prod.code;
+                } else if (prod && prod.id) {
+                    const digits = prod.id.match(/\d+/);
+                    codeVal = digits ? parseInt(digits[0]) : '';
+                }
+
+                if (!itemAgg[category]) {
+                    itemAgg[category] = {};
+                }
+
+                if (!itemAgg[category][pName]) {
+                    itemAgg[category][pName] = {
+                        item: pName,
+                        code: codeVal,
+                        qty: 0,
+                        total: 0
+                    };
+                }
+
+                itemAgg[category][pName].qty += pQty;
+                itemAgg[category][pName].total += pTotal;
+            });
+        });
+
+        // 3. Compute overall Grand Totals
+        let overallQty = 0;
+        let overallTotal = 0;
+
+        Object.keys(itemAgg).forEach(cat => {
+            Object.values(itemAgg[cat]).forEach(it => {
+                overallQty += it.qty;
+                overallTotal += it.total;
+            });
+        });
+
+        // 4. Build exact 2D Row Structure matching image
+        // Row 1: Empty or Title
+        // Row 2: Item Report : From DD-MM-YYYY
+        // Row 3: Empty
+        // Row 4: Header: ["Category", "Item", "Code", "Qty.", "Total"]
+        // Row 5: Total summary: ["Total", "-", "-", overallQty, overallTotal]
+        // Following rows: For each category -> category header, item rows, Sub Total row
+
+        const dataGrid = [];
+        dataGrid.push([""]); // Row 1
+        dataGrid.push([`Item Report : From ${displayDate}`]); // Row 2
+        dataGrid.push([""]); // Row 3
+        dataGrid.push(["Category", "Item", "Code", "Qty.", "Total"]); // Row 4 (Table header)
+        dataGrid.push(["Total", "-", "-", overallQty, overallTotal]); // Row 5 (Top Grand Total summary)
+
+        // Sort categories logically
+        const categories = Object.keys(itemAgg).sort();
+
+        categories.forEach(cat => {
+            dataGrid.push([""]); // Spacer before category
+            dataGrid.push([cat]); // Category Title in Column A
+
+            let catQty = 0;
+            let catTotal = 0;
+
+            const itemsInCat = Object.values(itemAgg[cat]).sort((a, b) => a.item.localeCompare(b.item));
+            itemsInCat.forEach(it => {
+                catQty += it.qty;
+                catTotal += it.total;
+                dataGrid.push([
+                    "",         // Column A (blank for item rows)
+                    it.item,    // Column B (Item Name)
+                    it.code,    // Column C (Code)
+                    it.qty,     // Column D (Qty.)
+                    it.total    // Column E (Total Amount)
+                ]);
+            });
+
+            // Category Sub Total row
+            dataGrid.push([
+                "Sub Total", // Column A
+                "",          // Column B
+                "",          // Column C
+                catQty,      // Column D (Category Qty sum)
+                catTotal     // Column E (Category Total sum)
+            ]);
+        });
+
+        const fileNameSuffix = displayDate.replace(/[\/\s:]/g, '-');
+        const fileName = `${chosenStore}_${fileNameSuffix}_ISR.xlsx`;
+
+        const xlsxLib = window.XLSX || (typeof XLSX !== 'undefined' ? XLSX : null);
+        if (xlsxLib) {
+            const ws = xlsxLib.utils.aoa_to_sheet(dataGrid);
+            // Column widths to match clean Excel layout
+            ws['!cols'] = [
+                { wch: 22 }, // Column A: Category / Sub Total
+                { wch: 32 }, // Column B: Item Name
+                { wch: 10 }, // Column C: Code
+                { wch: 10 }, // Column D: Qty.
+                { wch: 14 }  // Column E: Total
+            ];
+            const wb = xlsxLib.utils.book_new();
+            xlsxLib.utils.book_append_sheet(wb, ws, "Table0");
+            xlsxLib.writeFile(wb, fileName);
+        } else {
+            // CSV Fallback
+            let csvContent = "data:text/csv;charset=utf-8,";
+            dataGrid.forEach(row => {
+                const line = (row || []).map(cell => {
+                    const str = (cell === null || cell === undefined) ? "" : String(cell);
+                    return `"${str.replace(/"/g, '""')}"`;
+                }).join(",");
+                csvContent += line + "\n";
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `${chosenStore}_${fileNameSuffix}_ISR.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
     window.showBill = function(orderId) {
         const order = posOrders.find(o => o.id === orderId);
         if (!order) return alert("Order not found!");
