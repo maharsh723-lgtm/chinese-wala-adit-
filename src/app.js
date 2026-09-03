@@ -493,38 +493,12 @@ function initApp() {
                 posStockMovement = data.posStockMovement || [];
                 topSellingByStore = data.topSellingByStore || {};
 
-                // Restore/Sync Next Token from today's highest order token
+                // Restore/Sync Next Token from today's orders count starting at 109
                 try {
                     const todayDateStr = new Date().toISOString().split('T')[0];
                     const storeOrders = (posOrders || []).filter(o => o.store === getPOSStore() && (o.date === todayDateStr || (o.timestamp && o.timestamp.startsWith(todayDateStr))));
-                    let maxTokenFound = 0;
-                    storeOrders.forEach(o => {
-                        let tok = 0;
-                        if (o.tokenNumber !== undefined && o.tokenNumber !== null) {
-                            tok = parseInt(o.tokenNumber) || 0;
-                        } else if (o.kotNumber) {
-                            const match = o.kotNumber.match(/\d+/);
-                            if (match) tok = parseInt(match[0]) || 0;
-                        }
-                        if (tok >= 130 && tok <= 138) {
-                            // Skip phantom unplaced test orders
-                            return;
-                        }
-                        if (tok > maxTokenFound) maxTokenFound = tok;
-                    });
                     
-                    const savedLocal = parseInt(localStorage.getItem("pos_next_token") || "109");
-                    let candidateToken = savedLocal;
-                    if (candidateToken >= 130 && candidateToken <= 138) {
-                        candidateToken = 129;
-                    }
-                    if (maxTokenFound > 0 && maxTokenFound >= candidateToken) {
-                        posNextToken = maxTokenFound + 1;
-                    } else if (candidateToken >= 109) {
-                        posNextToken = candidateToken;
-                    } else {
-                        posNextToken = 109;
-                    }
+                    posNextToken = 109 + storeOrders.length;
                     localStorage.setItem("pos_next_token", posNextToken.toString());
                     syncTokenUI();
                 } catch(e) {
@@ -4006,39 +3980,13 @@ function initApp() {
         // Sort chronologically ascending to calculate uninterrupted sequential bill numbers
         filteredStoreOrders.sort((a, b) => a.timeVal - b.timeVal);
 
-        // Filter out any unplaced test orders (e.g. dummy orders or orders numbered 130 to 138)
-        const validStoreOrders = filteredStoreOrders.filter(item => {
-            const ord = item.order;
-            const tokNum = parseInt(ord.tokenNumber) || parseInt((ord.orderNumber || '').replace(/[^0-9]/g, '')) || 0;
-            if (tokNum >= 130 && tokNum <= 138) {
-                return false;
-            }
-            return true;
-        });
+        // Assign clean, continuous sequential numbers starting from 109: #109, #110, #111, #112...
+        const baseStartingToken = 109;
 
-        // Continue consecutive bill numbering cleanly starting from 109 / 129
-        let seqRunner = 109;
-        const firstWithTokenIdx = validStoreOrders.findIndex(item => item.order.tokenNumber && parseInt(item.order.tokenNumber) >= 100);
-        if (firstWithTokenIdx !== -1) {
-            const firstToken = parseInt(validStoreOrders[firstWithTokenIdx].order.tokenNumber);
-            seqRunner = Math.max(109, firstToken - firstWithTokenIdx);
-        }
-
-        validStoreOrders.forEach((item, idx) => {
+        filteredStoreOrders.forEach((item, idx) => {
             const ord = item.order;
-            let tok = parseInt(ord.tokenNumber) || parseInt((ord.orderNumber || '').replace(/[^0-9]/g, '')) || 0;
-            
-            let finalTokenStr = '';
-            if (tok >= 100 && !(tok >= 130 && tok <= 138)) {
-                finalTokenStr = `#${tok}`;
-                seqRunner = tok + 1;
-            } else {
-                if (seqRunner >= 130 && seqRunner <= 138) {
-                    seqRunner = 139;
-                }
-                finalTokenStr = `#${seqRunner}`;
-                seqRunner++;
-            }
+            const consecutiveNum = baseStartingToken + idx;
+            const finalTokenStr = `#${consecutiveNum}`;
 
             liveBills.push({
                 id: ord.id,
