@@ -476,6 +476,9 @@ try {
     CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses (date);
     CREATE INDEX IF NOT EXISTS idx_pos_audit_logs_timestamp ON pos_audit_logs (timestamp);
   `);
+} catch(e) {
+  console.warn("Index creation notice:", e);
+}
 // Clean up any test/phantom orders between 130 and 138
 try {
   const phantomOrders = db.prepare(`
