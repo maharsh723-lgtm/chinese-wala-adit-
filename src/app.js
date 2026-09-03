@@ -3995,12 +3995,14 @@ function initApp() {
             let billNumDisplay = '';
             if (order.tokenNumber !== undefined && order.tokenNumber !== null && parseInt(order.tokenNumber) > 0) {
                 billNumDisplay = `#${order.tokenNumber}`;
-            } else if (order.orderNumber) {
-                billNumDisplay = order.orderNumber.startsWith('#') ? order.orderNumber : `#${order.orderNumber}`;
-            } else if (order.kotNumber) {
+            } else if (order.kotNumber && order.kotNumber.startsWith('KOT-')) {
                 billNumDisplay = order.kotNumber;
+            } else if (order.orderNumber && !order.orderNumber.includes('order-')) {
+                billNumDisplay = order.orderNumber.startsWith('#') ? order.orderNumber : `#${order.orderNumber}`;
             } else {
-                billNumDisplay = `#${order.id}`;
+                const rawStr = String(order.id || order.orderNumber || '');
+                const digits = rawStr.match(/\d+$/);
+                billNumDisplay = digits ? `#${digits[0].slice(-3)}` : `#${rawStr.replace(/[^a-zA-Z0-9]/g, '').slice(-3)}`;
             }
 
             liveBills.push({
