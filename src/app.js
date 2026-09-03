@@ -10629,6 +10629,9 @@ function initApp() {
         if (printBtn && !printBtn.dataset.listenerBound) {
             printBtn.dataset.listenerBound = "true";
             printBtn.addEventListener("click", () => {
+                if (typeof window._pendingOrderCommit === 'function') {
+                    window._pendingOrderCommit();
+                }
                 document.body.classList.add('print-bill-only');
                 document.body.classList.remove('print-kot-only');
                 window.print();
@@ -10640,6 +10643,9 @@ function initApp() {
         if (printKOTBtn && !printKOTBtn.dataset.listenerBound) {
             printKOTBtn.dataset.listenerBound = "true";
             printKOTBtn.addEventListener("click", () => {
+                if (typeof window._pendingOrderCommit === 'function') {
+                    window._pendingOrderCommit();
+                }
                 document.body.classList.add('print-kot-only');
                 document.body.classList.remove('print-bill-only');
                 window.print();
@@ -10651,6 +10657,9 @@ function initApp() {
         if (pdfBtn && !pdfBtn.dataset.listenerBound) {
             pdfBtn.dataset.listenerBound = "true";
             pdfBtn.addEventListener("click", () => {
+                if (typeof window._pendingOrderCommit === 'function') {
+                    window._pendingOrderCommit();
+                }
                 downloadReceiptPDF();
             });
         }
@@ -10970,83 +10979,86 @@ function initApp() {
         };
         orderPayload.tokenNumber = posNextToken;
 
-        if (window._isPlacingOrder) {
-            console.warn("Order placement already in progress.");
-            return;
+        // Construct order object for immediate invoice generation & continuous printing
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.toTimeString().split(' ')[0];
+        const currentTokenForBill = posNextToken;
+
+        const orderObj = {
+            id: orderId,
+            date: posEditingOrder ? (posEditingOrder.date || dateStr) : dateStr,
+            time: posEditingOrder ? (posEditingOrder.time || timeStr) : timeStr,
+            timestamp: dateStr + 'T' + timeStr,
+            customerName: activeCust?.name || (posEditingOrder?.customerName) || 'Walk-in Guest',
+            customerPhone: enteredPhone || (activeCust?.phone) || (posEditingOrder?.customerPhone) || '',
+            orderType: posSelectedOrderType,
+            tableName: orderPayload.tableName,
+            subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
+            items: [...posCart],
+            orderNumber: `#${currentTokenForBill}`,
+            tokenNumber: currentTokenForBill,
+            kotNumber: posEditingOrder ? posEditingOrder.kotNumber : `KOT-${String(currentTokenForBill).padStart(2, '0')}`,
+            store: getPOSStore()
+        };
+
+        // Render GST Invoice and Kitchen Slip immediately so user gets continuous print dialog without lag
+        renderGSTInvoice(orderObj);
+        
+        const invoiceModal = document.getElementById("modalPOSInvoice");
+        if (invoiceModal) {
+            invoiceModal.style.display = "flex";
         }
-        window._isPlacingOrder = true;
 
-        try {
-            if (posEditingOrder) {
-                try {
-                    await fetch(`${API_BASE}/api/pos/orders/${posEditingOrder.id}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}` }
-                    });
-                } catch(e) {}
+        // Function that saves order to backend & updates local state only once printing begins
+        let orderSaved = false;
+        async function commitOrderToDatabase() {
+            if (orderSaved) return;
+            orderSaved = true;
+
+            try {
+                if (posEditingOrder) {
+                    try {
+                        await fetch(`${API_BASE}/api/pos/orders/${posEditingOrder.id}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}` }
+                        });
+                    } catch(e) {}
+                }
+
+                const response = await fetch(`${API_BASE}/api/pos/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`,
+                        'x-store-name': getPOSStore(),
+                        'x-user-role': 'sm'
+                    },
+                    body: JSON.stringify(orderPayload)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.order) {
+                        orderObj.id = result.order.id;
+                        orderObj.kotNumber = result.order.kotNumber || orderObj.kotNumber;
+                    }
+                }
+            } catch (err) {
+                console.warn("Offline / network issue while saving order:", err);
             }
 
-            const response = await fetch(`${API_BASE}/api/pos/orders`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`,
-                    'x-store-name': getPOSStore(),
-                    'x-user-role': 'sm'
-                },
-                body: JSON.stringify(orderPayload)
-            });
-            
-            if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`Server returned error code ${response.status}. Details: ${errText}`);
-            }
-            const result = await response.json();
-            
-            const orderObj = {
-                id: result.order.id,
-                date: posEditingOrder ? posEditingOrder.date : result.order.date,
-                time: posEditingOrder ? posEditingOrder.time : result.order.time,
-                customerName: activeCust?.name || (posEditingOrder?.customerName) || 'Walk-in Guest',
-                customerPhone: enteredPhone || (activeCust?.phone) || (posEditingOrder?.customerPhone) || '',
-                orderType: posSelectedOrderType,
-                tableName: orderPayload.tableName,
-                subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
-                items: posCart,
-                kotNumber: posEditingOrder ? posEditingOrder.orderNumber : result.order.kotNumber,
-                tokenNumber: posNextToken
-            };
-            
             // If editing, remove old local entries
             if (posEditingOrder) {
                 posOrders = posOrders.filter(o => o.id !== posEditingOrder.id);
                 posOrderItems = posOrderItems.filter(i => i.orderId !== posEditingOrder.id);
             }
-            
-            // Push to local list for immediate display
-            posOrders.push({
-                id: result.order.id,
-                date: result.order.date,
-                time: result.order.time,
-                timestamp: result.order.date + 'T' + result.order.time,
-                orderNumber: `#${posNextToken}`,
-                tokenNumber: posNextToken,
-                kotNumber: result.order.kotNumber,
-                store: getPOSStore(),
-                customerName: activeCust?.name || (posEditingOrder?.customerName) || 'Walk-in Guest',
-                customerPhone: enteredPhone || (activeCust?.phone) || (posEditingOrder?.customerPhone) || '',
-                orderType: posSelectedOrderType,
-                tableName: orderPayload.tableName,
-                subtotal: subtotal,
-                tax: tax,
-                discount: discount,
-                serviceCharge: serviceCharge,
-                grandTotal: grandTotal,
-                paymentMethod: paymentMethod
-            });
-            posCart.forEach(item => {
+
+            // Push order to local lists
+            posOrders.push(orderObj);
+            (orderObj.items || []).forEach(item => {
                 posOrderItems.push({
-                    orderId: result.order.id,
+                    orderId: orderObj.id,
                     productId: item.productId,
                     productName: item.productName || item.name,
                     quantity: item.quantity,
@@ -11055,36 +11067,37 @@ function initApp() {
                     instructions: item.instructions || ''
                 });
             });
+
             if (currentActiveScreen === "live-sales-stream" && typeof window.renderLiveSalesStream === "function") {
                 window.renderLiveSalesStream();
             }
 
-            renderGSTInvoice(orderObj);
+            // Deduct local inventory
+            deductLocalInventory(orderObj.items || []);
             
-            // Show the invoice modal and trigger print instantly without lag
-            const invoiceModal = document.getElementById("modalPOSInvoice");
-            if (invoiceModal) {
-                invoiceModal.style.display = "flex";
-                // Instant browser print trigger
-                requestAnimationFrame(() => {
-                    setTimeout(() => window.print(), 50);
-                });
-            }
-            
-            posCart = [];
-            posEditingOrder = null;
-            posAppliedCoupon = null;
-            const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
-            const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
-            syncCartStateAndUI();
+            // Advance sequential token
             incrementToken();
-            
-        } catch (err) {
-            console.error("Order placement failed:", err);
-            alert("Network/Server Error: Could not save order to server.\nPlease check your WiFi connection and try again.\n\nDetails: " + err.message);
-        } finally {
-            window._isPlacingOrder = false;
         }
+
+        window._pendingOrderCommit = commitOrderToDatabase;
+
+        // Clear billing cart
+        posCart = [];
+        posEditingOrder = null;
+        posAppliedCoupon = null;
+        const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
+        const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
+        syncCartStateAndUI();
+
+        // Trigger browser print dialog instantly
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                if (typeof window._pendingOrderCommit === 'function') {
+                    window._pendingOrderCommit();
+                }
+                window.print();
+            }, 50);
+        });
     }
 
     function incrementToken() {
