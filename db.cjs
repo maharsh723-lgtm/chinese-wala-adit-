@@ -8,6 +8,10 @@ const dbFilename = process.env.DB_FILE || 'database.db';
 const dbPath = path.isAbsolute(dbFilename) ? dbFilename : path.join(__dirname, dbFilename);
 const db = new DatabaseSync(dbPath);
 db.exec("PRAGMA busy_timeout = 10000;");
+db.exec("PRAGMA journal_mode = WAL;");
+db.exec("PRAGMA synchronous = NORMAL;");
+db.exec("PRAGMA cache_size = -64000;"); // 64MB cache in RAM
+db.exec("PRAGMA temp_store = MEMORY;");
 
 console.log(`Database initialized at: ${dbPath}`);
 
@@ -460,10 +464,21 @@ db.exec(`
   )
 `);
 
-// Safe ALTER TABLE updates for purchase_orders
-try { db.exec("ALTER TABLE purchase_orders ADD COLUMN supplierId TEXT"); } catch(e){}
-try { db.exec("ALTER TABLE purchase_orders ADD COLUMN internalRemarks TEXT"); } catch(e){}
-try { db.exec("ALTER TABLE purchase_orders ADD COLUMN qrCodeData TEXT"); } catch(e){}
+// Create performance indexes
+try {
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pos_orders_date_store ON pos_orders (date, store);
+    CREATE INDEX IF NOT EXISTS idx_pos_orders_status ON pos_orders (status);
+    CREATE INDEX IF NOT EXISTS idx_pos_order_items_orderId ON pos_order_items (orderId);
+    CREATE INDEX IF NOT EXISTS idx_pos_order_items_product ON pos_order_items (productName);
+    CREATE INDEX IF NOT EXISTS idx_inventory_store ON inventory (store);
+    CREATE INDEX IF NOT EXISTS idx_product_sales_date ON product_sales (date);
+    CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses (date);
+    CREATE INDEX IF NOT EXISTS idx_pos_audit_logs_timestamp ON pos_audit_logs (timestamp);
+  `);
+} catch(e) {
+  console.warn("Index creation notice:", e);
+}
 
 
 

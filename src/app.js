@@ -536,15 +536,11 @@ function initApp() {
                 }
                 localStorage.setItem("bk_logged_in_user", JSON.stringify(currentUser));
 
-                renderAllLists();
-        if (currentActiveScreen === "training") renderTrainingScreen();
-                
-                if (typeof window.refreshAccountingData === 'function') {
-                    window.refreshAccountingData();
+                // Only re-render current active screen to eliminate lag
+                if (currentActiveScreen !== 'billing' || isInitial) {
+                    renderAllLists();
                 }
-                if (typeof window.refreshReportsData === 'function') {
-                    window.refreshReportsData();
-                }
+                if (currentActiveScreen === "training") renderTrainingScreen();
             }
         } catch (err) {
             console.warn('Failed to sync state from server. Using local defaults.', err);
@@ -604,12 +600,12 @@ function initApp() {
         }
     }
 
-    // Periodic Polling loop (every 5 seconds)
+    // Periodic Background Polling loop (every 15 seconds)
     setInterval(() => {
-        if (localStorage.getItem("bk_jwt_token")) {
+        if (localStorage.getItem("bk_jwt_token") && document.visibilityState !== 'hidden') {
             syncStateFromServer();
         }
-    }, 5000);
+    }, 15000);
 
     // Configure Sidebar options and hide unnecessary menus
     function configureSidebarForRoles() {
