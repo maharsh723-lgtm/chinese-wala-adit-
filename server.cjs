@@ -4355,8 +4355,21 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
       );
     });
 
-    // Create Kitchen Order (KOT)
-    const kotNumber = 'KOT-' + Math.floor(1000 + Math.random() * 9000);
+    // Create Kitchen Order (KOT) with 24-hour daily resetting sequence (KOT-01, KOT-02...)
+    let todayKotCount = 0;
+    try {
+      const kotCountRow = db.prepare(`
+        SELECT COUNT(*) as count FROM pos_kitchen_orders 
+        WHERE store = ? AND orderId IN (
+          SELECT id FROM pos_orders WHERE date = ? AND store = ?
+        )
+      `).get(store, dateStr, store);
+      todayKotCount = (kotCountRow && kotCountRow.count) ? kotCountRow.count : 0;
+    } catch(e) {
+      todayKotCount = 0;
+    }
+    const nextKotSeq = todayKotCount + 1;
+    const kotNumber = `KOT-${String(nextKotSeq).padStart(2, '0')}`;
     const kotId = 'kot-' + Date.now();
     db.prepare(`
       INSERT INTO pos_kitchen_orders (id, orderId, kotNumber, status, store, items)

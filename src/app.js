@@ -159,7 +159,8 @@ function initApp() {
     let posOrderItems = [];
     let posAuditLogs = [];
     let posStockMovement = [];
-    let posNextToken = parseInt(localStorage.getItem("pos_next_token") || "0");
+    let posNextToken = parseInt(localStorage.getItem("pos_next_token") || "109");
+    if (isNaN(posNextToken) || posNextToken < 109) posNextToken = 109;
     let topSellingByStore = {};
     
     // POS Cart State
@@ -508,11 +509,15 @@ function initApp() {
                         if (tok > maxTokenFound) maxTokenFound = tok;
                     });
                     
-                    const savedLocal = parseInt(localStorage.getItem("pos_next_token") || "0");
+                    const savedLocal = parseInt(localStorage.getItem("pos_next_token") || "109");
                     if (maxTokenFound > 0 && maxTokenFound >= savedLocal) {
-                        posNextToken = (maxTokenFound + 1) % 100;
-                        localStorage.setItem("pos_next_token", posNextToken.toString());
+                        posNextToken = maxTokenFound + 1;
+                    } else if (savedLocal >= 109) {
+                        posNextToken = savedLocal;
+                    } else {
+                        posNextToken = 109;
                     }
+                    localStorage.setItem("pos_next_token", posNextToken.toString());
                     syncTokenUI();
                 } catch(e) {
                     console.error("Token sync error:", e);
@@ -10444,7 +10449,7 @@ function initApp() {
         if (prevTokenBtn && !prevTokenBtn.dataset.listenerBound) {
             prevTokenBtn.dataset.listenerBound = "true";
             prevTokenBtn.addEventListener("click", () => {
-                posNextToken = posNextToken <= 0 ? 99 : posNextToken - 1;
+                posNextToken = posNextToken <= 1 ? 1 : posNextToken - 1;
                 localStorage.setItem("pos_next_token", posNextToken.toString());
                 syncTokenUI();
             });
@@ -10454,7 +10459,7 @@ function initApp() {
         if (resetTokenBtn && !resetTokenBtn.dataset.listenerBound) {
             resetTokenBtn.dataset.listenerBound = "true";
             resetTokenBtn.addEventListener("click", () => {
-                posNextToken = 0;
+                posNextToken = 109;
                 localStorage.setItem("pos_next_token", posNextToken.toString());
                 syncTokenUI();
             });
@@ -10464,7 +10469,7 @@ function initApp() {
         if (nextTokenBtn && !nextTokenBtn.dataset.listenerBound) {
             nextTokenBtn.dataset.listenerBound = "true";
             nextTokenBtn.addEventListener("click", () => {
-                posNextToken = posNextToken >= 99 ? 0 : posNextToken + 1;
+                posNextToken = posNextToken + 1;
                 localStorage.setItem("pos_next_token", posNextToken.toString());
                 syncTokenUI();
             });
@@ -10690,13 +10695,13 @@ function initApp() {
     }
 
     function incrementToken() {
-        posNextToken = posNextToken >= 99 ? 0 : posNextToken + 1;
+        posNextToken = posNextToken + 1;
         localStorage.setItem("pos_next_token", posNextToken.toString());
         syncTokenUI();
     }
 
     function syncTokenUI() {
-        const tokenStr = '#' + String(posNextToken).padStart(2, '0');
+        const tokenStr = '#' + String(posNextToken);
         const statusToken = document.getElementById("statusNextToken");
         if (statusToken) {
             statusToken.textContent = tokenStr;
