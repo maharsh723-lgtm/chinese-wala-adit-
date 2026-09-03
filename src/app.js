@@ -9415,6 +9415,7 @@ function initApp() {
         renderPosProductsList();
         renderPosCartList();
         bindBillingEvents();
+        syncTokenUI();
         updateHeldOrdersCount();
         renderTableFloorPlan();
     }
@@ -11048,6 +11049,11 @@ function initApp() {
     }
 
     function syncTokenUI() {
+        if (!posNextToken || isNaN(posNextToken) || posNextToken < 109) {
+            const saved = parseInt(localStorage.getItem("pos_next_token") || "109");
+            posNextToken = (saved && !isNaN(saved) && saved >= 109) ? saved : 109;
+            localStorage.setItem("pos_next_token", posNextToken.toString());
+        }
         const tokenStr = '#' + String(posNextToken);
         const statusToken = document.getElementById("statusNextToken");
         if (statusToken) {
