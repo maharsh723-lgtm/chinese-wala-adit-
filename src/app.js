@@ -3992,10 +3992,21 @@ function initApp() {
                 }
             });
 
+            let billNumDisplay = '';
+            if (order.tokenNumber !== undefined && order.tokenNumber !== null && parseInt(order.tokenNumber) > 0) {
+                billNumDisplay = `#${order.tokenNumber}`;
+            } else if (order.orderNumber) {
+                billNumDisplay = order.orderNumber.startsWith('#') ? order.orderNumber : `#${order.orderNumber}`;
+            } else if (order.kotNumber) {
+                billNumDisplay = order.kotNumber;
+            } else {
+                billNumDisplay = `#${order.id}`;
+            }
+
             liveBills.push({
                 id: order.id,
                 orderTime: order.timestamp || (order.date + (order.time ? `T${order.time}` : '')),
-                tokenNumber: order.tokenNumber !== undefined && order.tokenNumber !== null ? `#${String(order.tokenNumber)}` : (order.kotNumber || `#${order.orderNumber || order.id}`),
+                tokenNumber: billNumDisplay,
                 store: order.store || 'VESU',
                 orderType: order.orderType || 'Dine In',
                 tableName: order.tableName,
@@ -10994,9 +11005,22 @@ function initApp() {
             // Push to local list for immediate display
             posOrders.push({
                 id: result.order.id,
+                date: result.order.date,
+                time: result.order.time,
                 timestamp: result.order.date + 'T' + result.order.time,
-                orderNumber: result.order.kotNumber,
+                orderNumber: `#${posNextToken}`,
+                tokenNumber: posNextToken,
+                kotNumber: result.order.kotNumber,
                 store: getPOSStore(),
+                customerName: activeCust?.name || (posEditingOrder?.customerName) || 'Walk-in Guest',
+                customerPhone: enteredPhone || (activeCust?.phone) || (posEditingOrder?.customerPhone) || '',
+                orderType: posSelectedOrderType,
+                tableName: orderPayload.tableName,
+                subtotal: subtotal,
+                tax: tax,
+                discount: discount,
+                serviceCharge: serviceCharge,
+                grandTotal: grandTotal,
                 paymentMethod: paymentMethod
             });
             posCart.forEach(item => {
@@ -11270,15 +11294,20 @@ function initApp() {
 
                     const generateKOT = (items, title) => {
                         if (items.length === 0) return '';
+                        const kotDisplay = order.kotNumber || 'KOT-01';
+                        const tokenDisplay = order.tokenNumber ? `#${order.tokenNumber}` : (order.dToken ? `#${order.dToken}` : (order.tableName || `#${order.id.substring(0,6)}`));
                         return `
                             <div style="text-align:center; margin-top: 30px; font-weight: bold; font-size: 12px; letter-spacing: 2px;">✂ --- TEAR HERE --- ✂</div>
                             <div class="kot-print-section" style="margin-top: 10px; padding-top: 20px; border-top: 2px dashed #000;">
                                 <div style="text-align:center; font-weight: 900; font-size: 18px; margin-bottom: 4px;">BADI KATORI</div>
-                                <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 12px;">${title}</div>
+                                <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 8px;">${title}</div>
                                 
-                                <div style="text-align:center; margin-bottom:12px;">
-                                    <span style="font-size: 20px; font-weight: 900; border: 2px solid #000; padding: 4px 12px; border-radius: 4px;">
-                                        TOKEN: #${order.tokenNumber || order.dToken || order.tableName || order.id.substring(0,8)}
+                                <div style="text-align:center; margin-bottom:10px; display:flex; justify-content:center; gap:8px; align-items:center;">
+                                    <span style="font-size: 16px; font-weight: 900; background: #000; color: #fff; padding: 3px 10px; border-radius: 4px;">
+                                        ${kotDisplay}
+                                    </span>
+                                    <span style="font-size: 18px; font-weight: 900; border: 2px solid #000; padding: 2px 10px; border-radius: 4px;">
+                                        TOKEN: ${tokenDisplay}
                                     </span>
                                 </div>
 
