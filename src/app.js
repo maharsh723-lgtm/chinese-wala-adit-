@@ -3532,55 +3532,108 @@ function initApp() {
     // ==============================================
     // SCREEN 14.8: DAILY EXPENSES
     // ==============================================
+    let selectedExpenseFilterDate = getTodayDateStr(); // defaults to today, null or 'ALL' for all dates
+
     window.renderDailyExpensesScreen = renderDailyExpensesScreen;
     function renderDailyExpensesScreen() {
         const tbody = document.getElementById("dailyExpensesTableBody");
         const totalDisplay = document.getElementById("dailyExpenseTotalDisplay");
+        const heading = document.getElementById("dailyExpenseListHeading");
+        const activeDateLabel = document.getElementById("dailyExpenseActiveDateLabel");
+        const dateInput = document.getElementById("filterExpenseDate");
         if (!tbody || !totalDisplay) return;
+        
+        if (dateInput && !dateInput.value) {
+            dateInput.value = selectedExpenseFilterDate || getTodayDateStr();
+        }
         
         const todayStr = getTodayDateStr();
         
-        let todayExpenses = expenses.filter(e => e.date === todayStr);
+        // Filter expenses based on selected date
+        let filteredExpenses = [...expenses];
         if (currentRole === "bm") {
-            todayExpenses = todayExpenses.filter(e => e.store === currentStore);
+            filteredExpenses = filteredExpenses.filter(e => e.store === currentStore);
         }
         
-        // Sort latest first
-        todayExpenses.sort((a, b) => b.id.localeCompare(a.id));
+        if (selectedExpenseFilterDate && selectedExpenseFilterDate !== 'ALL') {
+            filteredExpenses = filteredExpenses.filter(e => e.date === selectedExpenseFilterDate);
+            if (activeDateLabel) {
+                if (selectedExpenseFilterDate === todayStr) {
+                    activeDateLabel.textContent = `Showing: Today (${todayStr})`;
+                } else {
+                    const dObj = new Date(selectedExpenseFilterDate);
+                    const formatted = isNaN(dObj.getTime()) ? selectedExpenseFilterDate : dObj.toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+                    activeDateLabel.textContent = `Showing: ${formatted}`;
+                }
+            }
+        } else {
+            if (activeDateLabel) activeDateLabel.textContent = "Showing: All Recorded Dates";
+        }
+        
+        // Sort latest date and ID first
+        filteredExpenses.sort((a, b) => {
+            if (b.date !== a.date) return (b.date || '').localeCompare(a.date || '');
+            return (b.id || '').localeCompare(a.id || '');
+        });
         
         tbody.innerHTML = "";
         let total = 0;
         
-        if (todayExpenses.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-tertiary);">No expenses logged today.</td></tr>`;
+        if (filteredExpenses.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--text-tertiary);">No expenses found for this date.</td></tr>`;
         } else {
-            todayExpenses.forEach(exp => {
+            filteredExpenses.forEach(exp => {
                 total += parseFloat(exp.amount) || 0;
                 const row = document.createElement("tr");
-                let paymentBadgeColor = (exp.paymentMethod || "Cash").toLowerCase().includes('cash') ? 'var(--orange-primary)' : 'var(--success)';
-                let paymentBadgeBg = (exp.paymentMethod || "Cash").toLowerCase().includes('cash') ? 'rgba(249, 115, 22, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+                const paymentLower = (exp.paymentMethod || "Cash").toLowerCase();
+                let paymentBadgeColor = paymentLower.includes('cash') ? 'var(--orange-primary)' : 'var(--success)';
+                let paymentBadgeBg = paymentLower.includes('cash') ? 'rgba(249, 115, 22, 0.1)' : 'rgba(16, 185, 129, 0.1)';
                 
+                const storeBadge = exp.store ? `<span class="pill-badge" style="background:var(--bg-hover); font-size:0.75rem; margin-right:4px;">${exp.store}</span>` : '';
+
                 row.innerHTML = `
-                    <td style="font-weight:700;">${exp.category || "General"}</td>
-                    <td>${exp.description || ""}</td>
-                    <td><span class="pill-badge" style="background: ${paymentBadgeBg}; color: ${paymentBadgeColor}; border: 1px solid ${paymentBadgeColor};">${exp.paymentMethod || 'Cash'}</span></td>
-                    <td style="color:var(--text-secondary); font-size:0.85rem;">${exp.addedBy || "Unknown"}</td>
-                    <td style="text-align:right; font-weight:700; color:var(--danger);">₹${parseFloat(exp.amount).toLocaleString('en-IN')}</td>
-                    <td style="text-align:right;"><button class="saas-btn saas-btn-danger" style="padding:4px 8px; font-size:0.8rem;" onclick="window.deleteExpense('${exp.id}')">Delete</button></td>
+                    <td style="font-family:monospace; font-size:0.85rem; color:var(--text-secondary); white-space:nowrap;">${exp.date || '--'}</td>
+                    <td style="font-weight:700; color:var(--text-primary);">${exp.category || "General"}</td>
+                    <td style="color:var(--text-secondary);">${exp.description || "-"}</td>
+                    <td><span class="pill-badge" style="background: ${paymentBadgeBg}; color: ${paymentBadgeColor}; border: 1px solid ${paymentBadgeColor}; font-weight:700; font-size:0.75rem;">${exp.paymentMethod || 'Cash'}</span></td>
+                    <td style="color:var(--text-secondary); font-size:0.85rem;">${storeBadge}${exp.addedBy || "Staff"}</td>
+                    <td style="text-align:right; font-weight:800; color:var(--danger); font-size:0.95rem;">₹${parseFloat(exp.amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style="text-align:center; white-space:nowrap;">
+                        <div style="display:inline-flex; gap:6px; align-items:center;">
+                            <button type="button" class="saas-btn saas-btn-primary" style="padding:4px 8px; font-size:0.75rem; background:#3b82f6; color:#fff; font-weight:700; border:none; border-radius:4px; cursor:pointer;" onclick="window.openEditExpenseModal('${exp.id}')">Edit</button>
+                            <button type="button" class="saas-btn saas-btn-danger" style="padding:4px 8px; font-size:0.75rem; background:#ef4444; color:#fff; font-weight:700; border:none; border-radius:4px; cursor:pointer;" onclick="window.deleteExpense('${exp.id}')">Delete</button>
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(row);
             });
         }
         
-        totalDisplay.textContent = total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+        totalDisplay.textContent = total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
+
+    window.openEditExpenseModal = function(id) {
+        const exp = expenses.find(e => e.id === id);
+        if (!exp) return alert("Expense not found!");
+
+        document.getElementById("editExpenseId").value = exp.id;
+        document.getElementById("editExpenseDate").value = exp.date || getTodayDateStr();
+        document.getElementById("editExpenseCategory").value = exp.category || "General";
+        document.getElementById("editExpenseDescription").value = exp.description || "";
+        document.getElementById("editExpensePayment").value = exp.paymentMethod || "Cash";
+        document.getElementById("editExpenseAmount").value = exp.amount || 0;
+
+        const modal = document.getElementById("modalEditExpense");
+        if (modal) modal.style.display = "flex";
+    };
 
     window.deleteExpense = async function(id) {
         if (!confirm("Are you sure you want to delete this expense?")) return;
         try {
-            const res = await fetch(`/api/expenses/${id}`, {
+            const token = localStorage.getItem("bk_jwt_token") || localStorage.getItem("bk_token") || "";
+            const res = await fetch(`${API_BASE}/api/expenses/${id}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}` }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 expenses = expenses.filter(e => e.id !== id);
@@ -3594,8 +3647,52 @@ function initApp() {
         }
     };
 
-    // Add Expense Form Handler
+    // Daily Expense Filters and Edit Form Handlers
     document.addEventListener("DOMContentLoaded", () => {
+        // Date filter change handler
+        const filterDateInput = document.getElementById("filterExpenseDate");
+        if (filterDateInput) {
+            filterDateInput.value = getTodayDateStr();
+            filterDateInput.addEventListener("change", (e) => {
+                selectedExpenseFilterDate = e.target.value;
+                renderDailyExpensesScreen();
+            });
+        }
+
+        // Preset buttons: Today
+        const btnToday = document.getElementById("btnExpenseQuickToday");
+        if (btnToday) {
+            btnToday.addEventListener("click", () => {
+                const today = getTodayDateStr();
+                selectedExpenseFilterDate = today;
+                if (filterDateInput) filterDateInput.value = today;
+                renderDailyExpensesScreen();
+            });
+        }
+
+        // Preset buttons: Yesterday
+        const btnYesterday = document.getElementById("btnExpenseQuickYesterday");
+        if (btnYesterday) {
+            btnYesterday.addEventListener("click", () => {
+                const d = new Date();
+                d.setDate(d.getDate() - 1);
+                const yestStr = d.toLocaleDateString('en-CA');
+                selectedExpenseFilterDate = yestStr;
+                if (filterDateInput) filterDateInput.value = yestStr;
+                renderDailyExpensesScreen();
+            });
+        }
+
+        // Preset buttons: All Dates
+        const btnAll = document.getElementById("btnExpenseQuickAll");
+        if (btnAll) {
+            btnAll.addEventListener("click", () => {
+                selectedExpenseFilterDate = 'ALL';
+                renderDailyExpensesScreen();
+            });
+        }
+
+        // Add Expense Form Handler
         const expenseForm = document.getElementById("formAddDailyExpense");
         if (expenseForm) {
             expenseForm.addEventListener("submit", async (e) => {
@@ -3619,20 +3716,21 @@ function initApp() {
                     addedBy: currentUser ? currentUser.name : "System"
                 };
 
+                const expId = 'exp-' + Date.now();
                 // Push locally
                 expenses.push({
-                    id: 'exp-' + Date.now(),
+                    id: expId,
                     ...payload
                 });
 
                 // Save to server
                 try {
-                    const reqToken = localStorage.getItem("bk_token") || sessionStorage.getItem("bk_token") || "";
-                    await fetch('/api/expenses', {
+                    const token = localStorage.getItem("bk_jwt_token") || localStorage.getItem("bk_token") || "";
+                    await fetch(`${API_BASE}/api/expenses`, {
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + reqToken
+                            'Authorization': 'Bearer ' + token
                         },
                         body: JSON.stringify(payload)
                     });
@@ -3642,6 +3740,8 @@ function initApp() {
 
                 expenseForm.reset();
                 document.getElementById("dailyExpenseDate").value = getTodayDateStr(); // reset date
+                selectedExpenseFilterDate = dateVal;
+                if (filterDateInput) filterDateInput.value = dateVal;
                 
                 if (typeof window.renderDailyExpensesScreen === "function") {
                     window.renderDailyExpensesScreen();
@@ -3656,6 +3756,60 @@ function initApp() {
             if (dateInput) {
                 dateInput.value = getTodayDateStr();
             }
+        }
+
+        // Edit Expense Form Handler
+        const editForm = document.getElementById("formEditDailyExpense");
+        if (editForm) {
+            editForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const id = document.getElementById("editExpenseId").value;
+                const dateVal = document.getElementById("editExpenseDate").value;
+                const catVal = document.getElementById("editExpenseCategory").value;
+                const descVal = document.getElementById("editExpenseDescription").value;
+                const payVal = document.getElementById("editExpensePayment").value;
+                const amtVal = parseFloat(document.getElementById("editExpenseAmount").value);
+
+                const existingExp = expenses.find(x => x.id === id);
+                const payload = {
+                    date: dateVal,
+                    category: catVal,
+                    description: descVal,
+                    paymentMethod: payVal,
+                    amount: amtVal,
+                    store: existingExp ? existingExp.store : getPOSStore()
+                };
+
+                // Update locally
+                if (existingExp) {
+                    existingExp.date = dateVal;
+                    existingExp.category = catVal;
+                    existingExp.description = descVal;
+                    existingExp.paymentMethod = payVal;
+                    existingExp.amount = amtVal;
+                }
+
+                // Update on server
+                try {
+                    const token = localStorage.getItem("bk_jwt_token") || localStorage.getItem("bk_token") || "";
+                    await fetch(`${API_BASE}/api/expenses/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                } catch(err) {
+                    console.error("Failed to update expense on server", err);
+                }
+
+                const modal = document.getElementById("modalEditExpense");
+                if (modal) modal.style.display = "none";
+
+                renderDailyExpensesScreen();
+                alert("Expense updated successfully!");
+            });
         }
     });
 

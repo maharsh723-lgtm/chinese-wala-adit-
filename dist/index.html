@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
     <script defer src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-  <script type="module" crossorigin src="./assets/index-Dh_9BgKf.js"></script>
+  <script type="module" crossorigin src="./assets/index-CJkJ59yZ.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-jnZL_ppJ.css">
 </head>
 <body>
@@ -3370,21 +3370,32 @@
                         
                         <!-- Expense List -->
                         <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-md); padding: 24px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                                <h3 style="font-weight:800;">Today's Logged Expenses</h3>
-                                <div style="font-weight:700; font-size:1.1rem; color:var(--danger);">Total: ₹<span id="dailyExpenseTotalDisplay">0.00</span></div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                                <div>
+                                    <h3 style="font-weight:800; margin:0;" id="dailyExpenseListHeading">Expenses for Selected Date</h3>
+                                    <span style="font-size:0.8rem; color:var(--text-tertiary);" id="dailyExpenseActiveDateLabel">Showing: Today</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <label style="font-weight:700; font-size:0.85rem; color:var(--text-secondary);">View Date:</label>
+                                    <input type="date" id="filterExpenseDate" class="saas-input" style="width:145px; padding:6px 10px; font-weight:600;">
+                                    <button type="button" class="saas-btn" id="btnExpenseQuickToday" style="padding:6px 10px; font-size:0.8rem; background:var(--bg-hover);">Today</button>
+                                    <button type="button" class="saas-btn" id="btnExpenseQuickYesterday" style="padding:6px 10px; font-size:0.8rem; background:var(--bg-hover);">Yesterday</button>
+                                    <button type="button" class="saas-btn" id="btnExpenseQuickAll" style="padding:6px 10px; font-size:0.8rem; background:var(--bg-hover);">All Dates</button>
+                                </div>
+                                <div style="font-weight:800; font-size:1.15rem; color:var(--danger); background:rgba(239, 68, 68, 0.1); padding:6px 12px; border-radius:6px; border:1px solid rgba(239, 68, 68, 0.2);">Total: ₹<span id="dailyExpenseTotalDisplay">0.00</span></div>
                             </div>
                             
                             <div class="saas-table-container">
                                 <table class="saas-table">
                                     <thead>
                                         <tr>
+                                            <th>Date</th>
                                             <th>Category</th>
                                             <th>Description</th>
                                             <th>Paid Via</th>
-                                            <th>Added By</th>
+                                            <th>Outlet / Added By</th>
                                             <th style="text-align:right;">Amount (₹)</th>
-                                            <th style="text-align:right;">Action</th>
+                                            <th style="text-align:center;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="dailyExpensesTableBody">
@@ -6450,6 +6461,80 @@
                     </div>
                 </div>
                 <button type="submit" class="saas-btn saas-btn-primary" style="width: 100%; margin-top: 12px; background: #c29f68; color: #000; font-weight: 800; border: none; padding: 10px;">Record Shift Log</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Expense -->
+    <div class="modal-overlay" id="modalEditExpense" style="z-index: 10000; display: none;">
+        <div class="modal-content" style="max-width: 480px; width: 95%; background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-lg); border-radius: var(--radius-md); padding: 24px;">
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 style="font-weight: 800; display:flex; align-items:center; gap:8px; margin:0;"><i data-lucide="edit-3"></i> Edit Daily Expense</h3>
+                <div class="modal-close" onclick="closeModal('modalEditExpense')" style="cursor: pointer; color: var(--text-tertiary);">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </div>
+            </div>
+            <form id="formEditDailyExpense" style="display: flex; flex-direction: column; gap: 14px;">
+                <input type="hidden" id="editExpenseId">
+                <div class="saas-form-group">
+                    <label style="font-weight:700; font-size:0.85rem; margin-bottom:4px; display:block;">Date</label>
+                    <input type="date" id="editExpenseDate" class="saas-input" required>
+                </div>
+                <div class="saas-form-group">
+                    <label style="font-weight:700; font-size:0.85rem; margin-bottom:4px; display:block;">Category</label>
+                    <select id="editExpenseCategory" class="saas-select" required>
+                        <option value="AATA PURI">AATA PURI</option>
+                        <option value="Advance (SALARY A/c)">Advance (SALARY A/c)</option>
+                        <option value="Advertisement">Advertisement</option>
+                        <option value="Beverages (from CK factory)">Beverages (from CK factory)</option>
+                        <option value="COKE - Cold drinks & Kinley (Bottled Water)">COKE - Cold drinks & Kinley (Bottled Water)</option>
+                        <option value="COMMISSARY SUPPLY (CK - FACTORY)">COMMISSARY SUPPLY (CK - FACTORY)</option>
+                        <option value="COMMISSION For Change">COMMISSION For Change</option>
+                        <option value="Conveyance Expense ( RAPIDO PORTER)">Conveyance Expense ( RAPIDO PORTER)</option>
+                        <option value="Cooking Water 20 Ltr. Jars">Cooking Water 20 Ltr. Jars</option>
+                        <option value="Dahi (Matangi Dairy)">Dahi (Matangi Dairy)</option>
+                        <option value="DELIVERY VAN EXPENSES ( c/o C.K.)">DELIVERY VAN EXPENSES ( c/o C.K.)</option>
+                        <option value="DISPOSABLE Packing Material">DISPOSABLE Packing Material</option>
+                        <option value="Electricity Bills of Shops">Electricity Bills of Shops</option>
+                        <option value="FRUITS">FRUITS</option>
+                        <option value="Gas Fuel">Gas Fuel</option>
+                        <option value="HOUSEKEEPING MATERIAL">HOUSEKEEPING MATERIAL</option>
+                        <option value="ICE">ICE</option>
+                        <option value="Internet Broadband Monthly Expenses">Internet Broadband Monthly Expenses</option>
+                        <option value="KULCHE">KULCHE</option>
+                        <option value="Misc. Incidental Exp.">Misc. Incidental Exp.</option>
+                        <option value="Namkin">Namkin</option>
+                        <option value="Oil, Butter, Ghee">Oil, Butter, Ghee</option>
+                        <option value="Other Food Items">Other Food Items</option>
+                        <option value="Pav/Buns (For Misal & Bun Tikki)">Pav/Buns (For Misal & Bun Tikki)</option>
+                        <option value="Salary">Salary</option>
+                        <option value="Shop Equipment MAINTAINENCE">Shop Equipment MAINTAINENCE</option>
+                        <option value="Shop Rent">Shop Rent</option>
+                        <option value="Staff Food Exp.">Staff Food Exp.</option>
+                        <option value="Stationary Printing Xerox Etc">Stationary Printing Xerox Etc</option>
+                        <option value="Vegetables">Vegetables</option>
+                    </select>
+                </div>
+                <div class="saas-form-group">
+                    <label style="font-weight:700; font-size:0.85rem; margin-bottom:4px; display:block;">Description / Note</label>
+                    <input type="text" id="editExpenseDescription" class="saas-input" required>
+                </div>
+                <div class="saas-form-group">
+                    <label style="font-weight:700; font-size:0.85rem; margin-bottom:4px; display:block;">Payment Method</label>
+                    <select id="editExpensePayment" class="saas-select" required>
+                        <option value="Cash">Cash (Drawer)</option>
+                        <option value="UPI">UPI / Online</option>
+                        <option value="Card">Credit Card</option>
+                    </select>
+                </div>
+                <div class="saas-form-group">
+                    <label style="font-weight:700; font-size:0.85rem; margin-bottom:4px; display:block;">Amount (₹)</label>
+                    <input type="number" id="editExpenseAmount" class="saas-input" min="1" step="0.01" required>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <button type="button" class="saas-btn" style="flex:1; background:var(--bg-hover);" onclick="closeModal('modalEditExpense')">Cancel</button>
+                    <button type="submit" class="saas-btn saas-btn-primary" style="flex:2;">Save Changes</button>
+                </div>
             </form>
         </div>
     </div>

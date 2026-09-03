@@ -829,6 +829,33 @@ app.post('/api/expenses', authenticateToken, (req, res) => {
   }
 });
 
+app.put('/api/expenses/:id', authenticateToken, (req, res) => {
+  try {
+    const id = req.params.id;
+    const { category, amount, date, store, description, paymentMethod } = req.body;
+    const dateStr = date || new Date().toISOString().split('T')[0];
+
+    db.prepare(`
+      UPDATE expenses 
+      SET category = ?, amount = ?, date = ?, store = ?, description = ?, paymentMethod = ?
+      WHERE id = ?
+    `).run(category, parseFloat(amount), dateStr, store, description, paymentMethod || 'Cash', id);
+
+    // Update or re-insert corresponding transaction
+    db.prepare(`
+      UPDATE transactions 
+      SET branch_id = ?, category = ?, amount = ?, date = ?
+      WHERE id = ?
+    `).run(store, category, parseFloat(amount), dateStr, 'exp-' + id);
+
+    if (io) io.emit('pl_update');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error updating expense:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.delete('/api/expenses/:id', authenticateToken, (req, res) => {
   try {
     const id = req.params.id;
