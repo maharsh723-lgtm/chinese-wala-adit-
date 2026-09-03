@@ -9298,6 +9298,34 @@ function initApp() {
         if (window.lucide) window.lucide.createIcons();
     }
 
+    function isWaterBottleItem(item) {
+        if (!item) return false;
+        const name = (item.productName || item.name || '').trim().toLowerCase();
+        const id = (item.productId || item.id || '').trim().toLowerCase();
+        // Exclude water bottles, water bottle products, and standard packaged water from discount
+        return id === 'pos-p-130' || id === 'prod-water' || name === 'water' || name === 'water bottle' || name === 'packaged water' || name === 'mineral water';
+    }
+
+    function calculateCartSubtotals() {
+        let totalSubtotal = 0;
+        let discountableSubtotal = 0;
+        posCart.forEach(item => {
+            let itemPrice = item.price;
+            if (item.modifiers && item.modifiers.length > 0) {
+                (item.modifiers || []).forEach(modName => {
+                    const modInfo = posModifiers.find(m => m.name === modName);
+                    if (modInfo) itemPrice += modInfo.price;
+                });
+            }
+            const itemSubtotal = itemPrice * item.quantity;
+            totalSubtotal += itemSubtotal;
+            if (!isWaterBottleItem(item)) {
+                discountableSubtotal += itemSubtotal;
+            }
+        });
+        return { totalSubtotal, discountableSubtotal };
+    }
+
     function renderPosCartList() {
         const cartList = document.getElementById("posCartItemsList");
         if (!cartList) return;
@@ -9351,7 +9379,7 @@ function initApp() {
         }
         
         let listHtml = '';
-        let subtotal = 0;
+        const { totalSubtotal: subtotal, discountableSubtotal } = calculateCartSubtotals();
         
         posCart.forEach((item, index) => {
             let itemPrice = item.price;
@@ -9363,7 +9391,6 @@ function initApp() {
             }
             
             const itemSubtotal = itemPrice * item.quantity;
-            subtotal += itemSubtotal;
             
             const product = posProducts.find(p => p.id === item.productId) || {};
             const imgUrl = product.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100&auto=format&fit=crop&q=60';
@@ -9414,11 +9441,11 @@ function initApp() {
         const tax = 0;
         const serviceCharge = 0;
         
-        // 20% flat discount on overall bill
-        let discount = Math.round(subtotal * 0.20 * 100) / 100;
+        // 20% flat discount on eligible items (excluding Water Bottles)
+        let discount = Math.round(discountableSubtotal * 0.20 * 100) / 100;
         if (posAppliedCoupon) {
             if (posAppliedCoupon.discountType === 'percent') {
-                discount = Math.round(subtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
+                discount = Math.round(discountableSubtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
             } else {
                 discount = posAppliedCoupon.discountValue;
             }
@@ -10217,18 +10244,10 @@ function initApp() {
                     if (modal) modal.style.display = "none";
                     
                     if (method === 'Split') {
-                        let subtotal = 0;
-                        posCart.forEach(item => {
-                            let itemPrice = item.price;
-                            (item.modifiers || []).forEach(modName => {
-                                const modInfo = posModifiers.find(m => m.name === modName);
-                                if (modInfo) itemPrice += modInfo.price;
-                            });
-                            subtotal += itemPrice * item.quantity;
-                        });
-                        let discount = Math.round(subtotal * 0.20 * 100) / 100;
+                        const { totalSubtotal: subtotal, discountableSubtotal } = calculateCartSubtotals();
+                        let discount = Math.round(discountableSubtotal * 0.20 * 100) / 100;
                         if (posAppliedCoupon) {
-                            if (posAppliedCoupon.discountType === 'percent') discount = Math.round(subtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
+                            if (posAppliedCoupon.discountType === 'percent') discount = Math.round(discountableSubtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
                             else discount = posAppliedCoupon.discountValue;
                         }
                         const grandTotal = Math.max(0, subtotal - discount);
@@ -10373,23 +10392,15 @@ function initApp() {
             activeCust.phone = enteredPhone;
         }
         
-        let subtotal = 0;
-        posCart.forEach(item => {
-            let itemPrice = item.price;
-            (item.modifiers || []).forEach(modName => {
-                const modInfo = posModifiers.find(m => m.name === modName);
-                if (modInfo) itemPrice += modInfo.price;
-            });
-            subtotal += itemPrice * item.quantity;
-        });
+        const { totalSubtotal: subtotal, discountableSubtotal } = calculateCartSubtotals();
         
         const tax = 0;
         const serviceCharge = 0;
         
-        let discount = Math.round(subtotal * 0.20 * 100) / 100;
+        let discount = Math.round(discountableSubtotal * 0.20 * 100) / 100;
         if (posAppliedCoupon) {
             if (posAppliedCoupon.discountType === 'percent') {
-                discount = Math.round(subtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
+                discount = Math.round(discountableSubtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
             } else {
                 discount = posAppliedCoupon.discountValue;
             }
