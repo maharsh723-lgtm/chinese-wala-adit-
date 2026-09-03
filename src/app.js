@@ -506,14 +506,22 @@ function initApp() {
                             const match = o.kotNumber.match(/\d+/);
                             if (match) tok = parseInt(match[0]) || 0;
                         }
+                        if (tok >= 130 && tok <= 138) {
+                            // Skip phantom unplaced test orders
+                            return;
+                        }
                         if (tok > maxTokenFound) maxTokenFound = tok;
                     });
                     
                     const savedLocal = parseInt(localStorage.getItem("pos_next_token") || "109");
-                    if (maxTokenFound > 0 && maxTokenFound >= savedLocal) {
+                    let candidateToken = savedLocal;
+                    if (candidateToken >= 130 && candidateToken <= 138) {
+                        candidateToken = 129;
+                    }
+                    if (maxTokenFound > 0 && maxTokenFound >= candidateToken) {
                         posNextToken = maxTokenFound + 1;
-                    } else if (savedLocal >= 109) {
-                        posNextToken = savedLocal;
+                    } else if (candidateToken >= 109) {
+                        posNextToken = candidateToken;
                     } else {
                         posNextToken = 109;
                     }
@@ -3998,24 +4006,36 @@ function initApp() {
         // Sort chronologically ascending to calculate uninterrupted sequential bill numbers
         filteredStoreOrders.sort((a, b) => a.timeVal - b.timeVal);
 
-        // Find the lowest explicit token or base
+        // Filter out any unplaced test orders (e.g. dummy orders or orders numbered 130 to 138)
+        const validStoreOrders = filteredStoreOrders.filter(item => {
+            const ord = item.order;
+            const tokNum = parseInt(ord.tokenNumber) || parseInt((ord.orderNumber || '').replace(/[^0-9]/g, '')) || 0;
+            if (tokNum >= 130 && tokNum <= 138) {
+                return false;
+            }
+            return true;
+        });
+
+        // Continue consecutive bill numbering cleanly starting from 109 / 129
         let seqRunner = 109;
-        const firstWithTokenIdx = filteredStoreOrders.findIndex(item => item.order.tokenNumber && parseInt(item.order.tokenNumber) >= 100);
+        const firstWithTokenIdx = validStoreOrders.findIndex(item => item.order.tokenNumber && parseInt(item.order.tokenNumber) >= 100);
         if (firstWithTokenIdx !== -1) {
-            const firstToken = parseInt(filteredStoreOrders[firstWithTokenIdx].order.tokenNumber);
-            seqRunner = Math.max(1, firstToken - firstWithTokenIdx);
+            const firstToken = parseInt(validStoreOrders[firstWithTokenIdx].order.tokenNumber);
+            seqRunner = Math.max(109, firstToken - firstWithTokenIdx);
         }
 
-        filteredStoreOrders.forEach((item, idx) => {
+        validStoreOrders.forEach((item, idx) => {
             const ord = item.order;
+            let tok = parseInt(ord.tokenNumber) || parseInt((ord.orderNumber || '').replace(/[^0-9]/g, '')) || 0;
+            
             let finalTokenStr = '';
-            if (ord.tokenNumber !== undefined && ord.tokenNumber !== null && parseInt(ord.tokenNumber) >= 100) {
-                finalTokenStr = `#${ord.tokenNumber}`;
-                seqRunner = parseInt(ord.tokenNumber) + 1;
-            } else if (ord.orderNumber && !ord.orderNumber.includes('order-') && parseInt(ord.orderNumber.replace(/[^0-9]/g, '')) >= 100) {
-                finalTokenStr = ord.orderNumber.startsWith('#') ? ord.orderNumber : `#${ord.orderNumber}`;
-                seqRunner = parseInt(ord.orderNumber.replace(/[^0-9]/g, '')) + 1;
+            if (tok >= 100 && !(tok >= 130 && tok <= 138)) {
+                finalTokenStr = `#${tok}`;
+                seqRunner = tok + 1;
             } else {
+                if (seqRunner >= 130 && seqRunner <= 138) {
+                    seqRunner = 139;
+                }
                 finalTokenStr = `#${seqRunner}`;
                 seqRunner++;
             }

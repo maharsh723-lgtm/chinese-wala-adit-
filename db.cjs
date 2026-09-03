@@ -476,8 +476,21 @@ try {
     CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses (date);
     CREATE INDEX IF NOT EXISTS idx_pos_audit_logs_timestamp ON pos_audit_logs (timestamp);
   `);
+// Clean up any test/phantom orders between 130 and 138
+try {
+  const phantomOrders = db.prepare(`
+    SELECT id FROM pos_orders 
+    WHERE (CAST(SUBSTR(id, INSTR(id, 'order-') + 6) AS INTEGER) >= 130 AND CAST(SUBSTR(id, INSTR(id, 'order-') + 6) AS INTEGER) <= 138)
+       OR (dToken IS NOT NULL AND (dToken LIKE '%130%' OR dToken LIKE '%131%' OR dToken LIKE '%132%' OR dToken LIKE '%133%' OR dToken LIKE '%134%' OR dToken LIKE '%135%' OR dToken LIKE '%136%' OR dToken LIKE '%137%' OR dToken LIKE '%138%'))
+  `).all();
+  if (phantomOrders.length > 0) {
+    const ids = phantomOrders.map(o => o.id);
+    const placeholders = ids.map(() => '?').join(',');
+    db.prepare(`DELETE FROM pos_orders WHERE id IN (${placeholders})`).run(...ids);
+    db.prepare(`DELETE FROM pos_order_items WHERE orderId IN (${placeholders})`).run(...ids);
+  }
 } catch(e) {
-  console.warn("Index creation notice:", e);
+  console.warn("Clean phantom orders note:", e);
 }
 
 
