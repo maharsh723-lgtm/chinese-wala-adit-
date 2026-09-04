@@ -10971,9 +10971,8 @@ function initApp() {
             orderNumber: `#${currentTokenForBill}`,
             tokenNumber: currentTokenForBill,
             kotNumber: posEditingOrder ? posEditingOrder.kotNumber : ((function() {
-                const todayOrdersCount = (posOrders || []).filter(o => (o.store || getPOSStore()) === getPOSStore() && (o.date === dateStr || (o.timestamp && o.timestamp.startsWith(dateStr)))).length;
-                const kitchenCount = (posKitchenOrders || []).filter(k => (k.store || getPOSStore()) === getPOSStore()).length;
-                const nextKotNum = Math.max(todayOrdersCount, kitchenCount) + 1;
+                const todayOrders = (posOrders || []).filter(o => (o.store || getPOSStore()) === getPOSStore() && (o.date === dateStr || (o.timestamp && o.timestamp.startsWith(dateStr))));
+                const nextKotNum = (todayOrders.length || 0) + 1;
                 return `KOT-${String(nextKotNum).padStart(2, '0')}`;
             })()),
             store: getPOSStore()
