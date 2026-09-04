@@ -11286,7 +11286,7 @@ function initApp() {
                 
                 <div style="text-align:center; font-size:10px; margin-top:8px;">
                     Thank you for dining at Badi Katori!<br>
-                    Live KOT: ${order.kotNumber || 'KOT-PENDING'}
+                    Live KOT: ${order.tokenNumber ? '#' + order.tokenNumber : (order.kotNumber || 'KOT-PENDING')}
                 </div>
                 </div>
                 
@@ -11308,7 +11308,7 @@ function initApp() {
                                 
                                 <div style="text-align:center; margin-bottom:10px; display:flex; justify-content:center; gap:8px; align-items:center;">
                                     <span style="font-size: 16px; font-weight: 900; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
-                                        ${kotDisplay}
+                                        KOT: ${tokenDisplay}
                                     </span>
                                     <span style="font-size: 16px; font-weight: 900; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
                                         TOKEN: ${tokenDisplay}
