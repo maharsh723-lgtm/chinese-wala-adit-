@@ -2078,6 +2078,9 @@ try {
 
   // Update existing individual branch manager passwords as well to simplify
   db.prepare("UPDATE employees SET password = ? WHERE roleKey = 'sm'").run(hashPassword("managerbk/09#"));
+
+  // Ensure all POS items including Kachori have available stock >= 100
+  db.prepare("UPDATE pos_products SET stock = 100 WHERE stock <= 0 OR stock IS NULL").run();
   
 } catch (err) {
   console.error("Migration Error adding login employees:", err);

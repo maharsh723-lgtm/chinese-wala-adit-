@@ -9704,19 +9704,23 @@ function initApp() {
             const favClass = p.isFavorite ? 'active' : '';
             const vegClass = p.isVeg ? 'veg' : 'non-veg';
             
-            let displayStock = p.stock;
-            if (p.ingredients && p.ingredients.length > 0) {
+            let displayStock = (p.stock !== undefined && p.stock !== null) ? p.stock : 100;
+            if (p.ingredients && Array.isArray(p.ingredients) && p.ingredients.length > 0) {
                 let minAvailable = Infinity;
+                let matchedIngredientsCount = 0;
                 p.ingredients.forEach(ing => {
                     const inv = inventory.find(i => (i.label||'').toLowerCase() === (ing.name||'').toLowerCase() && i.store === getPOSStore());
                     if (inv) {
-                        const portionAvailable = Math.floor(inv.stock / ing.qty);
+                        matchedIngredientsCount++;
+                        const portionAvailable = Math.floor(inv.stock / (ing.qty || 1));
                         if (portionAvailable < minAvailable) minAvailable = portionAvailable;
-                    } else {
-                        minAvailable = 0;
                     }
                 });
-                displayStock = minAvailable === Infinity ? 0 : minAvailable;
+                if (matchedIngredientsCount > 0 && minAvailable !== Infinity) {
+                    displayStock = minAvailable;
+                } else {
+                    displayStock = (p.stock !== undefined && p.stock !== null && p.stock > 0) ? p.stock : 100;
+                }
             }
             
             const isLowStock = displayStock > 0 && displayStock <= 5;
