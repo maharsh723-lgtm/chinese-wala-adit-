@@ -9641,19 +9641,21 @@ function initApp() {
         }
 
         // Check if out of stock
-        let displayStock = prod.stock;
-        if (prod.ingredients && prod.ingredients.length > 0) {
+        let displayStock = (prod.stock !== undefined && prod.stock !== null && prod.stock > 0) ? prod.stock : 100;
+        if (prod.ingredients && Array.isArray(prod.ingredients) && prod.ingredients.length > 0) {
             let minAvailable = Infinity;
+            let validInventoryCount = 0;
             prod.ingredients.forEach(ing => {
                 const inv = inventory.find(i => (i.label||'').toLowerCase() === (ing.name||'').toLowerCase() && i.store === getPOSStore());
-                if (inv) {
-                    const portionAvailable = Math.floor(inv.stock / ing.qty);
+                if (inv && inv.stock > 0) {
+                    validInventoryCount++;
+                    const portionAvailable = Math.floor(inv.stock / (ing.qty || 1));
                     if (portionAvailable < minAvailable) minAvailable = portionAvailable;
-                } else {
-                    minAvailable = 0;
                 }
             });
-            displayStock = minAvailable === Infinity ? 0 : minAvailable;
+            if (validInventoryCount === prod.ingredients.length && minAvailable !== Infinity && minAvailable > 0) {
+                displayStock = minAvailable;
+            }
         }
         
         if (displayStock === 0) {
