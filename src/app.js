@@ -10968,7 +10968,10 @@ function initApp() {
             items: [...posCart],
             orderNumber: `#${currentTokenForBill}`,
             tokenNumber: currentTokenForBill,
-            kotNumber: posEditingOrder ? posEditingOrder.kotNumber : `KOT-${String(currentTokenForBill).padStart(2, '0')}`,
+            kotNumber: posEditingOrder ? posEditingOrder.kotNumber : ((function() {
+                const currentStoreKots = (posKitchenOrders || []).filter(k => (k.store || getPOSStore()) === getPOSStore());
+                return `KOT-${String(currentStoreKots.length + 1).padStart(2, '0')}`;
+            })()),
             store: getPOSStore()
         };
 
@@ -11286,7 +11289,7 @@ function initApp() {
                 
                 <div style="text-align:center; font-size:10px; margin-top:8px;">
                     Thank you for dining at Badi Katori!<br>
-                    Live KOT: ${order.tokenNumber ? '#' + order.tokenNumber : (order.kotNumber || 'KOT-PENDING')}
+                    Live KOT: ${order.kotNumber || 'KOT-PENDING'}
                 </div>
                 </div>
                 
@@ -11308,7 +11311,7 @@ function initApp() {
                                 
                                 <div style="text-align:center; margin-bottom:10px; display:flex; justify-content:center; gap:8px; align-items:center;">
                                     <span style="font-size: 16px; font-weight: 900; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
-                                        KOT: ${tokenDisplay}
+                                        ${kotDisplay.startsWith('KOT') ? kotDisplay : 'KOT: ' + kotDisplay}
                                     </span>
                                     <span style="font-size: 16px; font-weight: 900; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
                                         TOKEN: ${tokenDisplay}
