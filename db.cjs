@@ -2082,6 +2082,27 @@ try {
   // Ensure all POS items including Kachori have available stock >= 100
   db.prepare("UPDATE pos_products SET stock = 100 WHERE stock <= 0 OR stock IS NULL").run();
   
+  // Seed/Replenish Kachori and Chaat raw bases across all store branches
+  const branches = ['VESU', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'];
+  const baseItems = ['Kachori', 'Samosa', 'Aloo Tikki', 'Pani Puri', 'Papdi', 'Bhalla', 'Dahi', 'Sonth Chutney', 'Green Chutney', 'Nylon Sev'];
+  
+  const checkInv = db.prepare("SELECT id, stock FROM inventory WHERE LOWER(label) = LOWER(?) AND store = ?");
+  const updateInv = db.prepare("UPDATE inventory SET stock = 500 WHERE id = ?");
+  const insertInv = db.prepare("INSERT INTO inventory (id, label, category, stock, unit, reorder, store, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'In Stock')");
+  
+  branches.forEach(storeName => {
+    baseItems.forEach(itemLabel => {
+      const existing = checkInv.get(itemLabel, storeName);
+      if (existing) {
+        if (existing.stock <= 0) {
+          updateInv.run(existing.id);
+        }
+      } else {
+        const invId = `inv-seed-${storeName.toLowerCase().replace(/\s+/g, '-')}-${itemLabel.toLowerCase().replace(/\s+/g, '-')}`;
+        insertInv.run(invId, itemLabel, 'Raw Materials', 500, 'Piece', 20, storeName);
+      }
+    });
+  });
 } catch (err) {
   console.error("Migration Error adding login employees:", err);
 }
