@@ -9944,8 +9944,8 @@ function initApp() {
         const tax = 0;
         const serviceCharge = 0;
         
-        // 20% flat discount on eligible items (excluding Water Bottles)
-        let discount = Math.round(discountableSubtotal * 0.20 * 100) / 100;
+        // Discount only applies if coupon is entered
+        let discount = 0;
         if (posAppliedCoupon) {
             if (posAppliedCoupon.discountType === 'percent') {
                 discount = Math.round(discountableSubtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
@@ -9974,8 +9974,12 @@ function initApp() {
         
         const discountRow = document.getElementById("posDiscountRow");
         if (discountRow) {
-            discountRow.style.display = 'flex';
-            updateTotalsDOM("posDiscount", `-₹${discount.toFixed(2)}`);
+            if (discount > 0) {
+                discountRow.style.display = 'flex';
+                updateTotalsDOM("posDiscount", `-₹${discount.toFixed(2)}`);
+            } else {
+                discountRow.style.display = 'none';
+            }
         }
         
         document.getElementById("posServiceChargeRow") && (document.getElementById("posServiceChargeRow").style.display = 'none');
@@ -10757,7 +10761,7 @@ function initApp() {
                     
                     if (method === 'Split') {
                         const { totalSubtotal: subtotal, discountableSubtotal } = calculateCartSubtotals();
-                        let discount = Math.round(discountableSubtotal * 0.20 * 100) / 100;
+                        let discount = 0;
                         if (posAppliedCoupon) {
                             if (posAppliedCoupon.discountType === 'percent') discount = Math.round(discountableSubtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
                             else discount = posAppliedCoupon.discountValue;
@@ -10909,7 +10913,7 @@ function initApp() {
         const tax = 0;
         const serviceCharge = 0;
         
-        let discount = Math.round(discountableSubtotal * 0.20 * 100) / 100;
+        let discount = 0;
         if (posAppliedCoupon) {
             if (posAppliedCoupon.discountType === 'percent') {
                 discount = Math.round(discountableSubtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
