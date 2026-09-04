@@ -3215,10 +3215,10 @@ Status: Pending Area Manager Signoff`;const a=`https://api.whatsapp.com/send?pho
                                 <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 8px;">${B}</div>
                                 
                                 <div style="text-align:center; margin-bottom:10px; display:flex; justify-content:center; gap:8px; align-items:center;">
-                                    <span style="font-size: 16px; font-weight: 900; background: #000; color: #fff; padding: 3px 10px; border-radius: 4px;">
+                                    <span style="font-size: 16px; font-weight: 900; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
                                         ${A}
                                     </span>
-                                    <span style="font-size: 18px; font-weight: 900; border: 2px solid #000; padding: 2px 10px; border-radius: 4px;">
+                                    <span style="font-size: 16px; font-weight: 900; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
                                         TOKEN: ${v}
                                     </span>
                                 </div>

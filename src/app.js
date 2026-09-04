@@ -11305,10 +11305,10 @@ function initApp() {
                                 <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 8px;">${title}</div>
                                 
                                 <div style="text-align:center; margin-bottom:10px; display:flex; justify-content:center; gap:8px; align-items:center;">
-                                    <span style="font-size: 16px; font-weight: 900; background: #000; color: #fff; padding: 3px 10px; border-radius: 4px;">
+                                    <span style="font-size: 16px; font-weight: 900; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
                                         ${kotDisplay}
                                     </span>
-                                    <span style="font-size: 18px; font-weight: 900; border: 2px solid #000; padding: 2px 10px; border-radius: 4px;">
+                                    <span style="font-size: 16px; font-weight: 900; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
                                         TOKEN: ${tokenDisplay}
                                     </span>
                                 </div>
