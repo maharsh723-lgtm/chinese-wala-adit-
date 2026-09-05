@@ -3903,8 +3903,55 @@ function initApp() {
         if (!tbody) return;
 
         const dateInput = document.getElementById("filterLiveSalesDate");
-        if (dateInput && !dateInput.value) {
-            dateInput.value = selectedLiveSalesFilterDate || getTodayDateStr();
+        if (dateInput) {
+            if (!dateInput.dataset.listenerBound) {
+                dateInput.dataset.listenerBound = "true";
+                dateInput.addEventListener("change", (e) => {
+                    selectedLiveSalesFilterDate = e.target.value;
+                    renderLiveSalesStream();
+                });
+            }
+            if (selectedLiveSalesFilterDate && selectedLiveSalesFilterDate !== 'ALL') {
+                dateInput.value = selectedLiveSalesFilterDate;
+            } else if (selectedLiveSalesFilterDate === 'ALL') {
+                dateInput.value = '';
+            } else if (!dateInput.value) {
+                dateInput.value = getTodayDateStr();
+            }
+        }
+
+        const btnToday = document.getElementById("btnLiveSalesQuickToday");
+        if (btnToday && !btnToday.dataset.listenerBound) {
+            btnToday.dataset.listenerBound = "true";
+            btnToday.addEventListener("click", () => {
+                const today = getTodayDateStr();
+                selectedLiveSalesFilterDate = today;
+                if (dateInput) dateInput.value = today;
+                renderLiveSalesStream();
+            });
+        }
+
+        const btnYesterday = document.getElementById("btnLiveSalesQuickYesterday");
+        if (btnYesterday && !btnYesterday.dataset.listenerBound) {
+            btnYesterday.dataset.listenerBound = "true";
+            btnYesterday.addEventListener("click", () => {
+                const d = new Date();
+                d.setDate(d.getDate() - 1);
+                const yestStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                selectedLiveSalesFilterDate = yestStr;
+                if (dateInput) dateInput.value = yestStr;
+                renderLiveSalesStream();
+            });
+        }
+
+        const btnAll = document.getElementById("btnLiveSalesQuickAll");
+        if (btnAll && !btnAll.dataset.listenerBound) {
+            btnAll.dataset.listenerBound = "true";
+            btnAll.addEventListener("click", () => {
+                selectedLiveSalesFilterDate = 'ALL';
+                if (dateInput) dateInput.value = '';
+                renderLiveSalesStream();
+            });
         }
 
         let liveBills = [];
@@ -3926,7 +3973,7 @@ function initApp() {
             if (selectedLiveSalesFilterDate === todayStr) {
                 dateLabelText = "Today";
             } else {
-                const dObj = new Date(selectedLiveSalesFilterDate);
+                const dObj = new Date(selectedLiveSalesFilterDate + 'T00:00:00');
                 dateLabelText = isNaN(dObj.getTime()) ? selectedLiveSalesFilterDate : dObj.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
             }
         } else {
@@ -3941,11 +3988,19 @@ function initApp() {
         // Process orders
         const filteredStoreOrders = [];
         (posOrders || []).forEach(order => {
-            if (currentRole === "bm" && order.store !== currentStore) return;
+            if (order.status === 'Refunded' || order.status === 'Cancelled') return;
             
+            // Store check
+            if (currentRole === "bm" && currentStore !== "All") {
+                const s1 = (order.store || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const s2 = (currentStore || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (s1 && s2 && !s1.includes(s2) && !s2.includes(s1)) return;
+            }
+            
+            // Date filter check
             if (selectedLiveSalesFilterDate && selectedLiveSalesFilterDate !== 'ALL') {
-                const matches = (order.date === selectedLiveSalesFilterDate) || (order.timestamp && order.timestamp.startsWith(selectedLiveSalesFilterDate));
-                if (!matches) return;
+                const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
+                if (orderDate !== selectedLiveSalesFilterDate) return;
             }
 
             billCount++;
@@ -3961,7 +4016,7 @@ function initApp() {
             // Count food and beverages
             (items || []).forEach(item => {
                 const qty = parseInt(item.quantity || item.qty || 1);
-                const prod = (posProducts || []).find(p => p.id === item.productId);
+                const prod = (posProducts || []).find(p => p.id === item.productId || (p.name && p.name.toLowerCase() === (item.productName || item.name || '').toLowerCase()));
                 if (prod && bevCategories.includes(prod.category)) {
                     bevCount += qty;
                 } else {
@@ -3980,12 +4035,11 @@ function initApp() {
         // Sort chronologically ascending to calculate uninterrupted sequential bill numbers
         filteredStoreOrders.sort((a, b) => a.timeVal - b.timeVal);
 
-        // Assign clean, continuous sequential numbers starting from 109: #109, #110, #111, #112...
         const baseStartingToken = 109;
 
         filteredStoreOrders.forEach((item, idx) => {
             const ord = item.order;
-            const consecutiveNum = baseStartingToken + idx;
+            const consecutiveNum = ord.tokenNumber ? ord.tokenNumber : (baseStartingToken + idx);
             const finalTokenStr = `#${consecutiveNum}`;
 
             liveBills.push({
@@ -4069,48 +4123,6 @@ function initApp() {
             tbody.appendChild(row);
         });
     }
-
-    // Initialize Live Sales Date Filter Event Listeners
-    document.addEventListener("DOMContentLoaded", () => {
-        const filterLiveDateInput = document.getElementById("filterLiveSalesDate");
-        if (filterLiveDateInput) {
-            filterLiveDateInput.value = getTodayDateStr();
-            filterLiveDateInput.addEventListener("change", (e) => {
-                selectedLiveSalesFilterDate = e.target.value;
-                renderLiveSalesStream();
-            });
-        }
-
-        const btnToday = document.getElementById("btnLiveSalesQuickToday");
-        if (btnToday) {
-            btnToday.addEventListener("click", () => {
-                const today = getTodayDateStr();
-                selectedLiveSalesFilterDate = today;
-                if (filterLiveDateInput) filterLiveDateInput.value = today;
-                renderLiveSalesStream();
-            });
-        }
-
-        const btnYesterday = document.getElementById("btnLiveSalesQuickYesterday");
-        if (btnYesterday) {
-            btnYesterday.addEventListener("click", () => {
-                const d = new Date();
-                d.setDate(d.getDate() - 1);
-                const yestStr = d.toLocaleDateString('en-CA');
-                selectedLiveSalesFilterDate = yestStr;
-                if (filterLiveDateInput) filterLiveDateInput.value = yestStr;
-                renderLiveSalesStream();
-            });
-        }
-
-        const btnAll = document.getElementById("btnLiveSalesQuickAll");
-        if (btnAll) {
-            btnAll.addEventListener("click", () => {
-                selectedLiveSalesFilterDate = 'ALL';
-                renderLiveSalesStream();
-            });
-        }
-    });
 
     window.exportLiveSalesItemReportToExcel = function() {
         // 1. Gather all filtered orders for the chosen date & active branch
