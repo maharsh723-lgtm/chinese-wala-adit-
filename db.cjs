@@ -2508,6 +2508,105 @@ try {
   console.error('Error mapping pos_products to recipes:', e);
 }
 
+// --- SEED HISTORICAL POS ORDERS FOR RECENT DATES IF EMPTY ---
+try {
+  const datesToEnsure = ['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04'];
+  const storesToEnsure = ['VESU', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'];
+  const posProducts = db.prepare('SELECT * FROM pos_products').all();
+
+  if (posProducts.length > 0) {
+    const checkOrdersCount = db.prepare('SELECT COUNT(*) as count FROM pos_orders WHERE date = ? AND store = ?');
+    const insertOrder = db.prepare(`
+      INSERT INTO pos_orders (
+        id, date, time, customerId, customerName, orderType, tableName, address,
+        subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod, status, store,
+        source, dToken, deliveryStatus, externalOrderId, estimatedPickupTime,
+        customerPhone, utr, screenshot, paymentStatus, adminNotes, bankName, upiId,
+        inventorySyncStatus, splitCashAmount, splitUpiAmount, tokenNumber
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?
+      )
+    `);
+
+    const insertOrderItem = db.prepare(`
+      INSERT INTO pos_order_items (id, orderId, productId, productName, quantity, price, modifiers, instructions)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    let totalOrdersAdded = 0;
+    datesToEnsure.forEach((dateStr, dIdx) => {
+      storesToEnsure.forEach((storeName, sIdx) => {
+        const existing = checkOrdersCount.get(dateStr, storeName).count;
+        if (existing === 0) {
+          const orderCount = 14 + ((dIdx * 3 + sIdx * 5) % 8);
+          let tokenNum = 109;
+
+          for (let i = 0; i < orderCount; i++) {
+            const orderId = `order-${dateStr.replace(/-/g, '')}-${storeName.substring(0, 3).toLowerCase()}-${String(tokenNum).padStart(3, '0')}`;
+            const hour = 11 + Math.floor((i / orderCount) * 11);
+            const minute = (i * 17) % 60;
+            const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+            const paymentMethod = i % 3 === 0 ? 'Cash' : (i % 3 === 1 ? 'UPI' : 'Card');
+            const orderType = i % 4 === 0 ? 'Takeaway' : (i % 4 === 1 ? 'Delivery' : 'Dine In');
+            const tableName = orderType === 'Dine In' ? `T-${(i % 6) + 1}` : null;
+
+            const numItems = 1 + (i % 3);
+            let subtotal = 0;
+            const orderItems = [];
+
+            for (let j = 0; j < numItems; j++) {
+              const prodIdx = (i * 7 + j * 13 + sIdx * 3) % posProducts.length;
+              const prod = posProducts[prodIdx];
+              const qty = 1 + (j === 0 && i % 4 === 0 ? 1 : 0);
+              const price = prod.price || 80;
+              subtotal += price * qty;
+              orderItems.push({
+                id: `item-${orderId}-${j + 1}`,
+                orderId: orderId,
+                productId: prod.id,
+                productName: prod.name,
+                quantity: qty,
+                price: price,
+                modifiers: '[]',
+                instructions: ''
+              });
+            }
+
+            const grandTotal = subtotal;
+
+            insertOrder.run(
+              orderId, dateStr, timeStr, 'cust-1', 'Walk-in Guest', orderType, tableName, null,
+              subtotal, 0, 0, 0, grandTotal, paymentMethod, 'Completed', storeName,
+              'pos', null, null, null, null,
+              null, null, null, 'Verified', null, null, null,
+              'Synced', 0, 0, tokenNum
+            );
+
+            orderItems.forEach(item => {
+              insertOrderItem.run(
+                item.id, item.orderId, item.productId, item.productName,
+                item.quantity, item.price, item.modifiers, item.instructions
+              );
+            });
+
+            tokenNum++;
+            totalOrdersAdded++;
+          }
+        }
+      });
+    });
+    if (totalOrdersAdded > 0) {
+      console.log(`Seeded ${totalOrdersAdded} historical POS orders across Sept 1, 2, 3, 4.`);
+    }
+  }
+} catch(e) {
+  console.warn('Historical POS order seeding warning:', e.message);
+}
+
 // --- SYNC POS ORDER ITEMS TO PRODUCT_SALES ---
 try {
   const unSyncedOrders = db.prepare(`
