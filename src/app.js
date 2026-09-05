@@ -3958,6 +3958,7 @@ function initApp() {
         let foodCount = 0;
         let bevCount = 0;
         let billCount = 0;
+        let deletedBillCount = 0;
         let totalRevenue = 0;
         const todayStr = getTodayDateStr();
         const bevCategories = ['Indian Coolers', 'Frappe', 'Hot Coffee Mix', 'Hot Tea', 'Milkshakes', 'Cheese Cake Shakes', 'Lassi', 'Beverages', 'Drinks', 'Coffee', 'Tea'];
@@ -3966,6 +3967,7 @@ function initApp() {
         const lblFood = document.getElementById("lbl-live-sales-food");
         const lblBev = document.getElementById("lbl-live-sales-bev");
         const lblBills = document.getElementById("lbl-live-sales-bills");
+        const lblDeleted = document.getElementById("lbl-live-sales-deleted");
         const lblRev = document.getElementById("lbl-live-sales-rev");
 
         let dateLabelText = "";
@@ -3983,13 +3985,12 @@ function initApp() {
         if (lblFood) lblFood.textContent = `Food Sold (${dateLabelText})`;
         if (lblBev) lblBev.textContent = `Beverages Sold (${dateLabelText})`;
         if (lblBills) lblBills.textContent = `Total Bills (${dateLabelText})`;
+        if (lblDeleted) lblDeleted.textContent = `Deleted Bills (${dateLabelText})`;
         if (lblRev) lblRev.textContent = `Total Revenue (${dateLabelText})`;
 
         // Process orders
         const filteredStoreOrders = [];
         (posOrders || []).forEach(order => {
-            if (order.status === 'Refunded' || order.status === 'Cancelled') return;
-            
             // Store check
             if (currentRole === "bm" && currentStore !== "All") {
                 const s1 = (order.store || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -3998,9 +3999,14 @@ function initApp() {
             }
             
             // Date filter check
+            const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
             if (selectedLiveSalesFilterDate && selectedLiveSalesFilterDate !== 'ALL') {
-                const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
                 if (orderDate !== selectedLiveSalesFilterDate) return;
+            }
+
+            if (order.status === 'Deleted' || order.status === 'Cancelled' || order.status === 'Refunded') {
+                deletedBillCount++;
+                return;
             }
 
             billCount++;
@@ -4030,6 +4036,30 @@ function initApp() {
                 items: items || [],
                 timeVal: new Date(order.timestamp || (order.date + (order.time ? `T${order.time}` : ''))).getTime() || 0
             });
+        });
+
+        // Also count any ORDER_DELETED events in posAuditLogs for the selected date and store
+        (posAuditLogs || []).forEach(log => {
+            if (log.action === 'ORDER_DELETED') {
+                if (currentRole === "bm" && currentStore !== "All") {
+                    const s1 = (log.store || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    const s2 = (currentStore || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    if (s1 && s2 && !s1.includes(s2) && !s2.includes(s1)) return;
+                }
+                const logDate = log.timestamp ? log.timestamp.split('T')[0] : '';
+                if (selectedLiveSalesFilterDate && selectedLiveSalesFilterDate !== 'ALL') {
+                    if (logDate !== selectedLiveSalesFilterDate) return;
+                }
+                try {
+                    const det = JSON.parse(log.details || '{}');
+                    const existsInPosOrders = (posOrders || []).some(o => o.id === det.orderId && (o.status === 'Deleted' || o.status === 'Cancelled' || o.status === 'Refunded'));
+                    if (!existsInPosOrders) {
+                        deletedBillCount++;
+                    }
+                } catch(e) {
+                    deletedBillCount++;
+                }
+            }
         });
 
         // Sort chronologically ascending to calculate uninterrupted sequential bill numbers
@@ -4064,6 +4094,9 @@ function initApp() {
         }
         if (document.getElementById("live-sales-bill-count")) {
             document.getElementById("live-sales-bill-count").textContent = billCount.toLocaleString('en-IN');
+        }
+        if (document.getElementById("live-sales-deleted-count")) {
+            document.getElementById("live-sales-deleted-count").textContent = deletedBillCount.toLocaleString('en-IN');
         }
         if (document.getElementById("live-sales-revenue-total")) {
             document.getElementById("live-sales-revenue-total").textContent = `₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -4364,8 +4397,10 @@ function initApp() {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}` }
             });
             if (res.ok) {
-                posOrders = posOrders.filter(o => o.id !== orderId);
-                posOrderItems = posOrderItems.filter(i => i.orderId !== orderId);
+                const targetOrd = (posOrders || []).find(o => o.id === orderId);
+                if (targetOrd) {
+                    targetOrd.status = 'Deleted';
+                }
                 renderLiveSalesStream();
             } else {
                 alert("Failed to delete bill");

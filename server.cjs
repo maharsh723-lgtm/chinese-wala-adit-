@@ -4466,10 +4466,24 @@ app.get('/api/inventory/:id/ledger', authenticateToken, (req, res) => {
 app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
-    // Delete order items
-    db.prepare('DELETE FROM pos_order_items WHERE orderId = ?').run(id);
-    // Delete order
-    db.prepare('DELETE FROM pos_orders WHERE id = ?').run(id);
+    const order = db.prepare('SELECT * FROM pos_orders WHERE id = ?').get(id);
+    if (order) {
+      const todayStr = order.date || new Date().toISOString().split('T')[0];
+      const auditId = 'audit-' + Date.now();
+      db.prepare(`
+        INSERT INTO pos_audit_logs (id, timestamp, action, userId, userName, details, store)
+        VALUES (?, ?, 'ORDER_DELETED', ?, ?, ?, ?)
+      `).run(
+        auditId,
+        new Date().toISOString(),
+        req.user ? req.user.id : 'admin',
+        req.user ? req.user.name : 'Manager',
+        JSON.stringify({ orderId: id, grandTotal: order.grandTotal, tokenNumber: order.tokenNumber, date: todayStr }),
+        order.store || 'VESU'
+      );
+      // Mark as Deleted to track deleted count while removing from active sales
+      db.prepare("UPDATE pos_orders SET status = 'Deleted' WHERE id = ?").run(id);
+    }
     // Delete from transactions (income)
     db.prepare('DELETE FROM transactions WHERE id = ?').run('pos-' + id);
     if (io) {
