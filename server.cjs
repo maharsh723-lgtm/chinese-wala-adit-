@@ -194,7 +194,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
       posOrderItems = db.prepare(`SELECT * FROM pos_order_items WHERE orderId IN (${placeholders})`).all(...recentOrderIds);
     }
     const posAuditLogs = db.prepare("SELECT * FROM pos_audit_logs WHERE timestamp >= datetime('now', '-7 days')").all();
-    const posStockMovement = db.prepare('SELECT * FROM pos_stock_movement WHERE timestamp >= ?').all(sevenDaysAgo);
+    const posStockMovement = db.prepare('SELECT * FROM pos_stock_movement WHERE timestamp >= ?').all(sixtyDaysAgo);
     const purchases = db.prepare('SELECT * FROM purchases').all();
     const expenses = db.prepare('SELECT * FROM expenses').all();
 
