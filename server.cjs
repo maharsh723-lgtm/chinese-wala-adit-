@@ -1883,40 +1883,7 @@ app.delete('/api/recipes/:id', authenticateToken, (req, res) => {
 });
 
 
-// Temporary patch endpoint to update all dates to today
-app.get('/api/patch-dates', (req, res) => {
-  try {
-    const todayObj = new Date();
-    const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
-    
-    db.prepare('UPDATE wastage SET date = ?').run(todayStr);
-    db.prepare('UPDATE product_sales SET date = ?').run(todayStr);
-    db.prepare('UPDATE eod_reports SET date = ?').run(todayStr);
-    db.prepare('UPDATE checklists SET date = ?').run(todayStr);
-    
-    const employees = db.prepare('SELECT id, history FROM employees').all();
-    const updateEmp = db.prepare('UPDATE employees SET history = ? WHERE id = ?');
-    employees.forEach(emp => {
-        if (emp.history) {
-            try {
-                const hist = JSON.parse(emp.history);
-                let changed = false;
-                hist.forEach(h => {
-                    if (h.date !== todayStr) {
-                        h.date = todayStr;
-                        changed = true;
-                    }
-                });
-                if (changed) updateEmp.run(JSON.stringify(hist), emp.id);
-            } catch(e) {}
-        }
-    });
-    
-    res.json({ success: true, newDate: todayStr });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+
 
 // ==========================================
 // === SWIGGY & ZOMATO DELIVERY INTEGRATION ===
@@ -3849,38 +3816,6 @@ app.get(/.*/, (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.sendFile(path.join(__dirname, 'index.html'));
 });
-
-// Auto-patch dates to today on startup
-try {
-  const todayObj = new Date();
-  const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
-  console.log(`Auto-patching database dates on startup to: ${todayStr}`);
-  
-  db.prepare('UPDATE wastage SET date = ?').run(todayStr);
-  db.prepare('UPDATE product_sales SET date = ?').run(todayStr);
-  db.prepare('UPDATE eod_reports SET date = ?').run(todayStr);
-  db.prepare('UPDATE checklists SET date = ?').run(todayStr);
-  
-  const employees = db.prepare('SELECT id, history FROM employees').all();
-  const updateEmp = db.prepare('UPDATE employees SET history = ? WHERE id = ?');
-  employees.forEach(emp => {
-      if (emp.history) {
-          try {
-              const hist = JSON.parse(emp.history);
-              let changed = false;
-              hist.forEach(h => {
-                  if (h.date !== todayStr) {
-                      h.date = todayStr;
-                      changed = true;
-                  }
-              });
-              if (changed) updateEmp.run(JSON.stringify(hist), emp.id);
-          } catch(e) {}
-      }
-  });
-} catch (err) {
-  console.error('Failed to auto-patch database dates on startup:', err);
-}
 
 // Auto-migrate legacy plaintext passwords to secure PBKDF2 hashes on startup
 try {

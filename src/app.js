@@ -518,10 +518,8 @@ function initApp() {
                 }
                 localStorage.setItem("bk_logged_in_user", JSON.stringify(currentUser));
 
-                // Only re-render current active screen to eliminate lag
-                if (currentActiveScreen !== 'billing' || isInitial) {
-                    renderAllLists();
-                }
+                // Re-render current active screen to reflect latest database state
+                renderAllLists();
                 if (currentActiveScreen === "training") renderTrainingScreen();
             }
         } catch (err) {
