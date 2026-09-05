@@ -4394,11 +4394,59 @@ function initApp() {
             });
         }
 
-        // 3. Filter Data
+        // 3. Build Unified Sales Data from both productSales and posOrders/posOrderItems
+        const currentMonthStr = getTodayDateStr().substring(0, 7);
         const selectedStore = (currentRole === "bm") ? currentStore : (storeSelect ? storeSelect.value : "All");
-        const selectedMonth = monthSelect ? monthSelect.value : "2026-06";
+        const selectedMonth = monthSelect ? (monthSelect.value || currentMonthStr) : currentMonthStr;
 
-        const filteredSales = productSales.filter(sale => {
+        const unifiedSales = [...(productSales || [])];
+        const existingKeys = new Set(unifiedSales.map(s => `${s.store || 'VESU'}_${s.date}_${(s.itemName || '').toLowerCase()}`));
+
+        // Aggregate from posOrders and posOrderItems
+        const posSalesMap = {};
+        (posOrders || []).forEach(order => {
+            if (order.status === 'Refunded' || order.status === 'Cancelled') return;
+            const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : getTodayDateStr());
+            const orderStore = order.store || 'VESU';
+            
+            let items = order.items;
+            if (!items || !Array.isArray(items) || items.length === 0) {
+                items = (posOrderItems || []).filter(i => i.orderId === order.id);
+            }
+            
+            (items || []).forEach(item => {
+                const pName = item.productName || item.name || 'Item';
+                const pQty = parseInt(item.quantity || item.qty || 1);
+                const pPrice = parseFloat(item.price || 0);
+                const pRev = pQty * pPrice;
+                const key = `${orderStore}_${orderDate}_${pName.toLowerCase()}`;
+                
+                if (!posSalesMap[key]) {
+                    const prod = (posProducts || []).find(p => p.id === item.productId || (p.name && p.name.toLowerCase() === pName.toLowerCase()));
+                    posSalesMap[key] = {
+                        id: `ps-pos-${orderStore}-${orderDate}-${pName.replace(/\s+/g, '-').toLowerCase()}`,
+                        store: orderStore,
+                        date: orderDate,
+                        recipeId: item.productId || (prod ? prod.id : 'rec-pos'),
+                        itemName: pName,
+                        category: prod ? prod.category : 'General',
+                        qty: 0,
+                        revenue: 0,
+                        image: prod?.image || '🍽️'
+                    };
+                }
+                posSalesMap[key].qty += pQty;
+                posSalesMap[key].revenue += pRev;
+            });
+        });
+
+        Object.keys(posSalesMap).forEach(k => {
+            if (!existingKeys.has(k)) {
+                unifiedSales.push(posSalesMap[k]);
+            }
+        });
+
+        const filteredSales = unifiedSales.filter(sale => {
             const storeMatch = (selectedStore === "All" || sale.store === selectedStore);
             const monthMatch = (selectedMonth === "All" || (sale.date && sale.date.startsWith(selectedMonth)));
             return storeMatch && monthMatch;
@@ -5234,7 +5282,13 @@ function initApp() {
     }
 
     function getMaxSalesDate() {
-        let maxDate = "2026-06-15";
+        let maxDate = getTodayDateStr();
+        if (posOrders && posOrders.length > 0) {
+            posOrders.forEach(o => {
+                const od = o.date || (o.timestamp ? o.timestamp.split('T')[0] : '');
+                if (od && od > maxDate) maxDate = od;
+            });
+        }
         if (productSales && productSales.length > 0) {
             productSales.forEach(s => {
                 if (s.date && s.date > maxDate) {
@@ -5263,25 +5317,28 @@ function initApp() {
         };
 
         const targetTime = parseDateToUTC(dateStr);
-        const maxDateStr = getMaxSalesDate();
-        const maxDateTime = parseDateToUTC(maxDateStr);
+        const todayStr = getTodayDateStr();
+        const todayTime = parseDateToUTC(todayStr);
 
         if (preset === "today") {
-            return dateStr === maxDateStr;
+            return dateStr === todayStr;
         }
         if (preset === "yesterday") {
             const oneDayMs = 24 * 60 * 60 * 1000;
-            const yesterdayTime = maxDateTime - oneDayMs;
+            const yesterdayTime = todayTime - oneDayMs;
             const yDate = new Date(yesterdayTime);
             const yDateStr = `${yDate.getUTCFullYear()}-${String(yDate.getUTCMonth() + 1).padStart(2, '0')}-${String(yDate.getUTCDate()).padStart(2, '0')}`;
             return dateStr === yDateStr;
         }
-        if (preset === "last7") {
+        if (preset === "last7" || preset === "this-week") {
             const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-            const startTime = maxDateTime - sevenDaysMs;
-            return targetTime >= startTime && targetTime <= maxDateTime;
+            const startTime = todayTime - sevenDaysMs;
+            return targetTime >= startTime && targetTime <= todayTime;
         }
-        return false;
+        if (preset === "this-month") {
+            return dateStr.startsWith(todayStr.substring(0, 7));
+        }
+        return true;
     }
 
     function renderMaterialReconciliationScreen() {

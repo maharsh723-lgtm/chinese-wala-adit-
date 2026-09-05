@@ -178,9 +178,9 @@ app.get('/api/state', authenticateToken, (req, res) => {
     const posTables = db.prepare('SELECT * FROM pos_tables').all();
     const posCoupons = db.prepare('SELECT * FROM pos_coupons').all();
     const posKitchenOrders = db.prepare('SELECT * FROM pos_kitchen_orders').all();
-    // Fetch only recent POS data (last 7 days) to speed up initial load
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const posOrders = db.prepare('SELECT * FROM pos_orders WHERE date >= ?').all(sevenDaysAgo);
+    // Fetch POS data for the last 60 days so all current and recent month orders are loaded
+    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const posOrders = db.prepare('SELECT * FROM pos_orders WHERE date >= ?').all(sixtyDaysAgo);
     const recentOrderIds = posOrders.map(o => o.id);
     let posOrderItems = [];
     if (recentOrderIds.length > 0) {
@@ -4353,6 +4353,35 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
         JSON.stringify(item.modifiers || []),
         item.instructions || ''
       );
+
+      // Auto-sync into product_sales ledger
+      try {
+        const pQty = parseInt(item.quantity || 1);
+        const pPrice = parseFloat(item.price || 0);
+        const pRev = pQty * pPrice;
+        const prod = db.prepare('SELECT category, image FROM pos_products WHERE id = ? OR name = ?').get(item.productId, item.productName);
+        const existingPs = db.prepare('SELECT id, qty, revenue FROM product_sales WHERE store = ? AND date = ? AND itemName = ?').get(store, dateStr, item.productName);
+        if (existingPs) {
+          db.prepare('UPDATE product_sales SET qty = qty + ?, revenue = revenue + ? WHERE id = ?').run(pQty, pRev, existingPs.id);
+        } else {
+          db.prepare(`
+            INSERT INTO product_sales (id, store, date, recipeId, itemName, category, qty, revenue, image)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(
+            `ps-${store}-${dateStr}-${Date.now()}-${idx}`,
+            store,
+            dateStr,
+            item.productId || 'rec-pos',
+            item.productName,
+            prod ? prod.category : 'General',
+            pQty,
+            pRev,
+            prod ? prod.image : '🍽️'
+          );
+        }
+      } catch (psErr) {
+        console.warn("Error auto-syncing product_sales:", psErr.message);
+      }
     });
 
     // Create Kitchen Order (KOT) with 24-hour daily resetting sequence (KOT-01, KOT-02...)

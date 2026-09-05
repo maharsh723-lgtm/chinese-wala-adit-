@@ -2508,4 +2508,41 @@ try {
   console.error('Error mapping pos_products to recipes:', e);
 }
 
+// --- SYNC POS ORDER ITEMS TO PRODUCT_SALES ---
+try {
+  const unSyncedOrders = db.prepare(`
+    SELECT o.store, o.date, oi.productId, oi.productName, SUM(oi.quantity) as qty, SUM(oi.price * oi.quantity) as revenue
+    FROM pos_order_items oi
+    JOIN pos_orders o ON oi.orderId = o.id
+    WHERE o.status != 'Refunded' AND o.status != 'Cancelled'
+    GROUP BY o.store, o.date, oi.productName
+  `).all();
+
+  const insertOrUpdatePs = db.prepare(`
+    INSERT INTO product_sales (id, store, date, recipeId, itemName, category, qty, revenue, image)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET qty = excluded.qty, revenue = excluded.revenue
+  `);
+
+  unSyncedOrders.forEach(row => {
+    const prod = db.prepare('SELECT category, image FROM pos_products WHERE id = ? OR name = ?').get(row.productId, row.productName);
+    const safeName = (row.productName || 'item').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+    const id = `ps-${row.store || 'VESU'}-${row.date}-${safeName}`;
+    insertOrUpdatePs.run(
+      id,
+      row.store || 'VESU',
+      row.date,
+      row.productId || 'rec-pos',
+      row.productName,
+      prod ? prod.category : 'General',
+      row.qty || 0,
+      row.revenue || 0,
+      prod ? prod.image : '🍽️'
+    );
+  });
+  console.log(`Synced ${unSyncedOrders.length} POS order item aggregates into product_sales.`);
+} catch(e) {
+  console.warn('POS order sync to product_sales warning:', e.message);
+}
+
 module.exports = { db, dbReady };
