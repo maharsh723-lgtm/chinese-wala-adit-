@@ -1,5 +1,13 @@
 import { trainingData } from "./trainingData.js";
 function initApp() {
+    // Absolute base URL if opened via file:// protocol or dev ports
+    let API_BASE = '';
+    if (window.location.protocol.startsWith('file')) {
+        API_BASE = 'http://localhost:3000';
+    } else if (window.location.port && window.location.port !== '3000' && window.location.port !== '80' && window.location.port !== '443') {
+        API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+    }
+
     // Override window.fetch to automatically include JWT token
     const originalFetch = window.fetch;
     window.fetch = function (url, options = {}) {
@@ -309,13 +317,7 @@ function initApp() {
     let ownerAttendanceSelectedEmployee = ""; // Selected employee for monthly history
     let ownerAttendanceSelectedMonth = "2026-06"; // Selected month (YYYY-MM format)
 
-    // Absolute base URL if opened via file:// protocol or other ports
-    let API_BASE = '';
-    if (window.location.protocol.startsWith('file')) {
-        API_BASE = 'http://localhost:3000';
-    } else if (window.location.port && window.location.port !== '3000') {
-        API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
-    }
+
 
     const defaultEmployees = {
         "1": { id: "1", name: "Crew Member 1", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
