@@ -91,6 +91,12 @@ app.use(express.static(path.join(__dirname, 'public'), {
   }
 }));
 
+app.use(express.static(__dirname, {
+  setHeaders: (res, filePath) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  }
+}));
+
 
 
 // API: Get Environment Variables Config (Public)
@@ -4630,7 +4636,12 @@ async function sendBackgroundNotification(orderId) {
 // Fallback to serve index.html for single page layout (placed after all API routes)
 app.get(/.*/, (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  res.sendFile(path.join(__dirname, 'index.html'));
+  const distIndex = path.join(__dirname, 'dist', 'index.html');
+  if (fs.existsSync(distIndex)) {
+    res.sendFile(distIndex);
+  } else {
+    res.sendFile(path.join(__dirname, 'index.html'));
+  }
 });
 
 // Start Server after DB seeding is complete
