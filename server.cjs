@@ -207,7 +207,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
           SELECT productName, SUM(quantity) as qty
           FROM pos_order_items oi
           JOIN pos_orders o ON oi.orderId = o.id
-          WHERE o.store = ? AND o.date = ? AND o.status != 'Refunded'
+          WHERE o.store = ? AND o.date = ? AND o.status NOT IN ('Refunded', 'Cancelled', 'Deleted')
           GROUP BY productName
           ORDER BY qty DESC
           LIMIT 5
@@ -218,7 +218,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
             SELECT productName, SUM(quantity) as qty
             FROM pos_order_items oi
             JOIN pos_orders o ON oi.orderId = o.id
-            WHERE o.store = ? AND o.status != 'Refunded'
+            WHERE o.store = ? AND o.status NOT IN ('Refunded', 'Cancelled', 'Deleted')
             GROUP BY productName
             ORDER BY qty DESC
             LIMIT 5
@@ -4478,11 +4478,27 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
         new Date().toISOString(),
         req.user ? req.user.id : 'admin',
         req.user ? req.user.name : 'Manager',
-        JSON.stringify({ orderId: id, grandTotal: order.grandTotal, tokenNumber: order.tokenNumber, date: todayStr }),
+        JSON.stringify({ orderId: id, grandTotal: order.grandTotal, tokenNumber: order.tokenNumber, paymentMethod: order.paymentMethod, date: todayStr, store: order.store }),
         order.store || 'VESU'
       );
       // Mark as Deleted to track deleted count while removing from active sales
       db.prepare("UPDATE pos_orders SET status = 'Deleted' WHERE id = ?").run(id);
+
+      // Subtract items from product_sales
+      try {
+        const orderItems = db.prepare('SELECT * FROM pos_order_items WHERE orderId = ?').all(id);
+        orderItems.forEach(item => {
+          const safeName = (item.productName || 'item').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+          const psId = `ps-${order.store || 'VESU'}-${order.date}-${safeName}`;
+          db.prepare(`
+            UPDATE product_sales
+            SET qty = MAX(0, qty - ?), revenue = MAX(0, revenue - ?)
+            WHERE id = ?
+          `).run(item.quantity || 1, (item.price || 0) * (item.quantity || 1), psId);
+        });
+      } catch (err) {
+        console.warn('Error adjusting product_sales on order delete:', err.message);
+      }
     }
     // Delete from transactions (income)
     db.prepare('DELETE FROM transactions WHERE id = ?').run('pos-' + id);
@@ -4490,7 +4506,7 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
       io.emit('pl_update');
       io.emit('live_sales_update');
     }
-    res.json({ success: true });
+    res.json({ success: true, orderId: id });
   } catch (err) {
     console.error('Error deleting POS order:', err);
     res.status(500).json({ error: err.message });

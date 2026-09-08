@@ -2613,7 +2613,7 @@ try {
     SELECT o.store, o.date, oi.productId, oi.productName, SUM(oi.quantity) as qty, SUM(oi.price * oi.quantity) as revenue
     FROM pos_order_items oi
     JOIN pos_orders o ON oi.orderId = o.id
-    WHERE o.status != 'Refunded' AND o.status != 'Cancelled'
+    WHERE o.status NOT IN ('Refunded', 'Cancelled', 'Deleted')
     GROUP BY o.store, o.date, oi.productName
   `).all();
 

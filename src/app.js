@@ -716,9 +716,9 @@ function initApp() {
         const todayStr = getTodayDateStr();
 
         if (currentRole === "bm") {
-            // 1. Live Sales Today (Sum of non-refunded grandTotal for today)
-            const storeOrdersToday = posOrders.filter(o => o.store === currentStore && o.date === todayStr && o.status !== 'Refunded');
-            const liveSalesToday = storeOrdersToday.reduce((sum, o) => sum + o.grandTotal, 0);
+            // 1. Live Sales Today (Sum of active non-refunded/non-deleted grandTotal for today)
+            const storeOrdersToday = posOrders.filter(o => o.store === currentStore && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted');
+            const liveSalesToday = storeOrdersToday.reduce((sum, o) => sum + (parseFloat(o.grandTotal) || 0), 0);
 
             // 2. Food Cost % (COGS % based on actual item recipes rawCost vs sales)
             let cogsToday = 0;
@@ -852,7 +852,7 @@ function initApp() {
             const totalEmployees = Object.values(employees).filter(e => e.roleKey !== "owner" && e.roleKey !== "sm").length;
             const totalActiveStaff = Object.values(employees).filter(e => e.activePunch).length;
 
-            const consolidatedSalesToday = posOrders.filter(o => o.date === todayStr && o.status !== 'Refunded').reduce((sum, o) => sum + o.grandTotal, 0);
+            const consolidatedSalesToday = posOrders.filter(o => (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted').reduce((sum, o) => sum + (parseFloat(o.grandTotal) || 0), 0);
             const consolidatedExpensesToday = expenses.filter(e => e.date === todayStr).reduce((sum, e) => sum + e.amount, 0);
 
             container.innerHTML = `
@@ -930,18 +930,19 @@ function initApp() {
         if (!ctx) return;
 
         const todayStr = getTodayDateStr();
-        const storeOrdersToday = posOrders.filter(o => o.store === currentStore && o.date === todayStr && o.status !== 'Refunded');
+        const storeOrdersToday = posOrders.filter(o => o.store === currentStore && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted');
 
         const hourlySales = [0, 0, 0, 0, 0, 0];
         storeOrdersToday.forEach(order => {
             const timeStr = order.time || "12:00:00";
             const hour = parseInt(timeStr.split(":")[0]) || 12;
-            if (hour >= 8 && hour < 11) hourlySales[0] += order.grandTotal;
-            else if (hour >= 11 && hour < 14) hourlySales[1] += order.grandTotal;
-            else if (hour >= 14 && hour < 17) hourlySales[2] += order.grandTotal;
-            else if (hour >= 17 && hour < 20) hourlySales[3] += order.grandTotal;
-            else if (hour >= 20 && hour < 23) hourlySales[4] += order.grandTotal;
-            else if (hour >= 23 || hour < 8) hourlySales[5] += order.grandTotal;
+            const amt = parseFloat(order.grandTotal) || 0;
+            if (hour >= 8 && hour < 11) hourlySales[0] += amt;
+            else if (hour >= 11 && hour < 14) hourlySales[1] += amt;
+            else if (hour >= 14 && hour < 17) hourlySales[2] += amt;
+            else if (hour >= 17 && hour < 20) hourlySales[3] += amt;
+            else if (hour >= 20 && hour < 23) hourlySales[4] += amt;
+            else if (hour >= 23 || hour < 8) hourlySales[5] += amt;
         });
 
         if (chartSales) chartSales.destroy();
@@ -978,8 +979,8 @@ function initApp() {
         const labels = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
         const todayStr = getTodayDateStr();
         const salesData = labels.map(lbl => {
-            const storeOrders = posOrders.filter(o => o.store === lbl && o.date === todayStr && o.status !== 'Refunded');
-            return storeOrders.reduce((sum, o) => sum + o.grandTotal, 0);
+            const storeOrders = posOrders.filter(o => o.store === lbl && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted');
+            return storeOrders.reduce((sum, o) => sum + (parseFloat(o.grandTotal) || 0), 0);
         });
 
         if (chartOwnerSales) chartOwnerSales.destroy();
@@ -4401,7 +4402,13 @@ function initApp() {
                 if (targetOrd) {
                     targetOrd.status = 'Deleted';
                 }
-                renderLiveSalesStream();
+                initReconciliationState();
+                if (typeof window.renderLiveSalesStream === "function") {
+                    window.renderLiveSalesStream();
+                }
+                renderAllLists();
+                // Background sync state from server
+                syncStateFromServer();
             } else {
                 alert("Failed to delete bill");
             }
@@ -4452,7 +4459,7 @@ function initApp() {
         // Aggregate from posOrders and posOrderItems
         const posSalesMap = {};
         (posOrders || []).forEach(order => {
-            if (order.status === 'Refunded' || order.status === 'Cancelled') return;
+            if (order.status === 'Refunded' || order.status === 'Cancelled' || order.status === 'Deleted') return;
             const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : getTodayDateStr());
             const orderStore = order.store || 'VESU';
             
@@ -4920,8 +4927,8 @@ function initApp() {
                 let actualOrders = 0;
                 let actualExpenses = 0;
 
-                // Filter POS orders for currentStore, todayStr, and not cancelled/refunded
-                const todayOrders = posOrders.filter(o => o.store === currentStore && o.date === todayStr && o.status !== "Cancelled" && o.status !== "Refunded");
+                // Filter POS orders for currentStore, todayStr, and not cancelled/refunded/deleted
+                const todayOrders = posOrders.filter(o => o.store === currentStore && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== "Cancelled" && o.status !== "Refunded" && o.status !== "Deleted");
                 actualOrders = todayOrders.length;
                 todayOrders.forEach(o => {
                     const amt = parseFloat(o.grandTotal) || 0;
@@ -7787,13 +7794,6 @@ function initApp() {
     // ==========================================================================
 
     function initReconciliationState() {
-        const stored = localStorage.getItem("pos_reconciliations");
-        if (stored) {
-            posReconciliations = JSON.parse(stored);
-            return;
-        }
-
-        // Generate 30 days of mock reconciliation records
         const list = [];
         const managers = {
             'VESU': 'Manager VESU',
@@ -7803,39 +7803,76 @@ function initApp() {
         };
 
         const today = new Date();
+        const dateSet = new Set();
         for (let i = 0; i < 30; i++) {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
-            const dateStr = d.toISOString().split('T')[0];
+            dateSet.add(d.toISOString().split('T')[0]);
+        }
+        (posOrders || []).forEach(o => {
+            if (o.date) dateSet.add(o.date);
+            else if (o.timestamp) dateSet.add(o.timestamp.split('T')[0]);
+        });
+        (expenses || []).forEach(e => {
+            if (e.date) dateSet.add(e.date);
+        });
 
+        const sortedDates = Array.from(dateSet).sort((a, b) => b.localeCompare(a));
+
+        sortedDates.forEach(dateStr => {
             ['VESU', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'].forEach(store => {
-                // Determine base sales and splits
-                const totalSales = Math.round(15000 + Math.random() * 25000);
-                const cashSales = Math.round(totalSales * (0.2 + Math.random() * 0.15));
-                const upiSales = Math.round(totalSales * (0.5 + Math.random() * 0.15));
-                const cardSales = totalSales - cashSales - upiSales;
+                // Filter active orders (excluding Deleted, Cancelled, Refunded)
+                const activeOrders = (posOrders || []).filter(o => {
+                    const oDate = o.date || (o.timestamp ? o.timestamp.split('T')[0] : '');
+                    const oStore = o.store || 'VESU';
+                    return oStore === store && oDate === dateStr && o.status !== 'Deleted' && o.status !== 'Cancelled' && o.status !== 'Refunded';
+                });
 
-                const cashExpenses = Math.round(500 + Math.random() * 1500);
-                const creditExpenses = Math.round(200 + Math.random() * 800);
+                let totalSales = 0;
+                let cashSales = 0;
+                let upiSales = 0;
+                let cardSales = 0;
 
-                const openingCash = i === 29 ? 5000 : Math.round(4000 + Math.random() * 2000);
+                activeOrders.forEach(o => {
+                    const amt = parseFloat(o.grandTotal) || parseFloat(o.total) || 0;
+                    totalSales += amt;
+                    const splitCash = parseFloat(o.splitCashAmount) || 0;
+                    const splitUpi = parseFloat(o.splitUpiAmount) || 0;
+
+                    if (splitCash > 0 || splitUpi > 0) {
+                        cashSales += splitCash;
+                        upiSales += splitUpi;
+                    } else {
+                        const method = (o.paymentMethod || '').toUpperCase();
+                        if (method.includes('CASH')) {
+                            cashSales += amt;
+                        } else if (method.includes('CARD')) {
+                            cardSales += amt;
+                        } else {
+                            upiSales += amt;
+                        }
+                    }
+                });
+
+                // Filter expenses
+                const storeExpenses = (expenses || []).filter(e => (e.store || 'VESU') === store && e.date === dateStr);
+                let cashExpenses = 0;
+                let creditExpenses = 0;
+                storeExpenses.forEach(e => {
+                    const eAmt = parseFloat(e.amount) || 0;
+                    const eMethod = (e.paymentMethod || '').toLowerCase();
+                    if (eMethod.includes('cash')) {
+                        cashExpenses += eAmt;
+                    } else {
+                        creditExpenses += eAmt;
+                    }
+                });
+
+                const openingCash = 5000;
                 const closingCash = openingCash + cashSales - cashExpenses;
-
                 const idealBanking = openingCash + cashSales - cashExpenses;
-                
-                // Add some variance on certain days
-                let variance = 0;
-                if (Math.random() < 0.25) {
-                    variance = Math.round((Math.random() - 0.5) * 1200);
-                }
-                const actualBanking = idealBanking + variance;
-
-                let status = 'Balanced';
-                if (variance !== 0) {
-                    status = 'Cash Difference';
-                } else if (Math.random() < 0.1) {
-                    status = 'Pending Deposit';
-                }
+                const actualBanking = idealBanking;
+                const variance = 0;
 
                 list.push({
                     id: `${store}-${dateStr}`,
@@ -7853,20 +7890,19 @@ function initApp() {
                     idealBanking: idealBanking,
                     actualBanking: actualBanking,
                     variance: variance,
-                    status: status,
-                    notes: variance !== 0 ? `Discrepancy of ₹${variance} due to register mismatch.` : 'Daily cash matched register values.',
-                    isApproved: variance === 0 && status !== 'Pending Deposit',
+                    status: 'Balanced',
+                    notes: 'Live POS register values matched.',
+                    isApproved: true,
                     bankSlipUrl: null,
                     auditLogs: [
-                        { text: 'Shift EOD Cash reported', time: '23:15:00', user: managers[store] },
+                        { text: 'Shift EOD Cash synced', time: '23:15:00', user: managers[store] },
                         { text: 'System auto-reconciliation complete', time: '23:30:00', user: 'System' }
                     ]
                 });
             });
-        }
+        });
 
         posReconciliations = list;
-        localStorage.setItem("pos_reconciliations", JSON.stringify(posReconciliations));
     }
 
     // Main screen controller
