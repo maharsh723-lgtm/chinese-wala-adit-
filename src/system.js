@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const orders = liveStateData ? (liveStateData.posOrders || []) : [];
             const expenses = liveStateData ? (liveStateData.expenses || []) : [];
 
-            orders.filter(o => o.paymentMethod === "Cash" && o.status !== "Refunded").forEach(o => {
+            orders.filter(o => o.paymentMethod === "Cash" && o.status !== "Refunded" && o.status !== "Cancelled" && o.status !== "Deleted").forEach(o => {
                 rows.push([o.date, `POS Cash Sale: Order #${o.id}`, "Cash", o.grandTotal, 0, o.grandTotal]);
             });
             expenses.filter(e => e.paymentMode === "Cash").forEach(e => {

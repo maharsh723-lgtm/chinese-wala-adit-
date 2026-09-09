@@ -537,7 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Filter orders by active store and date
         const filteredOrders = orders.filter(o => {
-            return (store === "All" || o.store === store) && o.date === selectedDate && o.status !== "Refunded";
+            return (store === "All" || o.store === store) && o.date === selectedDate && o.status !== "Refunded" && o.status !== "Cancelled" && o.status !== "Deleted";
         });
 
         let totalRevenue = 0;

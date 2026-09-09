@@ -1498,7 +1498,8 @@ db.exec(`
   AFTER INSERT ON pos_orders
   BEGIN
     INSERT OR REPLACE INTO transactions (id, branch_id, type, category, amount, date)
-    VALUES ('order-' || NEW.id, NEW.store, 'income', COALESCE(NEW.orderType, 'Dine In'), NEW.grandTotal, NEW.date);
+    SELECT 'order-' || NEW.id, NEW.store, 'income', COALESCE(NEW.orderType, 'Dine In'), NEW.grandTotal, NEW.date
+    WHERE NEW.status NOT IN ('Cancelled', 'Deleted', 'Refunded');
   END;
 
   CREATE TRIGGER after_update_pos_order
@@ -1507,7 +1508,7 @@ db.exec(`
     DELETE FROM transactions WHERE id = 'order-' || OLD.id;
     INSERT INTO transactions (id, branch_id, type, category, amount, date)
     SELECT 'order-' || NEW.id, NEW.store, 'income', COALESCE(NEW.orderType, 'Dine In'), NEW.grandTotal, NEW.date
-    WHERE NEW.status != 'Cancelled';
+    WHERE NEW.status NOT IN ('Cancelled', 'Deleted', 'Refunded');
   END;
 
   CREATE TRIGGER after_delete_pos_order
@@ -1515,6 +1516,18 @@ db.exec(`
   BEGIN
     DELETE FROM transactions WHERE id = 'order-' || OLD.id;
   END;
+`);
+
+// Clean up any stale transactions for deleted/cancelled/refunded orders
+try {
+  db.exec(`
+    DELETE FROM transactions 
+    WHERE id IN (SELECT 'order-' || id FROM pos_orders WHERE status IN ('Cancelled', 'Deleted', 'Refunded'))
+       OR id IN (SELECT 'pos-' || id FROM pos_orders WHERE status IN ('Cancelled', 'Deleted', 'Refunded'));
+  `);
+} catch(e) {
+  console.warn('Failed to cleanup stale transactions on startup:', e.message);
+}
 
   -- 2. Expenses Triggers
   CREATE TRIGGER after_insert_expense

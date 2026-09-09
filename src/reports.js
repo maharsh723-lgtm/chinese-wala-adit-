@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Filter Cash Sales
         const cashOrders = orders.filter(o => {
-            return (store === "All" || o.store === store) && o.date === selectedDate && o.paymentMethod === "Cash" && o.status !== "Refunded";
+            return (store === "All" || o.store === store) && o.date === selectedDate && o.paymentMethod === "Cash" && o.status !== "Refunded" && o.status !== "Cancelled" && o.status !== "Deleted";
         });
 
         cashOrders.forEach(o => {
@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function computePeriodPl(period, store, orders, productSales, recipes, expenses) {
         // Filter orders
         const periodOrders = orders.filter(o => {
-            return o.date.startsWith(period) && (store === "All" || o.store === store) && o.status !== "Refunded";
+            return o.date.startsWith(period) && (store === "All" || o.store === store) && o.status !== "Refunded" && o.status !== "Cancelled" && o.status !== "Deleted";
         });
 
         // Revenue
@@ -321,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         stores.forEach(store => {
             // Compute metrics within dates range
-            const filteredOrders = orders.filter(o => o.store === store && o.date >= startDate && o.date <= endDate && o.status !== "Refunded");
+            const filteredOrders = orders.filter(o => o.store === store && o.date >= startDate && o.date <= endDate && o.status !== "Refunded" && o.status !== "Cancelled" && o.status !== "Deleted");
             
             let revenue = 0;
             filteredOrders.forEach(o => revenue += parseFloat(o.grandTotal || 0));
@@ -410,7 +410,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         stores.forEach(store => {
             // Gross sales
-            const filteredOrders = orders.filter(o => o.store === store && o.date >= startDate && o.date <= endDate && o.status !== "Refunded");
+            const filteredOrders = orders.filter(o => o.store === store && o.date >= startDate && o.date <= endDate && o.status !== "Refunded" && o.status !== "Cancelled" && o.status !== "Deleted");
             let grossVal = 0;
             filteredOrders.forEach(o => grossVal += parseFloat(o.grandTotal || 0));
 

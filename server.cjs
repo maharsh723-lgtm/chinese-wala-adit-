@@ -1113,7 +1113,7 @@ function computePLReportData(user, query) {
   try {
     totalGstCollected = db.prepare(`
       SELECT SUM(tax) as total FROM pos_orders 
-      WHERE ${dateQuery} ${branchQuery.replace('branch_id', 'store')}
+      WHERE ${dateQuery} ${branchQuery.replace('branch_id', 'store')} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')
     `).get(...sqlParams).total || (totalSales * 0.05);
 
     totalGstPaid = db.prepare(`
@@ -1130,7 +1130,7 @@ function computePLReportData(user, query) {
     const paymentSplit = db.prepare(`
       SELECT paymentMethod, SUM(grandTotal) as total, SUM(splitCashAmount) as totalSplitCash, SUM(splitUpiAmount) as totalSplitUpi
       FROM pos_orders 
-      WHERE ${dateQuery} ${branchQuery.replace('branch_id', 'store')} AND status != 'Cancelled'
+      WHERE ${dateQuery} ${branchQuery.replace('branch_id', 'store')} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')
       GROUP BY paymentMethod
     `).all(...sqlParams);
     
@@ -1192,7 +1192,7 @@ function computePLReportData(user, query) {
     totalOrdersCount = db.prepare(`
       SELECT COUNT(*) as count 
       FROM pos_orders 
-      WHERE ${dateQuery} ${ordersBranch} AND status != 'Cancelled'
+      WHERE ${dateQuery} ${ordersBranch} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')
     `).get(...ordersParams).count || 0;
   } catch (e) {}
   const avgOrderValue = totalOrdersCount > 0 ? (netSales / totalOrdersCount) : 0;
@@ -1214,11 +1214,11 @@ function computePLReportData(user, query) {
     let yearBranch = "";
     if (activeBranch !== "All") {
       yearBranch = "AND store = ?";
-      yearParams.push(yearBranch);
+      yearParams.push(activeBranch);
     }
     yearlyRevenue = db.prepare(`
       SELECT SUM(grandTotal) as total FROM pos_orders 
-      WHERE date BETWEEN ? AND ? ${yearBranch} AND status != 'Cancelled'
+      WHERE date BETWEEN ? AND ? ${yearBranch} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')
     `).get(...yearParams).total || 0;
   } catch (e) {
     yearlyRevenue = totalSales;
@@ -1248,12 +1248,12 @@ function computePLReportData(user, query) {
 
   branches.forEach(bName => {
     // today values
-    const tOrders = db.prepare("SELECT SUM(grandTotal) as total FROM pos_orders WHERE store = ? AND date = ? AND status != 'Cancelled'").get(bName, todayStr).total || 0;
+    const tOrders = db.prepare("SELECT SUM(grandTotal) as total FROM pos_orders WHERE store = ? AND date = ? AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')").get(bName, todayStr).total || 0;
     const tExps = db.prepare("SELECT SUM(amount) as total FROM expenses WHERE store = ? AND date = ?").get(bName, todayStr).total || 0;
     
     // month values
     const mStart = todayStr.slice(0, 8) + "01";
-    const mOrders = db.prepare("SELECT SUM(grandTotal) as total FROM pos_orders WHERE store = ? AND date BETWEEN ? AND ? AND status != 'Cancelled'").get(bName, mStart, todayStr).total || 0;
+    const mOrders = db.prepare("SELECT SUM(grandTotal) as total FROM pos_orders WHERE store = ? AND date BETWEEN ? AND ? AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')").get(bName, mStart, todayStr).total || 0;
     const mExps = db.prepare("SELECT SUM(amount) as total FROM expenses WHERE store = ? AND date BETWEEN ? AND ?").get(bName, mStart, todayStr).total || 0;
 
     branchDetails[bName] = {
@@ -4500,8 +4500,8 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
         console.warn('Error adjusting product_sales on order delete:', err.message);
       }
     }
-    // Delete from transactions (income)
-    db.prepare('DELETE FROM transactions WHERE id = ?').run('pos-' + id);
+    // Delete from transactions (income) - handle both order- and pos- and raw ID
+    db.prepare('DELETE FROM transactions WHERE id = ? OR id = ? OR id = ?').run('order-' + id, 'pos-' + id, id);
     if (io) {
       io.emit('pl_update');
       io.emit('live_sales_update');

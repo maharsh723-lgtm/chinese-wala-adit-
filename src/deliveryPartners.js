@@ -337,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
         orders.forEach(o => {
             if (o.date < startDate || o.date > endDate) return;
             if (store !== "All" && o.store !== store) return;
-            if (o.status === "Refunded") return;
+            if (o.status === "Refunded" || o.status === "Cancelled" || o.status === "Deleted") return;
 
             const value = parseFloat(o.grandTotal || 0);
 

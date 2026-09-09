@@ -865,7 +865,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (liveStateData && liveStateData.posOrders) {
             liveStateData.posOrders.forEach(o => {
                 if (store !== "All" && o.store !== store) return;
-                if (o.status === "Refunded") return;
+                if (o.status === "Refunded" || o.status === "Cancelled" || o.status === "Deleted") return;
                 
                 // Match dates
                 const oDate = o.date; // YYYY-MM-DD format usually

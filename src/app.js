@@ -4406,6 +4406,9 @@ function initApp() {
                 if (typeof window.renderLiveSalesStream === "function") {
                     window.renderLiveSalesStream();
                 }
+                if (typeof window.fetchAndRenderPnL === "function") {
+                    window.fetchAndRenderPnL();
+                }
                 renderAllLists();
                 // Background sync state from server
                 syncStateFromServer();

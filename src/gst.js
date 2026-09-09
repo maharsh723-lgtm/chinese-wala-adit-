@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const filteredOrders = orders.filter(o => {
             const matchStore = store === "All" || o.store === store;
             const matchDate = o.date >= startDate && o.date <= endDate;
-            return matchStore && matchDate && o.status !== "Refunded";
+            return matchStore && matchDate && o.status !== "Refunded" && o.status !== "Cancelled" && o.status !== "Deleted";
         });
 
         let grandTaxable = 0;
@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const filtered = orders.filter(o => {
             const matchStore = store === "All" || o.store === store;
             const matchDate = o.date >= startDate && o.date <= endDate;
-            if (o.status === "Refunded") return false;
+            if (o.status === "Refunded" || o.status === "Cancelled" || o.status === "Deleted") return false;
 
             const gstBreakdown = calculateOrderGst(o);
             let matchType = true;
@@ -313,7 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         const periodOrders = orders.filter(o => {
-            return o.date.startsWith(period) && (store === "All" || o.store === store) && o.status !== "Refunded";
+            return o.date.startsWith(period) && (store === "All" || o.store === store) && o.status !== "Refunded" && o.status !== "Cancelled" && o.status !== "Deleted";
         });
 
         let totalOutwardTaxable = 0;
