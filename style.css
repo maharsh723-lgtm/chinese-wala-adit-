@@ -2812,10 +2812,12 @@ body.sidebar-collapsed .pos-bottom-actions {
         margin: 0 !important;
         width: 3.3in !important;
     }
-    body:not(.print-kot-only) .kot-print-section {
+    body.print-bill-only .kot-print-section,
+    body.print-bill-only .tear-line-section {
         display: none !important;
     }
-    body.print-kot-only .bill-print-section {
+    body.print-kot-only .bill-print-section,
+    body.print-kot-only .tear-line-section {
         display: none !important;
     }
     #modalPOSInvoice .modal-content {

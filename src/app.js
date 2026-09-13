@@ -4343,11 +4343,13 @@ function initApp() {
     };
 
     window.reprintBill = function(orderId) {
-        const order = posOrders.find(o => o.id === orderId);
+        const order = posOrders.find(o => o.id === orderId) || (window.activeReceiptOrder && window.activeReceiptOrder.id === orderId ? window.activeReceiptOrder : null);
         if (!order) return alert("Order not found!");
-        if (!order.items) {
+        if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
             order.items = posOrderItems.filter(i => i.orderId === orderId).map(i => ({
                 ...i,
+                productName: i.productName || i.name || 'Item',
+                quantity: i.quantity || i.qty || 1,
                 modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
             }));
         }
@@ -4362,16 +4364,17 @@ function initApp() {
         setTimeout(() => {
             window.print();
             document.body.classList.remove('print-bill-only');
-            if (invoiceModal) invoiceModal.style.display = "none";
-        }, 500);
+        }, 300);
     };
 
     window.reprintKOT = function(orderId) {
-        const order = posOrders.find(o => o.id === orderId);
+        const order = posOrders.find(o => o.id === orderId) || (window.activeReceiptOrder && window.activeReceiptOrder.id === orderId ? window.activeReceiptOrder : null);
         if (!order) return alert("Order not found!");
-        if (!order.items) {
+        if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
             order.items = posOrderItems.filter(i => i.orderId === orderId).map(i => ({
                 ...i,
+                productName: i.productName || i.name || 'Item',
+                quantity: i.quantity || i.qty || 1,
                 modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
             }));
         }
@@ -4386,8 +4389,7 @@ function initApp() {
         setTimeout(() => {
             window.print();
             document.body.classList.remove('print-kot-only');
-            if (invoiceModal) invoiceModal.style.display = "none";
-        }, 500);
+        }, 300);
     };
 
     window.deletePOSOrder = async function(orderId, skipConfirm = false) {
@@ -10728,15 +10730,22 @@ function initApp() {
         if (reprintBtn && !reprintBtn.dataset.listenerBound) {
             reprintBtn.dataset.listenerBound = "true";
             reprintBtn.addEventListener("click", () => {
-                const oid = prompt("Enter Order ID to reprint receipt:");
-                if (!oid) return;
-                const order = posOrders.find(o => o.id === oid);
+                let oid = prompt("Enter Order ID to reprint receipt (leave blank for latest order):");
+                if (oid === null) return;
+                oid = oid.trim();
+                let order = null;
+                if (oid) {
+                    order = posOrders.find(o => o.id === oid);
+                } else if (window.activeReceiptOrder) {
+                    order = window.activeReceiptOrder;
+                } else if (posOrders && posOrders.length > 0) {
+                    order = posOrders[posOrders.length - 1];
+                }
                 if (!order) {
-                    alert("Order not found!");
+                    alert("No order found to print!");
                     return;
                 }
-                renderGSTInvoice(order);
-                document.getElementById("modalPOSInvoice").style.display = "flex";
+                window.reprintBill(order.id);
             });
         }
 
@@ -10872,11 +10881,42 @@ function initApp() {
         if (printKotBtn && !printKotBtn.dataset.listenerBound) {
             printKotBtn.dataset.listenerBound = "true";
             printKotBtn.addEventListener("click", () => {
-                if (posCart.length === 0) {
-                    alert("No items in cart to print KOT!");
-                    return;
+                if (posCart && posCart.length > 0) {
+                    const tempOrder = {
+                        id: posEditingOrder ? posEditingOrder.id : ("ORDER-" + Date.now()),
+                        customerName: "Guest",
+                        orderType: posOrderType || "Dine In",
+                        tableName: posSelectedTable,
+                        items: posCart.map(c => ({
+                            productName: c.productName || c.name || 'Item',
+                            quantity: c.quantity || 1,
+                            price: c.price || 0,
+                            modifiers: c.modifiers || []
+                        })),
+                        subtotal: 0,
+                        grandTotal: 0,
+                        date: new Date().toISOString().split("T")[0],
+                        time: new Date().toTimeString().split(" ")[0],
+                        tokenNumber: posNextToken,
+                        kotNumber: "KOT-" + String((posOrders || []).length + 1).padStart(2, '0'),
+                        store: currentStore
+                    };
+                    renderGSTInvoice(tempOrder);
+                    document.body.classList.add('print-kot-only');
+                    document.body.classList.remove('print-bill-only');
+                    const invoiceModal = document.getElementById("modalPOSInvoice");
+                    if (invoiceModal) invoiceModal.style.display = "flex";
+                    setTimeout(() => {
+                        window.print();
+                        document.body.classList.remove('print-kot-only');
+                    }, 300);
+                } else if (window.activeReceiptOrder) {
+                    window.reprintKOT(window.activeReceiptOrder.id);
+                } else if (posOrders && posOrders.length > 0) {
+                    window.reprintKOT(posOrders[posOrders.length - 1].id);
+                } else {
+                    alert("No items in cart or recent order to print KOT!");
                 }
-                showToast("Kitchen Order Ticket (KOT) sent to kitchen printer successfully.");
             });
         }
 
@@ -11335,7 +11375,19 @@ function initApp() {
 
     function renderGSTInvoice(order) {
         const printArea = document.getElementById("invoicePrintArea");
-        if (!printArea) return;
+        if (!printArea || !order) return;
+
+        if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
+            if (order.id && typeof posOrderItems !== 'undefined') {
+                order.items = posOrderItems.filter(i => i.orderId === order.id).map(i => ({
+                    ...i,
+                    productName: i.productName || i.name || 'Item',
+                    quantity: i.quantity || i.qty || 1,
+                    modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
+                }));
+            }
+        }
+        if (!order.items) order.items = [];
 
         const custObj = posCustomers.find(c => c.name === order.customerName || c.id === order.customerId);
         const customerPhone = order.customerPhone || (custObj ? custObj.phone : '');
@@ -11351,12 +11403,14 @@ function initApp() {
                 const modInfo = posModifiers.find(m => m.name === mName);
                 if (modInfo) itemPrice += parseFloat(modInfo.price || 0);
             });
-            const sub = itemPrice * (parseInt(item.quantity) || 1);
+            const pQty = parseInt(item.quantity || item.qty || 1);
+            const sub = itemPrice * pQty;
+            const pName = item.productName || item.name || 'Item';
             
             itemsHtml += `
                 <div class="receipt-item-row">
                     <div class="receipt-item-top">
-                        <span>${item.productName} (x${item.quantity}) @ ₹${(itemPrice || 0).toFixed(2)}</span>
+                        <span>${pName} (x${pQty}) @ ₹${(itemPrice || 0).toFixed(2)}</span>
                         <span>₹${(sub || 0).toFixed(2)}</span>
                     </div>
                     ${modsLine}
@@ -11441,8 +11495,8 @@ function initApp() {
                 
                 <!-- KOT SECTION APPENDED TO BILL (CONTINUOUS PRINT) -->
                 ${(function() {
-                    const paniPuriItems = order.items.filter(i => i.productName && i.productName.toLowerCase().includes('pani puri'));
-                    const mainItems = order.items.filter(i => !(i.productName && i.productName.toLowerCase().includes('pani puri')));
+                    const paniPuriItems = order.items.filter(i => (i.productName || i.name || '').toLowerCase().includes('pani puri'));
+                    const mainItems = order.items.filter(i => !(i.productName || i.name || '').toLowerCase().includes('pani puri'));
                     let kotHtml = '';
 
                     const generateKOT = (items, title) => {
@@ -11450,7 +11504,7 @@ function initApp() {
                         const kotDisplay = order.kotNumber || 'KOT-01';
                         const tokenDisplay = order.tokenNumber ? `#${order.tokenNumber}` : (order.dToken ? `#${order.dToken}` : (order.tableName || `#${order.id.substring(0,6)}`));
                         return `
-                            <div style="text-align:center; margin-top: 30px; font-weight: bold; font-size: 12px; letter-spacing: 2px;">✂ --- TEAR HERE --- ✂</div>
+                            <div class="tear-line-section" style="text-align:center; margin-top: 30px; font-weight: bold; font-size: 12px; letter-spacing: 2px;">✂ --- TEAR HERE --- ✂</div>
                             <div class="kot-print-section" style="margin-top: 10px; padding-top: 20px; border-top: 2px dashed #000;">
                                 <div style="text-align:center; font-weight: 900; font-size: 18px; margin-bottom: 4px;">BADI KATORI</div>
                                 <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 8px;">${title}</div>
@@ -11469,7 +11523,7 @@ function initApp() {
                                 ${items.map(item => `
                                     <div class="receipt-item-row" style="margin-bottom: 6px;">
                                         <div class="receipt-item-top" style="font-size: 16px; font-weight: 900;">
-                                            <span>[ ${item.quantity} ] x ${item.productName}</span>
+                                            <span>[ ${item.quantity || item.qty || 1} ] x ${item.productName || item.name || 'Item'}</span>
                                         </div>
                                         ${item.modifiers && item.modifiers.length > 0 ? `<div class="receipt-item-mods" style="font-size: 13px; margin-left: 20px; font-weight: bold;">+ ${item.modifiers.join(', ')}</div>` : ''}
                                     </div>
