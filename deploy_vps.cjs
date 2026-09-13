@@ -64,7 +64,8 @@ conn.on('ready', () => {
       console.log('=== Installing packages & Restarting PM2 on VPS ===');
       const command = `
         cd "/root/bk 2/shh 2/bk_operations"
-        npm install --production || true
+        npm install xlsx compression express dotenv better-sqlite3 jsonwebtoken pdfkit pdf-parse socket.io ssh2 --save || true
+        npm install || true
         pm2 restart all
         sleep 2
         pm2 status
