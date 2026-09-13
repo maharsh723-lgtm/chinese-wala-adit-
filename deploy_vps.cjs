@@ -1,79 +1,44 @@
 const { Client } = require('ssh2');
-const fs = require('fs');
-const path = require('path');
-
 const conn = new Client();
 
 conn.on('ready', () => {
   console.log('SSH Connection to VPS Successful!');
   
-  conn.sftp((err, sftp) => {
+  const command = `
+    echo "=== Cleaning local changes and syncing git on VPS ==="
+    cd "/root/bk 2/shh 2/bk_operations"
+    git remote set-url origin https://github.com/maharsh089-cmd/bk_operation.git
+    git fetch origin main
+    git reset --hard origin/main
+    
+    echo "=== Current Commit on VPS ==="
+    git log -n 1 --oneline
+    
+    echo "=== Building Production Bundle ==="
+    npm run build || true
+    
+    echo "=== Restarting PM2 Processes ==="
+    pm2 restart all
+    sleep 2
+    
+    echo "=== PM2 Status ==="
+    pm2 status
+  `;
+
+  conn.exec(command, (err, stream) => {
     if (err) {
-      console.error('SFTP Error:', err);
+      console.error('Exec error:', err);
       conn.end();
       return;
     }
-    
-    const vpsPath = '/root/bk 2/shh 2/bk_operations';
-    console.log('Uploading db.cjs to VPS...');
-    
-    sftp.fastPut(
-      path.join(__dirname, 'db.cjs'),
-      `${vpsPath}/db.cjs`,
-      (err) => {
-        if (err) {
-          console.error('Failed to upload db.cjs:', err);
-          conn.end();
-          return;
-        }
-        console.log('Successfully uploaded db.cjs!');
-        
-        console.log('Uploading style.css to VPS...');
-        sftp.fastPut(
-          path.join(__dirname, 'style.css'),
-          `${vpsPath}/style.css`,
-          (err) => {
-            if (err) console.error('Failed to upload style.css:', err);
-            else console.log('Successfully uploaded style.css!');
-            
-            const command = `
-              cd "/root/bk 2/shh 2/bk_operations"
-              echo "=== Building Vite Bundle on VPS ==="
-              npm run build || true
-              
-              echo "=== Restarting PM2 process bk-ops ==="
-              pm2 restart bk-ops || pm2 restart all
-              sleep 2
-              
-              echo "=== Testing local port 3000 ==="
-              curl -I http://localhost:3000
-              
-              echo "=== PM2 Status ==="
-              pm2 status
-              
-              echo "=== PM2 Error Log (Last 10 lines) ==="
-              pm2 logs bk-ops --lines 10 --nostream
-            `;
-            
-            conn.exec(command, (err, stream) => {
-              if (err) {
-                console.error('Exec error:', err);
-                conn.end();
-                return;
-              }
-              stream.on('close', (code, signal) => {
-                console.log('Stream closed with code:', code);
-                conn.end();
-              }).on('data', (data) => {
-                process.stdout.write(data);
-              }).stderr.on('data', (data) => {
-                process.stderr.write(data);
-              });
-            });
-          }
-        );
-      }
-    );
+    stream.on('close', (code, signal) => {
+      console.log('Stream closed with code:', code);
+      conn.end();
+    }).on('data', (data) => {
+      process.stdout.write(data);
+    }).stderr.on('data', (data) => {
+      process.stderr.write(data);
+    });
   });
 }).on('error', (err) => {
   console.error('SSH Connection Error:', err);

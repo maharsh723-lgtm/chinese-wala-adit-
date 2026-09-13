@@ -4357,14 +4357,17 @@ function initApp() {
         if (kot) order.kotNumber = kot.kotNumber;
         
         renderGSTInvoice(order);
-        document.body.classList.add('print-bill-only');
-        document.body.classList.remove('print-kot-only');
         const invoiceModal = document.getElementById("modalPOSInvoice");
         if (invoiceModal) invoiceModal.style.display = "flex";
         setTimeout(() => {
-            window.print();
-            document.body.classList.remove('print-bill-only');
-        }, 300);
+            if (typeof window.triggerThermalPrint === 'function') {
+                window.triggerThermalPrint('bill');
+            } else {
+                document.body.classList.add('print-bill-only');
+                window.print();
+                setTimeout(() => document.body.classList.remove('print-bill-only'), 500);
+            }
+        }, 100);
     };
 
     window.reprintKOT = function(orderId) {
@@ -4382,14 +4385,17 @@ function initApp() {
         if (kot) order.kotNumber = kot.kotNumber;
 
         renderGSTInvoice(order);
-        document.body.classList.add('print-kot-only');
-        document.body.classList.remove('print-bill-only');
         const invoiceModal = document.getElementById("modalPOSInvoice");
         if (invoiceModal) invoiceModal.style.display = "flex";
         setTimeout(() => {
-            window.print();
-            document.body.classList.remove('print-kot-only');
-        }, 300);
+            if (typeof window.triggerThermalPrint === 'function') {
+                window.triggerThermalPrint('kot');
+            } else {
+                document.body.classList.add('print-kot-only');
+                window.print();
+                setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
+            }
+        }, 100);
     };
 
     window.deletePOSOrder = async function(orderId, skipConfirm = false) {
@@ -10756,10 +10762,13 @@ function initApp() {
                 if (typeof window._pendingOrderCommit === 'function') {
                     window._pendingOrderCommit();
                 }
-                document.body.classList.add('print-bill-only');
-                document.body.classList.remove('print-kot-only');
-                window.print();
-                setTimeout(() => document.body.classList.remove('print-bill-only'), 500);
+                if (typeof window.triggerThermalPrint === 'function') {
+                    window.triggerThermalPrint('bill');
+                } else {
+                    document.body.classList.add('print-bill-only');
+                    window.print();
+                    setTimeout(() => document.body.classList.remove('print-bill-only'), 500);
+                }
             });
         }
 
@@ -10770,10 +10779,13 @@ function initApp() {
                 if (typeof window._pendingOrderCommit === 'function') {
                     window._pendingOrderCommit();
                 }
-                document.body.classList.add('print-kot-only');
-                document.body.classList.remove('print-bill-only');
-                window.print();
-                setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
+                if (typeof window.triggerThermalPrint === 'function') {
+                    window.triggerThermalPrint('kot');
+                } else {
+                    document.body.classList.add('print-kot-only');
+                    window.print();
+                    setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
+                }
             });
         }
 
@@ -11372,6 +11384,110 @@ function initApp() {
         const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
         window.open(url, '_blank');
     }
+
+    window.triggerThermalPrint = function(printMode = 'all') {
+        if (printMode === 'bill') {
+            document.body.classList.add('print-bill-only');
+            document.body.classList.remove('print-kot-only');
+        } else if (printMode === 'kot') {
+            document.body.classList.add('print-kot-only');
+            document.body.classList.remove('print-bill-only');
+        } else {
+            document.body.classList.remove('print-bill-only');
+            document.body.classList.remove('print-kot-only');
+        }
+
+        const invoiceModal = document.getElementById("modalPOSInvoice");
+        if (invoiceModal) invoiceModal.style.display = "flex";
+
+        try {
+            const printArea = document.getElementById("invoicePrintArea");
+            if (!printArea || !printArea.innerHTML.trim()) {
+                window.print();
+                setTimeout(() => document.body.classList.remove('print-bill-only', 'print-kot-only'), 500);
+                return;
+            }
+
+            let printIframe = document.getElementById("posPrintIframe");
+            if (!printIframe) {
+                printIframe = document.createElement("iframe");
+                printIframe.id = "posPrintIframe";
+                printIframe.style.position = "fixed";
+                printIframe.style.right = "0";
+                printIframe.style.bottom = "0";
+                printIframe.style.width = "0";
+                printIframe.style.height = "0";
+                printIframe.style.border = "none";
+                printIframe.style.opacity = "0";
+                document.body.appendChild(printIframe);
+            }
+
+            const billSection = printArea.querySelector(".bill-print-section")?.outerHTML || "";
+            const kotSections = Array.from(printArea.querySelectorAll(".kot-print-section, .tear-line-section")).map(el => el.outerHTML).join('');
+
+            let htmlToPrint = "";
+            if (printMode === 'bill') {
+                htmlToPrint = billSection || printArea.innerHTML;
+            } else if (printMode === 'kot') {
+                htmlToPrint = kotSections || printArea.innerHTML;
+            } else {
+                htmlToPrint = printArea.innerHTML;
+            }
+
+            const doc = printIframe.contentWindow.document;
+            doc.open();
+            doc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Thermal Receipt</title>
+                    <style>
+                        @page { size: auto; margin: 0; }
+                        html, body {
+                            font-family: 'Courier New', Courier, monospace, Arial, sans-serif;
+                            font-weight: 900;
+                            color: #000;
+                            background: #fff;
+                            margin: 0;
+                            padding: 2mm;
+                            width: 78mm;
+                            font-size: 13px;
+                            line-height: 1.3;
+                        }
+                        img { max-width: 160px; height: auto; display: block; margin: 0 auto 6px; filter: grayscale(1); }
+                        .receipt-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
+                        .receipt-divider { border-top: 2px dashed #000; margin: 8px 0; }
+                        .receipt-item-row { margin-bottom: 4px; }
+                        .receipt-item-top { display: flex; justify-content: space-between; font-weight: 900; font-size: 13px; }
+                        .receipt-item-mods { font-size: 11px; padding-left: 8px; font-weight: bold; }
+                        .receipt-totals { font-weight: 900; font-size: 15px; margin-top: 6px; }
+                        .receipt-brand-logo-container { width: 140px; margin: 0 auto 6px; }
+                        .receipt-header { text-align: center; }
+                        .kot-print-section { margin-top: 10px; padding-top: 10px; border-top: 2px dashed #000; }
+                    </style>
+                </head>
+                <body>
+                    ${htmlToPrint}
+                </body>
+                </html>
+            `);
+            doc.close();
+
+            setTimeout(() => {
+                try {
+                    printIframe.contentWindow.focus();
+                    printIframe.contentWindow.print();
+                } catch(err) {
+                    window.print();
+                }
+                document.body.classList.remove('print-bill-only', 'print-kot-only');
+            }, 150);
+        } catch (e) {
+            console.warn("Iframe thermal print error, fallback to window.print():", e);
+            window.print();
+            setTimeout(() => document.body.classList.remove('print-bill-only', 'print-kot-only'), 500);
+        }
+    };
 
     function renderGSTInvoice(order) {
         const printArea = document.getElementById("invoicePrintArea");

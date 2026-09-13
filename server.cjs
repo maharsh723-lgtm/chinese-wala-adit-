@@ -1,6 +1,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, 'env', '.env') });
 const express = require('express');
+const compression = require('compression');
 const { db, dbReady } = require('./db.cjs');
 const jwt = require('jsonwebtoken');
 const { hashPassword, verifyPassword } = require('./src/cryptoHelper.cjs');
@@ -14,6 +15,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 const JWT_SECRET = process.env.JWT_SECRET || 'badi_katori_secret_key_12345';
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Enable HTTP GZIP response compression for fast data transfer
+app.use(compression());
 
 // Security: In-Memory Request Rate Limiter (Firewall)
 const ipRequestCounts = new Map();
@@ -183,16 +187,24 @@ app.get('/api/state', authenticateToken, (req, res) => {
     const posCustomers = db.prepare('SELECT * FROM pos_customers').all();
     const posTables = db.prepare('SELECT * FROM pos_tables').all();
     const posCoupons = db.prepare('SELECT * FROM pos_coupons').all();
-    const posKitchenOrders = db.prepare('SELECT * FROM pos_kitchen_orders').all();
     // Fetch POS data for the last 60 days so all current and recent month orders are loaded
     const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const posOrders = db.prepare('SELECT * FROM pos_orders WHERE date >= ?').all(sixtyDaysAgo);
-    const recentOrderIds = posOrders.map(o => o.id);
-    let posOrderItems = [];
-    if (recentOrderIds.length > 0) {
-      const placeholders = recentOrderIds.map(() => '?').join(',');
-      posOrderItems = db.prepare(`SELECT * FROM pos_order_items WHERE orderId IN (${placeholders})`).all(...recentOrderIds);
-    }
+    
+    // Fast single JOIN for posOrderItems instead of mapping thousands of parameter placeholders
+    const posOrderItems = db.prepare(`
+      SELECT oi.* FROM pos_order_items oi
+      JOIN pos_orders o ON oi.orderId = o.id
+      WHERE o.date >= ?
+    `).all(sixtyDaysAgo);
+
+    // Fast filter for posKitchenOrders to avoid full historical table scans
+    const posKitchenOrders = db.prepare(`
+      SELECT ko.* FROM pos_kitchen_orders ko
+      WHERE ko.status IN ('Pending', 'In Progress', 'Ready')
+         OR ko.orderId IN (SELECT id FROM pos_orders WHERE date >= ?)
+    `).all(sixtyDaysAgo);
+
     const posAuditLogs = db.prepare("SELECT * FROM pos_audit_logs WHERE timestamp >= datetime('now', '-7 days')").all();
     const posStockMovement = db.prepare('SELECT * FROM pos_stock_movement WHERE timestamp >= ?').all(sixtyDaysAgo);
     const purchases = db.prepare('SELECT * FROM purchases').all();
@@ -218,11 +230,11 @@ app.get('/api/state', authenticateToken, (req, res) => {
             SELECT productName, SUM(quantity) as qty
             FROM pos_order_items oi
             JOIN pos_orders o ON oi.orderId = o.id
-            WHERE o.store = ? AND o.status NOT IN ('Refunded', 'Cancelled', 'Deleted')
+            WHERE o.store = ? AND o.date >= ? AND o.status NOT IN ('Refunded', 'Cancelled', 'Deleted')
             GROUP BY productName
             ORDER BY qty DESC
             LIMIT 5
-          `).all(st);
+          `).all(st, sixtyDaysAgo);
         }
         topSellingByStore[st] = items;
       });

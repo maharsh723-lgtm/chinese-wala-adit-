@@ -467,10 +467,14 @@ db.exec(`
 // Create performance indexes
 try {
   db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_pos_orders_date ON pos_orders (date);
     CREATE INDEX IF NOT EXISTS idx_pos_orders_date_store ON pos_orders (date, store);
     CREATE INDEX IF NOT EXISTS idx_pos_orders_status ON pos_orders (status);
     CREATE INDEX IF NOT EXISTS idx_pos_order_items_orderId ON pos_order_items (orderId);
     CREATE INDEX IF NOT EXISTS idx_pos_order_items_product ON pos_order_items (productName);
+    CREATE INDEX IF NOT EXISTS idx_pos_kitchen_orders_orderId ON pos_kitchen_orders (orderId);
+    CREATE INDEX IF NOT EXISTS idx_pos_kitchen_orders_status ON pos_kitchen_orders (status);
+    CREATE INDEX IF NOT EXISTS idx_pos_stock_movement_timestamp ON pos_stock_movement (timestamp);
     CREATE INDEX IF NOT EXISTS idx_inventory_store ON inventory (store);
     CREATE INDEX IF NOT EXISTS idx_product_sales_date ON product_sales (date);
     CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses (date);
