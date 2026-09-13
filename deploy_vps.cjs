@@ -1,45 +1,97 @@
 const { Client } = require('ssh2');
+const fs = require('fs');
+const path = require('path');
+
 const conn = new Client();
+
+function uploadFile(sftp, localPath, remotePath) {
+  return new Promise((resolve, reject) => {
+    sftp.fastPut(localPath, remotePath, (err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+}
+
+function uploadDir(sftp, localDir, remoteDir) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      sftp.mkdir(remoteDir, (err) => {
+        // ignore dir exists error
+      });
+      const files = fs.readdirSync(localDir);
+      for (const file of files) {
+        const localPath = path.join(localDir, file);
+        const remotePath = `${remoteDir}/${file}`;
+        const stat = fs.statSync(localPath);
+        if (stat.isDirectory()) {
+          await uploadDir(sftp, localPath, remotePath);
+        } else {
+          console.log(`Uploading ${file}...`);
+          await uploadFile(sftp, localPath, remotePath);
+        }
+      }
+      resolve();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
 
 conn.on('ready', () => {
   console.log('SSH Connection to VPS Successful!');
   
-  const command = `
-    echo "=== Cleaning local changes and syncing git on VPS ==="
-    cd "/root/bk 2/shh 2/bk_operations"
-    git remote set-url origin https://github.com/maharsh089-cmd/bk_operation.git
-    git fetch origin main
-    git reset --hard origin/main
-    
-    echo "=== Current Commit on VPS ==="
-    git log -n 1 --oneline
-    
-    echo "=== Building Production Bundle ==="
-    npm run build || true
-    
-    echo "=== Restarting PM2 Processes ==="
-    pm2 restart all
-    sleep 2
-    
-    echo "=== PM2 Status ==="
-    pm2 status
-  `;
-
-  conn.exec(command, (err, stream) => {
+  conn.sftp(async (err, sftp) => {
     if (err) {
-      console.error('Exec error:', err);
+      console.error('SFTP Error:', err);
       conn.end();
       return;
     }
-    stream.on('close', (code, signal) => {
-      console.log('Stream closed with code:', code);
+    
+    try {
+      const vpsPath = '/root/bk 2/shh 2/bk_operations';
+      console.log('=== Uploading core application files to VPS via SFTP ===');
+      
+      await uploadFile(sftp, path.join(__dirname, 'server.cjs'), `${vpsPath}/server.cjs`);
+      await uploadFile(sftp, path.join(__dirname, 'db.cjs'), `${vpsPath}/db.cjs`);
+      await uploadFile(sftp, path.join(__dirname, 'style.css'), `${vpsPath}/style.css`);
+      await uploadFile(sftp, path.join(__dirname, 'package.json'), `${vpsPath}/package.json`);
+      await uploadFile(sftp, path.join(__dirname, 'package-lock.json'), `${vpsPath}/package-lock.json`);
+      
+      console.log('=== Uploading built dist/ bundle to VPS ===');
+      await uploadDir(sftp, path.join(__dirname, 'dist'), `${vpsPath}/dist`);
+
+      console.log('=== Installing packages & Restarting PM2 on VPS ===');
+      const command = `
+        cd "/root/bk 2/shh 2/bk_operations"
+        npm install --production || true
+        pm2 restart all
+        sleep 2
+        pm2 status
+      `;
+
+      conn.exec(command, (execErr, stream) => {
+        if (execErr) {
+          console.error('Exec error:', execErr);
+          conn.end();
+          return;
+        }
+        stream.on('close', (code) => {
+          console.log('Deployment completed with status code:', code);
+          conn.end();
+        }).on('data', (data) => {
+          process.stdout.write(data);
+        }).stderr.on('data', (data) => {
+          process.stderr.write(data);
+        });
+      });
+
+    } catch (uploadErr) {
+      console.error('Upload Error:', uploadErr);
       conn.end();
-    }).on('data', (data) => {
-      process.stdout.write(data);
-    }).stderr.on('data', (data) => {
-      process.stderr.write(data);
-    });
+    }
   });
+
 }).on('error', (err) => {
   console.error('SSH Connection Error:', err);
 }).connect({
