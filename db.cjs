@@ -1529,72 +1529,74 @@ try {
   console.warn('Failed to cleanup stale transactions on startup:', e.message);
 }
 
-  -- 2. Expenses Triggers
-  CREATE TRIGGER after_insert_expense
-  AFTER INSERT ON expenses
-  BEGIN
-    INSERT OR REPLACE INTO transactions (id, branch_id, type, category, amount, date)
-    VALUES ('exp-' || NEW.id, NEW.store, 'expense', NEW.category, NEW.amount, NEW.date);
-  END;
+try {
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS after_insert_expense
+    AFTER INSERT ON expenses
+    BEGIN
+      INSERT OR REPLACE INTO transactions (id, branch_id, type, category, amount, date)
+      VALUES ('exp-' || NEW.id, NEW.store, 'expense', NEW.category, NEW.amount, NEW.date);
+    END;
 
-  CREATE TRIGGER after_update_expense
-  AFTER UPDATE ON expenses
-  BEGIN
-    UPDATE transactions
-    SET branch_id = NEW.store, category = NEW.category, amount = NEW.amount, date = NEW.date
-    WHERE id = 'exp-' || OLD.id;
-  END;
+    CREATE TRIGGER IF NOT EXISTS after_update_expense
+    AFTER UPDATE ON expenses
+    BEGIN
+      UPDATE transactions
+      SET branch_id = NEW.store, category = NEW.category, amount = NEW.amount, date = NEW.date
+      WHERE id = 'exp-' || OLD.id;
+    END;
 
-  CREATE TRIGGER after_delete_expense
-  AFTER DELETE ON expenses
-  BEGIN
-    DELETE FROM transactions WHERE id = 'exp-' || OLD.id;
-  END;
+    CREATE TRIGGER IF NOT EXISTS after_delete_expense
+    AFTER DELETE ON expenses
+    BEGIN
+      DELETE FROM transactions WHERE id = 'exp-' || OLD.id;
+    END;
 
-  -- 3. Purchases Triggers
-  CREATE TRIGGER after_insert_purchase
-  AFTER INSERT ON purchases
-  BEGIN
-    INSERT OR REPLACE INTO transactions (id, branch_id, type, category, amount, date)
-    VALUES ('pur-' || NEW.id, NEW.store, 'expense', 'Packaging', NEW.totalCost, NEW.date);
-  END;
+    CREATE TRIGGER IF NOT EXISTS after_insert_purchase
+    AFTER INSERT ON purchases
+    BEGIN
+      INSERT OR REPLACE INTO transactions (id, branch_id, type, category, amount, date)
+      VALUES ('pur-' || NEW.id, NEW.store, 'expense', 'Packaging', NEW.totalCost, NEW.date);
+    END;
 
-  CREATE TRIGGER after_update_purchase
-  AFTER UPDATE ON purchases
-  BEGIN
-    UPDATE transactions
-    SET branch_id = NEW.store, amount = NEW.totalCost, date = NEW.date
-    WHERE id = 'pur-' || OLD.id;
-  END;
+    CREATE TRIGGER IF NOT EXISTS after_update_purchase
+    AFTER UPDATE ON purchases
+    BEGIN
+      UPDATE transactions
+      SET branch_id = NEW.store, amount = NEW.totalCost, date = NEW.date
+      WHERE id = 'pur-' || OLD.id;
+    END;
 
-  CREATE TRIGGER after_delete_purchase
-  AFTER DELETE ON purchases
-  BEGIN
-    DELETE FROM transactions WHERE id = 'pur-' || OLD.id;
-  END;
+    CREATE TRIGGER IF NOT EXISTS after_delete_purchase
+    AFTER DELETE ON purchases
+    BEGIN
+      DELETE FROM transactions WHERE id = 'pur-' || OLD.id;
+    END;
 
-  -- 4. Sales Returns Triggers
-  CREATE TRIGGER after_insert_sales_return
-  AFTER INSERT ON sales_returns
-  BEGIN
-    INSERT OR REPLACE INTO transactions (id, branch_id, type, category, amount, date)
-    VALUES ('ret-' || NEW.id, NEW.store, 'expense', 'Sales Return', NEW.refund_amount, NEW.date);
-  END;
+    CREATE TRIGGER IF NOT EXISTS after_insert_sales_return
+    AFTER INSERT ON sales_returns
+    BEGIN
+      INSERT OR REPLACE INTO transactions (id, branch_id, type, category, amount, date)
+      VALUES ('ret-' || NEW.id, NEW.store, 'expense', 'Sales Return', NEW.refund_amount, NEW.date);
+    END;
 
-  CREATE TRIGGER after_update_sales_return
-  AFTER UPDATE ON sales_returns
-  BEGIN
-    UPDATE transactions
-    SET branch_id = NEW.store, amount = NEW.refund_amount, date = NEW.date
-    WHERE id = 'ret-' || OLD.id;
-  END;
+    CREATE TRIGGER IF NOT EXISTS after_update_sales_return
+    AFTER UPDATE ON sales_returns
+    BEGIN
+      UPDATE transactions
+      SET branch_id = NEW.store, amount = NEW.refund_amount, date = NEW.date
+      WHERE id = 'ret-' || OLD.id;
+    END;
 
-  CREATE TRIGGER after_delete_sales_return
-  AFTER DELETE ON sales_returns
-  BEGIN
-    DELETE FROM transactions WHERE id = 'ret-' || OLD.id;
-  END;
-`);
+    CREATE TRIGGER IF NOT EXISTS after_delete_sales_return
+    AFTER DELETE ON sales_returns
+    BEGIN
+      DELETE FROM transactions WHERE id = 'ret-' || OLD.id;
+    END;
+  `);
+} catch(e) {
+  console.warn('Triggers setup warning:', e.message);
+}
 
 const transCount = db.prepare("SELECT COUNT(*) as count FROM transactions").get().count;
 if (transCount === 0) {
