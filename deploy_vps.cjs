@@ -1,58 +1,79 @@
 const { Client } = require('ssh2');
+const fs = require('fs');
+const path = require('path');
+
 const conn = new Client();
 
 conn.on('ready', () => {
   console.log('SSH Connection to VPS Successful!');
   
-  const command = `
-    echo "=== Locating bk_operations directory ==="
-    TARGET_DIR=""
-    for d in /root/bk_operations /root/2/bk_operations /var/www/bk_operations /root/bk; do
-      if [ -d "$d/.git" ]; then
-        TARGET_DIR="$d"
-        break
-      fi
-    done
-    if [ -z "$TARGET_DIR" ]; then
-      TARGET_DIR=$(find /root /var/www /home -name ".git" 2>/dev/null | head -n 1 | xargs dirname)
-    fi
-    echo "Target repo directory: $TARGET_DIR"
-    cd "$TARGET_DIR"
-    
-    echo "=== Running git pull ==="
-    git fetch origin main
-    git reset --hard origin/main
-    
-    echo "=== Checking PM2 Logs (Last 20 lines) ==="
-    pm2 logs --lines 20 --nostream
-    
-    echo "=== Restarting PM2 Processes ==="
-    pm2 restart all
-    
-    echo "=== Testing Local HTTP Ports ==="
-    curl -I http://localhost:3000 || echo "Port 3000 failed"
-    curl -I http://localhost:5000 || echo "Port 5000 failed"
-    curl -I http://localhost:8080 || echo "Port 8080 failed"
-    
-    echo "=== Checking Nginx status ==="
-    systemctl status nginx --no-pager | head -n 15
-    nginx -t
-  `;
-
-  conn.exec(command, (err, stream) => {
+  conn.sftp((err, sftp) => {
     if (err) {
-      console.error('Exec error:', err);
+      console.error('SFTP Error:', err);
       conn.end();
       return;
     }
-    stream.on('close', (code, signal) => {
-      console.log('Stream closed with code:', code);
-      conn.end();
-    }).on('data', (data) => {
-      process.stdout.write(data);
-    }).stderr.on('data', (data) => {
-      process.stderr.write(data);
-    });
+    
+    const vpsPath = '/root/bk 2/shh 2/bk_operations';
+    console.log('Uploading db.cjs to VPS...');
+    
+    sftp.fastPut(
+      path.join(__dirname, 'db.cjs'),
+      `${vpsPath}/db.cjs`,
+      (err) => {
+        if (err) {
+          console.error('Failed to upload db.cjs:', err);
+          conn.end();
+          return;
+        }
+        console.log('Successfully uploaded db.cjs!');
+        
+        console.log('Uploading style.css to VPS...');
+        sftp.fastPut(
+          path.join(__dirname, 'style.css'),
+          `${vpsPath}/style.css`,
+          (err) => {
+            if (err) console.error('Failed to upload style.css:', err);
+            else console.log('Successfully uploaded style.css!');
+            
+            const command = `
+              cd "/root/bk 2/shh 2/bk_operations"
+              echo "=== Building Vite Bundle on VPS ==="
+              npm run build || true
+              
+              echo "=== Restarting PM2 process bk-ops ==="
+              pm2 restart bk-ops || pm2 restart all
+              sleep 2
+              
+              echo "=== Testing local port 3000 ==="
+              curl -I http://localhost:3000
+              
+              echo "=== PM2 Status ==="
+              pm2 status
+              
+              echo "=== PM2 Error Log (Last 10 lines) ==="
+              pm2 logs bk-ops --lines 10 --nostream
+            `;
+            
+            conn.exec(command, (err, stream) => {
+              if (err) {
+                console.error('Exec error:', err);
+                conn.end();
+                return;
+              }
+              stream.on('close', (code, signal) => {
+                console.log('Stream closed with code:', code);
+                conn.end();
+              }).on('data', (data) => {
+                process.stdout.write(data);
+              }).stderr.on('data', (data) => {
+                process.stderr.write(data);
+              });
+            });
+          }
+        );
+      }
+    );
   });
 }).on('error', (err) => {
   console.error('SSH Connection Error:', err);
