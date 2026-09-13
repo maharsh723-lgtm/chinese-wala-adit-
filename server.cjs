@@ -1,3 +1,10 @@
+process.on('uncaughtException', (err) => {
+  console.error('SERVER UNCAUGHT EXCEPTION PREVENTED CRASH:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('SERVER UNHANDLED REJECTION PREVENTED CRASH:', reason);
+});
+
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, 'env', '.env') });
 const express = require('express');

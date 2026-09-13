@@ -11386,6 +11386,81 @@ function initApp() {
     }
 
     window.triggerThermalPrint = function(printMode = 'all') {
+        const printArea = document.getElementById("invoicePrintArea");
+        if (!printArea || !printArea.innerHTML.trim()) {
+            alert("No receipt content available to print!");
+            return;
+        }
+
+        const invoiceModal = document.getElementById("modalPOSInvoice");
+        if (invoiceModal) invoiceModal.style.display = "flex";
+
+        const billSection = printArea.querySelector(".bill-print-section")?.outerHTML || "";
+        const kotSections = Array.from(printArea.querySelectorAll(".kot-print-section, .tear-line-section")).map(el => el.outerHTML).join('');
+
+        let htmlToPrint = "";
+        if (printMode === 'bill') {
+            htmlToPrint = billSection || printArea.innerHTML;
+        } else if (printMode === 'kot') {
+            htmlToPrint = kotSections || printArea.innerHTML;
+        } else {
+            htmlToPrint = printArea.innerHTML;
+        }
+
+        // 1. Try Pop-up Window Printing (Most reliable on Desktop/POS browsers)
+        try {
+            const printWin = window.open('', '_blank', 'width=450,height=700,top=50,left=50');
+            if (printWin) {
+                printWin.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Receipt Thermal Print</title>
+                        <style>
+                            @page { size: auto; margin: 0; }
+                            html, body {
+                                font-family: 'Courier New', Courier, monospace, Arial, sans-serif;
+                                font-weight: 900;
+                                color: #000;
+                                background: #fff;
+                                margin: 0;
+                                padding: 3mm;
+                                width: 78mm;
+                                font-size: 13px;
+                                line-height: 1.3;
+                            }
+                            img { max-width: 150px; height: auto; display: block; margin: 0 auto 6px; filter: grayscale(1); }
+                            .receipt-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
+                            .receipt-divider { border-top: 2px dashed #000; margin: 8px 0; }
+                            .receipt-item-row { margin-bottom: 4px; }
+                            .receipt-item-top { display: flex; justify-content: space-between; font-weight: 900; font-size: 13px; }
+                            .receipt-item-mods { font-size: 11px; padding-left: 8px; font-weight: bold; }
+                            .receipt-totals { font-weight: 900; font-size: 15px; margin-top: 6px; }
+                            .receipt-brand-logo-container { width: 140px; margin: 0 auto 6px; }
+                            .receipt-header { text-align: center; }
+                            .kot-print-section { margin-top: 10px; padding-top: 10px; border-top: 2px dashed #000; }
+                        </style>
+                    </head>
+                    <body>
+                        ${htmlToPrint}
+                        <script>
+                            window.onload = function() {
+                                window.focus();
+                                window.print();
+                                setTimeout(function() { window.close(); }, 500);
+                            };
+                        </script>
+                    </body>
+                    </html>
+                `);
+                printWin.document.close();
+                return;
+            }
+        } catch (e) {
+            console.warn("Popup print blocked, falling back to window.print():", e);
+        }
+
+        // 2. Direct Window Print Fallback
         if (printMode === 'bill') {
             document.body.classList.add('print-bill-only');
             document.body.classList.remove('print-kot-only');
@@ -11393,100 +11468,11 @@ function initApp() {
             document.body.classList.add('print-kot-only');
             document.body.classList.remove('print-bill-only');
         } else {
-            document.body.classList.remove('print-bill-only');
-            document.body.classList.remove('print-kot-only');
+            document.body.classList.remove('print-bill-only', 'print-kot-only');
         }
 
-        const invoiceModal = document.getElementById("modalPOSInvoice");
-        if (invoiceModal) invoiceModal.style.display = "flex";
-
-        try {
-            const printArea = document.getElementById("invoicePrintArea");
-            if (!printArea || !printArea.innerHTML.trim()) {
-                window.print();
-                setTimeout(() => document.body.classList.remove('print-bill-only', 'print-kot-only'), 500);
-                return;
-            }
-
-            let printIframe = document.getElementById("posPrintIframe");
-            if (!printIframe) {
-                printIframe = document.createElement("iframe");
-                printIframe.id = "posPrintIframe";
-                printIframe.style.position = "fixed";
-                printIframe.style.right = "0";
-                printIframe.style.bottom = "0";
-                printIframe.style.width = "0";
-                printIframe.style.height = "0";
-                printIframe.style.border = "none";
-                printIframe.style.opacity = "0";
-                document.body.appendChild(printIframe);
-            }
-
-            const billSection = printArea.querySelector(".bill-print-section")?.outerHTML || "";
-            const kotSections = Array.from(printArea.querySelectorAll(".kot-print-section, .tear-line-section")).map(el => el.outerHTML).join('');
-
-            let htmlToPrint = "";
-            if (printMode === 'bill') {
-                htmlToPrint = billSection || printArea.innerHTML;
-            } else if (printMode === 'kot') {
-                htmlToPrint = kotSections || printArea.innerHTML;
-            } else {
-                htmlToPrint = printArea.innerHTML;
-            }
-
-            const doc = printIframe.contentWindow.document;
-            doc.open();
-            doc.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Thermal Receipt</title>
-                    <style>
-                        @page { size: auto; margin: 0; }
-                        html, body {
-                            font-family: 'Courier New', Courier, monospace, Arial, sans-serif;
-                            font-weight: 900;
-                            color: #000;
-                            background: #fff;
-                            margin: 0;
-                            padding: 2mm;
-                            width: 78mm;
-                            font-size: 13px;
-                            line-height: 1.3;
-                        }
-                        img { max-width: 160px; height: auto; display: block; margin: 0 auto 6px; filter: grayscale(1); }
-                        .receipt-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
-                        .receipt-divider { border-top: 2px dashed #000; margin: 8px 0; }
-                        .receipt-item-row { margin-bottom: 4px; }
-                        .receipt-item-top { display: flex; justify-content: space-between; font-weight: 900; font-size: 13px; }
-                        .receipt-item-mods { font-size: 11px; padding-left: 8px; font-weight: bold; }
-                        .receipt-totals { font-weight: 900; font-size: 15px; margin-top: 6px; }
-                        .receipt-brand-logo-container { width: 140px; margin: 0 auto 6px; }
-                        .receipt-header { text-align: center; }
-                        .kot-print-section { margin-top: 10px; padding-top: 10px; border-top: 2px dashed #000; }
-                    </style>
-                </head>
-                <body>
-                    ${htmlToPrint}
-                </body>
-                </html>
-            `);
-            doc.close();
-
-            setTimeout(() => {
-                try {
-                    printIframe.contentWindow.focus();
-                    printIframe.contentWindow.print();
-                } catch(err) {
-                    window.print();
-                }
-                document.body.classList.remove('print-bill-only', 'print-kot-only');
-            }, 150);
-        } catch (e) {
-            console.warn("Iframe thermal print error, fallback to window.print():", e);
-            window.print();
-            setTimeout(() => document.body.classList.remove('print-bill-only', 'print-kot-only'), 500);
-        }
+        window.print();
+        setTimeout(() => document.body.classList.remove('print-bill-only', 'print-kot-only'), 500);
     };
 
     function renderGSTInvoice(order) {
