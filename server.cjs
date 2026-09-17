@@ -4489,6 +4489,32 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
     if (order) {
       const todayStr = order.date || new Date().toISOString().split('T')[0];
       const auditId = 'audit-' + Date.now();
+      const orderItems = db.prepare('SELECT * FROM pos_order_items WHERE orderId = ?').all(id);
+      
+      const auditDetails = {
+        orderId: id,
+        tokenNumber: order.tokenNumber || 0,
+        grandTotal: order.grandTotal || 0,
+        subtotal: order.subtotal || 0,
+        paymentMethod: order.paymentMethod || 'Cash',
+        splitCashAmount: order.splitCashAmount || 0,
+        splitUpiAmount: order.splitUpiAmount || 0,
+        date: todayStr,
+        time: order.time || '',
+        store: order.store || 'VESU',
+        orderType: order.orderType || 'Dine In',
+        tableName: order.tableName || '',
+        customerName: order.customerName || 'Walk-in Guest',
+        deletedBy: req.user ? req.user.name : 'Manager',
+        items: (orderItems || []).map(i => ({
+          productId: i.productId,
+          productName: i.productName || i.name || 'Item',
+          quantity: i.quantity || i.qty || 1,
+          price: i.price || 0,
+          modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
+        }))
+      };
+
       db.prepare(`
         INSERT INTO pos_audit_logs (id, timestamp, action, userId, userName, details, store)
         VALUES (?, ?, 'ORDER_DELETED', ?, ?, ?, ?)
@@ -4497,7 +4523,7 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
         new Date().toISOString(),
         req.user ? req.user.id : 'admin',
         req.user ? req.user.name : 'Manager',
-        JSON.stringify({ orderId: id, grandTotal: order.grandTotal, tokenNumber: order.tokenNumber, paymentMethod: order.paymentMethod, date: todayStr, store: order.store }),
+        JSON.stringify(auditDetails),
         order.store || 'VESU'
       );
       // Mark as Deleted to track deleted count while removing from active sales

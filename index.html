@@ -2983,6 +2983,53 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- MODAL: DELETED BILLS AUDIT -->
+                <div class="modal-overlay" id="modalDeletedBills" style="z-index: 20000; display:none;">
+                    <div class="modal-card" style="max-width: 950px; width: 95%; padding: 24px; max-height: 90vh; display: flex; flex-direction: column;">
+                        <div class="modal-header" style="border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 8px; border-radius: 8px;">
+                                    <i data-lucide="trash-2" style="width: 22px; height: 22px;"></i>
+                                </div>
+                                <div>
+                                    <h3 style="font-weight:800; margin:0; font-size: 1.2rem; color: var(--text-primary);">Deleted Bills Audit Log</h3>
+                                    <span style="font-size:0.8rem; color: var(--text-tertiary);" id="lblDeletedBillsModalSub">Full itemized breakdown & payment methods for deleted bills</span>
+                                </div>
+                            </div>
+                            <div class="modal-close" onclick="document.getElementById('modalDeletedBills').style.display='none'"><i data-lucide="x"></i></div>
+                        </div>
+                        
+                        <div style="flex: 1; overflow-y: auto; padding-right: 4px;">
+                            <div class="saas-table-container" style="box-shadow: none; border: 1px solid var(--border);">
+                                <table class="saas-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Outlet</th>
+                                            <th>Bill / Token #</th>
+                                            <th>Payment Method</th>
+                                            <th>Items Breakdown</th>
+                                            <th style="text-align:right;">Bill Amount (₹)</th>
+                                            <th>Deleted By</th>
+                                            <th style="text-align:center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="deletedBillsModalBody">
+                                        <!-- Dynamically populated -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:12px;">
+                            <span style="font-size:0.85rem; font-weight:700; color:var(--danger);" id="lblDeletedBillsSummaryTotal">Total Deleted Bills: 0</span>
+                            <button class="saas-btn saas-btn-primary" onclick="document.getElementById('modalDeletedBills').style.display='none'">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- SCREEN: KITCHEN DISPLAY SYSTEM (KDS) -->
                 <div class="app-screen" id="screen-kitchen-kds">
@@ -3048,12 +3095,15 @@
                             </div>
                             <div class="kpi-value" id="live-sales-bill-count">0</div>
                         </div>
-                        <div class="kpi-card" style="border-left: 4px solid #ef4444;">
+                        <div class="kpi-card" style="border-left: 4px solid #ef4444; cursor: pointer; transition: transform 0.15s ease;" onclick="window.openDeletedBillsModal()" title="Click to view detailed itemized breakdown of all deleted bills">
                             <div class="kpi-header">
                                 <span id="lbl-live-sales-deleted">Deleted Bills</span>
                                 <i data-lucide="trash-2" style="color: #ef4444;"></i>
                             </div>
                             <div class="kpi-value" style="color: #ef4444;" id="live-sales-deleted-count">0</div>
+                            <div style="font-size: 0.72rem; color: #ef4444; font-weight: 700; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                <span>Click to view audit list</span> &rarr;
+                            </div>
                         </div>
                         <div class="kpi-card" style="border-left: 4px solid #8b5cf6;">
                             <div class="kpi-header">

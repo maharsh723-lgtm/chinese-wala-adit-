@@ -4158,6 +4158,138 @@ function initApp() {
         });
     }
 
+    window.openDeletedBillsModal = function() {
+        const modal = document.getElementById("modalDeletedBills");
+        const tbody = document.getElementById("deletedBillsModalBody");
+        const summaryTotal = document.getElementById("lblDeletedBillsSummaryTotal");
+        if (!modal || !tbody) return;
+
+        modal.style.display = "flex";
+        tbody.innerHTML = "";
+
+        const selectedDate = selectedLiveSalesFilterDate || getTodayDateStr();
+        const deletedRecords = [];
+
+        // 1. Collect deleted orders from posOrders array
+        (posOrders || []).forEach(ord => {
+            if (ord.status === 'Deleted' || ord.status === 'Cancelled' || ord.status === 'Refunded') {
+                if (currentRole === "bm" && currentStore !== "All" && ord.store !== currentStore) return;
+                const ordDate = ord.date || (ord.timestamp ? ord.timestamp.split('T')[0] : '');
+                if (selectedDate && selectedDate !== 'ALL' && ordDate !== selectedDate) return;
+
+                let items = ord.items;
+                if (!items || !Array.isArray(items) || items.length === 0) {
+                    items = (posOrderItems || []).filter(i => i.orderId === ord.id);
+                }
+
+                deletedRecords.push({
+                    id: ord.id,
+                    tokenNumber: ord.tokenNumber ? `#${ord.tokenNumber}` : `#${ord.id.slice(-4)}`,
+                    store: ord.store || 'VESU',
+                    orderTime: ord.timestamp || (ord.date + (ord.time ? `T${ord.time}` : '')),
+                    paymentMethod: ord.paymentMethod || 'Cash',
+                    splitCashAmount: ord.splitCashAmount || 0,
+                    splitUpiAmount: ord.splitUpiAmount || 0,
+                    grandTotal: parseFloat(ord.grandTotal) || parseFloat(ord.total) || 0,
+                    deletedBy: ord.deletedBy || 'Manager / Staff',
+                    items: items || []
+                });
+            }
+        });
+
+        // 2. Collect from posAuditLogs (ORDER_DELETED action)
+        (posAuditLogs || []).forEach(log => {
+            if (log.action === 'ORDER_DELETED') {
+                if (currentRole === "bm" && currentStore !== "All") {
+                    const s1 = (log.store || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    const s2 = (currentStore || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    if (s1 && s2 && !s1.includes(s2) && !s2.includes(s1)) return;
+                }
+                const logDate = log.timestamp ? log.timestamp.split('T')[0] : '';
+                if (selectedDate && selectedDate !== 'ALL' && logDate !== selectedDate) return;
+
+                try {
+                    const det = typeof log.details === 'string' ? JSON.parse(log.details || '{}') : (log.details || {});
+                    const exists = deletedRecords.some(r => r.id === det.orderId || r.id === log.id);
+                    if (!exists) {
+                        deletedRecords.push({
+                            id: det.orderId || log.id,
+                            tokenNumber: det.tokenNumber ? `#${det.tokenNumber}` : `#DEL`,
+                            store: log.store || det.store || 'VESU',
+                            orderTime: log.timestamp || det.date || '',
+                            paymentMethod: det.paymentMethod || 'Cash',
+                            splitCashAmount: det.splitCashAmount || 0,
+                            splitUpiAmount: det.splitUpiAmount || 0,
+                            grandTotal: parseFloat(det.grandTotal) || 0,
+                            deletedBy: log.userName || det.deletedBy || 'Manager',
+                            items: det.items || []
+                        });
+                    }
+                } catch(e) {}
+            }
+        });
+
+        deletedRecords.sort((a, b) => new Date(b.orderTime) - new Date(a.orderTime));
+
+        if (summaryTotal) {
+            const totalSum = deletedRecords.reduce((sum, r) => sum + r.grandTotal, 0);
+            summaryTotal.textContent = `Total Deleted Bills: ${deletedRecords.length} (Total Amount: ₹${totalSum.toLocaleString('en-IN', { minimumFractionDigits: 2 })})`;
+        }
+
+        if (deletedRecords.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--text-tertiary);">No deleted bills recorded for ${selectedDate}.</td></tr>`;
+            return;
+        }
+
+        deletedRecords.forEach(rec => {
+            const tr = document.createElement("tr");
+            const t = new Date(rec.orderTime);
+            const timeStr = isNaN(t.getTime()) ? (rec.orderTime || '--:--') : t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const payLower = (rec.paymentMethod || '').toLowerCase();
+            let payBadgeBg = 'rgba(239, 68, 68, 0.1)';
+            let payBadgeColor = '#ef4444';
+            let payText = rec.paymentMethod || 'Cash';
+
+            if (payLower.includes('cash')) {
+                payBadgeBg = 'rgba(249, 115, 22, 0.15)';
+                payBadgeColor = 'var(--orange-primary)';
+            } else if (payLower.includes('upi') || payLower.includes('qr')) {
+                payBadgeBg = 'rgba(16, 185, 129, 0.15)';
+                payBadgeColor = 'var(--success)';
+            } else if (payLower.includes('card')) {
+                payBadgeBg = 'rgba(59, 130, 246, 0.15)';
+                payBadgeColor = '#3b82f6';
+            } else if (payLower.includes('split')) {
+                payBadgeBg = 'rgba(139, 92, 246, 0.15)';
+                payBadgeColor = '#8b5cf6';
+                if (rec.splitCashAmount > 0 || rec.splitUpiAmount > 0) {
+                    payText = `Split (Cash: ₹${rec.splitCashAmount}, UPI: ₹${rec.splitUpiAmount})`;
+                }
+            }
+
+            const itemsHtml = (rec.items && rec.items.length > 0)
+                ? rec.items.map(i => `<span style="display:inline-block; margin:2px; padding:2px 6px; background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.2); border-radius:4px; font-size:0.8rem; color:var(--danger);"><b>${i.productName || i.name || 'Item'}</b> (x${i.quantity || i.qty || 1}) @ ₹${parseFloat(i.price || 0).toFixed(2)}</span>`).join(' ')
+                : '<span style="color:var(--text-tertiary); font-size:0.8rem;">Item details not recorded</span>';
+
+            tr.innerHTML = `
+                <td style="white-space:nowrap;"><span style="font-family:monospace; font-size:0.85rem; color:var(--text-secondary);">${timeStr}</span></td>
+                <td><span class="pill-badge" style="background:var(--bg-hover); color:var(--text-secondary); font-size:0.75rem;">${rec.store}</span></td>
+                <td style="font-weight:800; color:var(--danger); font-size:0.95rem; white-space:nowrap;">${rec.tokenNumber}</td>
+                <td style="white-space:nowrap;"><span class="pill-badge" style="background:${payBadgeBg}; color:${payBadgeColor}; border:1px solid ${payBadgeColor}; font-weight:800; font-size:0.78rem;">${payText}</span></td>
+                <td style="min-width:220px; max-width:320px; white-space:normal;">
+                    <div style="display:flex; flex-wrap:wrap; gap:4px;">${itemsHtml}</div>
+                </td>
+                <td style="text-align:right; font-weight:800; font-size:0.95rem; color:var(--danger); white-space:nowrap;">₹${rec.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                <td style="font-size:0.85rem; color:var(--text-secondary); font-weight:600;">${rec.deletedBy}</td>
+                <td style="text-align:center; white-space:nowrap;">
+                    <button type="button" class="saas-btn" style="padding:4px 8px; font-size:0.75rem; background:#3b82f6; color:#fff; border:none; border-radius:4px; font-weight:700; cursor:pointer;" onclick="window.showBill('${rec.id}')">View Receipt</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    };
+
     window.exportLiveSalesItemReportToExcel = function() {
         // 1. Gather all filtered orders for the chosen date & active branch
         let filteredOrders = (posOrders || []).filter(order => {
