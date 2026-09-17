@@ -11260,13 +11260,20 @@ function initApp() {
         const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
         syncCartStateAndUI();
 
-        // Trigger browser print dialog instantly
+        // Trigger customer bill print dialog instantly
         requestAnimationFrame(() => {
             setTimeout(() => {
                 if (typeof window._pendingOrderCommit === 'function') {
                     window._pendingOrderCommit();
                 }
-                window.print();
+                if (typeof window.triggerThermalPrint === 'function') {
+                    window.triggerThermalPrint('bill');
+                } else {
+                    document.body.classList.add('print-bill-only');
+                    document.body.classList.remove('print-kot-only');
+                    window.print();
+                    setTimeout(() => document.body.classList.remove('print-bill-only'), 500);
+                }
             }, 50);
         });
     }
@@ -11385,7 +11392,7 @@ function initApp() {
         window.open(url, '_blank');
     }
 
-    window.triggerThermalPrint = function(printMode = 'all') {
+    window.triggerThermalPrint = function(printMode = 'bill') {
         const printArea = document.getElementById("invoicePrintArea");
         if (!printArea || !printArea.innerHTML.trim()) {
             alert("No receipt content available to print!");
@@ -11395,16 +11402,16 @@ function initApp() {
         const invoiceModal = document.getElementById("modalPOSInvoice");
         if (invoiceModal) invoiceModal.style.display = "flex";
 
+        const isKOT = (printMode === 'kot');
         const billSection = printArea.querySelector(".bill-print-section")?.outerHTML || "";
-        const kotSections = Array.from(printArea.querySelectorAll(".kot-print-section, .tear-line-section")).map(el => el.outerHTML).join('');
+        const kotSections = Array.from(printArea.querySelectorAll(".kot-print-section")).map(el => el.outerHTML).join('');
 
         let htmlToPrint = "";
-        if (printMode === 'bill') {
-            htmlToPrint = billSection || printArea.innerHTML;
-        } else if (printMode === 'kot') {
+        if (isKOT) {
             htmlToPrint = kotSections || printArea.innerHTML;
         } else {
-            htmlToPrint = printArea.innerHTML;
+            // Customer Bill Mode: Print ONLY customer bill
+            htmlToPrint = billSection || printArea.innerHTML;
         }
 
         // 1. Try Pop-up Window Printing (Most reliable on Desktop/POS browsers)
@@ -11415,7 +11422,7 @@ function initApp() {
                     <!DOCTYPE html>
                     <html>
                     <head>
-                        <title>Receipt Thermal Print</title>
+                        <title>${isKOT ? 'KOT Receipt' : 'Customer Bill'}</title>
                         <style>
                             @page { size: auto; margin: 0; }
                             html, body {
@@ -11461,14 +11468,12 @@ function initApp() {
         }
 
         // 2. Direct Window Print Fallback
-        if (printMode === 'bill') {
-            document.body.classList.add('print-bill-only');
-            document.body.classList.remove('print-kot-only');
-        } else if (printMode === 'kot') {
+        if (isKOT) {
             document.body.classList.add('print-kot-only');
             document.body.classList.remove('print-bill-only');
         } else {
-            document.body.classList.remove('print-bill-only', 'print-kot-only');
+            document.body.classList.add('print-bill-only');
+            document.body.classList.remove('print-kot-only');
         }
 
         window.print();

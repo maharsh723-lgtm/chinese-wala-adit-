@@ -2814,9 +2814,19 @@ body.sidebar-collapsed .pos-bottom-actions {
         margin: 0 !important;
         width: 100% !important;
     }
+    /* By default, hide KOT section when printing customer bills */
+    .kot-print-section,
+    .tear-line-section,
+    body:not(.print-kot-only) .kot-print-section,
+    body:not(.print-kot-only) .tear-line-section,
     body.print-bill-only .kot-print-section,
     body.print-bill-only .tear-line-section {
         display: none !important;
+    }
+
+    /* ONLY show KOT section and hide Bill section when print-kot-only class is explicitly active */
+    body.print-kot-only .kot-print-section {
+        display: block !important;
     }
     body.print-kot-only .bill-print-section,
     body.print-kot-only .tear-line-section {
