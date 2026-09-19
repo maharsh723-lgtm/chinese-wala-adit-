@@ -2402,8 +2402,8 @@ app.post('/api/pos/requisitions/:id/pay', authenticateToken, async (req, res) =>
     );
 
     // 2. Dispatch interactive Telegram message with Inline Approval Buttons
-    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
-    const telegramChatId = process.env.TELEGRAM_CHAT_ID || '-5352187849';
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN || '7912100960:AAGQXpd1mTWfOt3bAyuVvio0QBcnzNEUKK4';
+    const telegramChatId = String(process.env.TELEGRAM_CHAT_ID || '-5352187849');
 
     let itemDetails = '';
     if (items && items.length > 0) {
@@ -2429,26 +2429,25 @@ app.post('/api/pos/requisitions/:id/pay', authenticateToken, async (req, res) =>
     };
 
     let telegramMsgId = null;
-    if (telegramToken && telegramChatId) {
-      try {
-        const tgRes = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: telegramChatId,
-            text: messageText,
-            parse_mode: 'Markdown',
-            reply_markup: inlineKeyboard
-          })
-        });
-        const tgData = await tgRes.json();
-        if (tgData.ok && tgData.result) {
-          telegramMsgId = tgData.result.message_id;
-          db.prepare('UPDATE purchase_orders SET telegramMessageId = ?, telegramChatId = ? WHERE id = ?').run(telegramMsgId, String(telegramChatId), id);
-        }
-      } catch (tgErr) {
-        console.error('Error sending Telegram inline button message:', tgErr.message);
+    try {
+      const tgRes = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: telegramChatId,
+          text: messageText,
+          parse_mode: 'Markdown',
+          reply_markup: inlineKeyboard
+        })
+      });
+      const tgData = await tgRes.json();
+      console.log('Telegram pay sendMessage API response:', tgData);
+      if (tgData.ok && tgData.result) {
+        telegramMsgId = tgData.result.message_id;
+        db.prepare('UPDATE purchase_orders SET telegramMessageId = ?, telegramChatId = ? WHERE id = ?').run(telegramMsgId, String(telegramChatId), id);
       }
+    } catch (tgErr) {
+      console.error('Error sending Telegram inline button message:', tgErr.message);
     }
 
     const io = req.app.get('io');
@@ -2709,6 +2708,60 @@ app.post('/api/pos/requisitions/:id/status', authenticateToken, (req, res) => {
       }
     } catch (wsErr) {
       console.warn('Failed to send placeholder WhatsApp notification:', wsErr);
+    }
+
+    // Dispatch/Update Telegram Notification for Status Changes (e.g. Approved / Order Placed / Dispatched / Completed / Rejected)
+    try {
+      const telegramToken = process.env.TELEGRAM_BOT_TOKEN || '7912100960:AAGQXpd1mTWfOt3bAyuVvio0QBcnzNEUKK4';
+      const telegramChatId = String(order.telegramChatId || process.env.TELEGRAM_CHAT_ID || '-5352187849');
+      const messageId = order.telegramMessageId;
+
+      const items = db.prepare('SELECT * FROM purchase_order_items WHERE orderId = ?').all(id);
+      let itemDetails = '';
+      if (items && items.length > 0) {
+        itemDetails = '\n\n*📋 Items Ordered:*\n' + items.map(i => `• ${i.productName || i.name} - ${i.quantity || i.qty} units`).join('\n');
+      }
+
+      const nowFormatted = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      const statusEmoji = (status === 'Approved' || status === 'Order Placed') ? '✅' : (status === 'Rejected' ? '❌' : '📦');
+
+      const messageText = `${statusEmoji} *SMART PROCUREMENT ORDER ${status.toUpperCase()}*\n\n` +
+        `📌 *PO Number:* \`${id}\`\n` +
+        `🏢 *Branch:* ${order.branchName || 'VESU Outlet'}\n` +
+        `💰 *Amount:* ₹${parseFloat(order.grandTotal || 0).toFixed(2)}\n` +
+        `👤 *Manager:* ${order.managerName || 'Store Manager'}\n` +
+        `⚡ *Current Status:* ${status}\n` +
+        `⏰ *Confirmed At:* ${nowFormatted}` +
+        itemDetails;
+
+      if (messageId) {
+        await fetch(`https://api.telegram.org/bot${telegramToken}/editMessageText`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            message_id: messageId,
+            text: messageText,
+            parse_mode: 'Markdown'
+          })
+        });
+      } else {
+        const tgRes = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            text: messageText,
+            parse_mode: 'Markdown'
+          })
+        });
+        const tgData = await tgRes.json();
+        if (tgData.ok && tgData.result) {
+          db.prepare('UPDATE purchase_orders SET telegramMessageId = ? WHERE id = ?').run(tgData.result.message_id, id);
+        }
+      }
+    } catch (tgErr) {
+      console.error('Error dispatching Telegram status confirmation:', tgErr.message);
     }
 
     db.prepare(`
