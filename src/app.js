@@ -13209,6 +13209,13 @@ function initApp() {
         window.addToRequisitionCart(productId, productName, rate, "");
     };
 
+    window.addInventoryItemToPO = function(itemId) {
+        const invItem = (inventory || []).find(i => i.id === itemId);
+        if (!invItem) return alert("Inventory item not found!");
+        openRequisitionCartModal();
+        window.addToRequisitionCart(invItem.id, invItem.label, invItem.unitCost || 0, invItem.unit || "");
+    };
+
     function renderCartCheckoutList() {
         const listDiv = document.getElementById("cartCheckoutItemsList");
         if (!listDiv) return;
