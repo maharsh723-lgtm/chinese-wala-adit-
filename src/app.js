@@ -12909,17 +12909,38 @@ function initApp() {
                     </div>
                 `;
 
-                const stages = ["Payment Pending", "Order Placed", "Order Accepted", "Packing", "Dispatched", "Delivered", "Completed"];
+                const stages = ["Payment Pending", "Telegram Approval", "Order Placed", "Order Accepted", "Dispatched", "Completed"];
                 if (po.orderStatus === "Rejected") {
                     card.innerHTML += `
                         <div style="background:#ef444410; border:1px solid #ef444430; border-radius:6px; padding:10px; color:var(--danger); font-size:0.78rem; font-weight:600; text-align:center;">
-                            This Requisition Order has been Rejected / Cancelled by Warehouse management.
+                            This Requisition Order has been Rejected / Cancelled.
                         </div>
                     `;
                 } else {
-                    let currentStageIndex = stages.indexOf(po.orderStatus);
-                    if (po.paymentStatus === "Paid" && currentStageIndex === 0) currentStageIndex = 1;
-                    
+                    let currentStageIndex = 0;
+                    if (po.orderStatus === "Draft" || po.orderStatus === "Payment Pending") {
+                        currentStageIndex = 0;
+                    } else if (po.orderStatus === "PENDING_TELEGRAM_APPROVAL" || po.orderStatus === "Pending Telegram Approval") {
+                        currentStageIndex = 1;
+                    } else if (po.orderStatus === "Order Placed") {
+                        currentStageIndex = 2;
+                    } else if (po.orderStatus === "Order Accepted" || po.orderStatus === "Approved") {
+                        currentStageIndex = 3;
+                    } else if (po.orderStatus === "Packing" || po.orderStatus === "Packed" || po.orderStatus === "Dispatched" || po.orderStatus === "In Transit") {
+                        currentStageIndex = 4;
+                    } else if (po.orderStatus === "Completed" || po.orderStatus === "Delivered") {
+                        currentStageIndex = 5;
+                    }
+
+                    if (po.orderStatus === "PENDING_TELEGRAM_APPROVAL") {
+                        card.innerHTML += `
+                            <div style="background:rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.3); border-radius:6px; padding:10px; color:#f59e0b; font-size:0.78rem; font-weight:700; text-align:center; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                <i data-lucide="clock" style="width:16px; height:16px;"></i>
+                                <span>⏳ Payment Recorded. Order is awaiting Franchise Owner approval in Telegram before placing with Warehouse.</span>
+                            </div>
+                        `;
+                    }
+
                     let timelineHTML = `<div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px; position:relative; padding: 10px 0;">`;
                     stages.forEach((stage, idx) => {
                         let activeColor = "var(--text-tertiary)";
@@ -12931,7 +12952,7 @@ function initApp() {
                         timelineHTML += `
                             <div style="display:flex; flex-direction:column; align-items:center; flex:1; position:relative; z-index:2;">
                                 <div style="width:16px; height:16px; border-radius:50%; background:${activeColor}; border: 3px solid var(--bg-surface); box-shadow:0 0 0 2px ${activeColor};"></div>
-                                <span style="font-size:0.65rem; font-weight:700; color:${activeColor}; text-align:center; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70px;">${stage}</span>
+                                <span style="font-size:0.65rem; font-weight:700; color:${activeColor}; text-align:center; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:75px;">${stage}</span>
                             </div>
                         `;
                     });
