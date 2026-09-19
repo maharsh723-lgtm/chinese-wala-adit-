@@ -1273,6 +1273,83 @@ body.dark-theme .saas-form-input:focus, body.dark-theme .saas-form-select:focus,
     color: var(--text-secondary);
 }
 
+/* Requisition Cart Modal High-Contrast Adaptive Styling */
+#modalRequisitionCart .modal-content {
+    background: var(--bg-card, #ffffff) !important;
+    color: var(--text-primary, #2E231F) !important;
+    border: 1px solid var(--border, #D4C9BD) !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25) !important;
+}
+
+#modalRequisitionCart .modal-header {
+    background: var(--bg-hover, #F5F0EB) !important;
+    border-bottom: 1px solid var(--border, #D4C9BD) !important;
+}
+
+#modalRequisitionCart h3, 
+#modalRequisitionCart h4 {
+    color: var(--text-heading, #2E231F) !important;
+}
+
+#modalRequisitionCart input[type="text"],
+#modalRequisitionCart input[type="date"],
+#modalRequisitionCart select,
+#modalRequisitionCart textarea {
+    background: var(--bg-surface, #ffffff) !important;
+    color: var(--text-heading, #1e1915) !important;
+    border: 1.5px solid var(--border, #C29F68) !important;
+    border-radius: 8px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    outline: none !important;
+}
+
+#modalRequisitionCart input[type="text"]::placeholder,
+#modalRequisitionCart textarea::placeholder {
+    color: #786c63 !important;
+    opacity: 0.8 !important;
+}
+
+#modalRequisitionCart select option {
+    background: var(--bg-surface, #ffffff) !important;
+    color: var(--text-heading, #1e1915) !important;
+}
+
+body.dark-theme #modalRequisitionCart .modal-content {
+    background: #1E1915 !important;
+    color: #ffffff !important;
+    border-color: rgba(255,255,255,0.12) !important;
+}
+
+body.dark-theme #modalRequisitionCart .modal-header {
+    background: rgba(0,0,0,0.3) !important;
+    border-bottom-color: rgba(255,255,255,0.1) !important;
+}
+
+body.dark-theme #modalRequisitionCart h3, 
+body.dark-theme #modalRequisitionCart h4 {
+    color: #ffffff !important;
+}
+
+body.dark-theme #modalRequisitionCart input[type="text"],
+body.dark-theme #modalRequisitionCart input[type="date"],
+body.dark-theme #modalRequisitionCart select,
+body.dark-theme #modalRequisitionCart textarea {
+    background: #2E231F !important;
+    color: #ffffff !important;
+    border-color: rgba(255,255,255,0.2) !important;
+}
+
+body.dark-theme #modalRequisitionCart input[type="text"]::placeholder,
+body.dark-theme #modalRequisitionCart textarea::placeholder {
+    color: #a89f91 !important;
+}
+
+body.dark-theme #modalRequisitionCart select option {
+    background: #2E231F !important;
+    color: #ffffff !important;
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
     width: 6px;

@@ -19,8 +19,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
     <script defer src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-  <script type="module" crossorigin src="./assets/index-DiVk-vh_.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DZrSDILi.css">
+  <script type="module" crossorigin src="./assets/index-bX8VYuy8.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DEPLvpQy.css">
 </head>
 <body>
 
@@ -6033,9 +6033,9 @@
             </div>
             <div style="display: grid; grid-template-columns: 1.2fr 1fr; flex: 1; overflow: hidden; min-height: 0;">
                 <!-- Left panel: Search and Add items -->
-                <div style="display:flex; flex-direction:column; padding:20px; border-right:1px solid var(--border); background:rgba(0,0,0,0.15); overflow-y:auto;">
-                    <div style="position:relative; margin-bottom: 16px;">
-                        <input type="text" id="cartSearchInput" placeholder="Search product by name or category..." style="width:100%; padding:10px 14px 10px 36px; background:var(--bg-sidebar, #120f0d); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:0.85rem; outline:none; box-sizing:border-box;">
+                <div style="display:flex; flex-direction:column; padding:20px; border-right:1px solid var(--border); overflow-y:auto;">
+                    <div style="position:relative; margin-bottom: 16px; display:flex; align-items:center;">
+                        <input type="text" id="cartSearchInput" placeholder="Search product by name or category..." style="width:100%; padding:10px 14px 10px 36px; box-sizing:border-box;">
                         <i data-lucide="search" style="position:absolute; left:12px; top:11px; width:16px; height:16px; color:var(--text-tertiary);"></i>
                     </div>
                     <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px;" id="cartInventoryItemsList">
@@ -6044,8 +6044,8 @@
                 </div>
 
                 <!-- Right panel: Cart Checkout summary -->
-                <div style="display:flex; flex-direction:column; padding:20px; overflow-y:auto; background:var(--bg-card, #1e1915);">
-                    <h4 style="font-size:0.9rem; font-weight:800; color:var(--text-primary); margin-top:0; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px; display:flex; align-items:center; gap:6px;">
+                <div style="display:flex; flex-direction:column; padding:20px; overflow-y:auto;">
+                    <h4 style="font-size:0.9rem; font-weight:800; margin-top:0; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px; display:flex; align-items:center; gap:6px;">
                         <i data-lucide="clipboard-list" style="width:16px; height:16px; color:#d4af37;"></i> Order Items Checklist
                     </h4>
                     <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:16px; min-height:100px; padding-right:4px;" id="cartCheckoutItemsList">
@@ -6054,7 +6054,7 @@
                     
                     <div style="margin-bottom: 12px;">
                         <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px;">Payment Method</label>
-                        <select id="cartPaymentMethod" style="width:100%; padding:10px 14px; background:var(--bg-sidebar, #120f0d); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:0.85rem; outline:none; box-sizing:border-box;">
+                        <select id="cartPaymentMethod" style="width:100%; padding:10px 14px; box-sizing:border-box;">
                             <option value="UPI">UPI Instant (Dynamic QR)</option>
                             <option value="Bank Transfer">Bank NEFT/IMPS Transfer</option>
                             <option value="Cash Approval">Cash on Delivery Approval</option>
@@ -6064,12 +6064,12 @@
                     
                     <div style="margin-bottom: 12px;">
                         <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px;">Expected Delivery Date</label>
-                        <input type="date" id="cartDeliveryDate" style="width:100%; padding:10px 14px; background:var(--bg-sidebar, #120f0d); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:0.85rem; outline:none; box-sizing:border-box;">
+                        <input type="date" id="cartDeliveryDate" style="width:100%; padding:10px 14px; box-sizing:border-box;">
                     </div>
 
                     <div style="margin-bottom: 16px;">
                         <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px;">Requisition Notes</label>
-                        <textarea id="cartNotes" placeholder="e.g. Please supply fresh stock only..." rows="2" style="width:100%; padding:10px 14px; background:var(--bg-sidebar, #120f0d); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:0.85rem; outline:none; resize:none; box-sizing:border-box;"></textarea>
+                        <textarea id="cartNotes" placeholder="e.g. Please supply fresh stock only..." rows="2" style="width:100%; padding:10px 14px; resize:none; box-sizing:border-box;"></textarea>
                     </div>
 
                     <!-- Ledger Summary -->
