@@ -2464,15 +2464,19 @@ app.post('/api/pos/requisitions/:id/pay', authenticateToken, async (req, res) =>
 app.post('/api/telegram/webhook', async (req, res) => {
   try {
     const body = req.body;
+    console.log('Incoming Telegram Webhook Payload:', JSON.stringify(body));
     
+    // Respond to Telegram immediately with 200 OK so Telegram doesn't timeout
+    res.status(200).json({ ok: true });
+
     // Handle Telegram Inline Button Callback Queries
     if (body && body.callback_query) {
       const callbackQuery = body.callback_query;
       const callbackId = callbackQuery.id;
       const callbackData = callbackQuery.data || '';
       const fromUser = callbackQuery.from ? `@${callbackQuery.from.username || callbackQuery.from.first_name || 'Owner'}` : '@Owner';
-      const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
-      const telegramChatId = callbackQuery.message?.chat?.id || process.env.TELEGRAM_CHAT_ID;
+      const telegramToken = process.env.TELEGRAM_BOT_TOKEN || '7912100960:AAGQXpd1mTWfOt3bAyuVvio0QBcnzNEUKK4';
+      const telegramChatId = callbackQuery.message?.chat?.id || process.env.TELEGRAM_CHAT_ID || '-5352187849';
       const messageId = callbackQuery.message?.message_id;
 
       if (callbackData.startsWith('approve_po_') || callbackData.startsWith('reject_po_')) {
@@ -2481,25 +2485,21 @@ app.post('/api/telegram/webhook', async (req, res) => {
 
         const order = db.prepare('SELECT * FROM purchase_orders WHERE id = ?').get(poId);
         if (!order) {
-          if (telegramToken) {
-            await fetch(`https://api.telegram.org/bot${telegramToken}/answerCallbackQuery`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ callback_query_id: callbackId, text: 'Order not found in database!', show_alert: true })
-            });
-          }
-          return res.json({ ok: true });
+          await fetch(`https://api.telegram.org/bot${telegramToken}/answerCallbackQuery`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ callback_query_id: callbackId, text: 'Order not found in database!', show_alert: true })
+          });
+          return;
         }
 
         if (order.orderStatus === 'Order Placed' || order.orderStatus === 'Approved' || order.orderStatus === 'Rejected') {
-          if (telegramToken) {
-            await fetch(`https://api.telegram.org/bot${telegramToken}/answerCallbackQuery`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ callback_query_id: callbackId, text: `Order is already ${order.orderStatus}!`, show_alert: true })
-            });
-          }
-          return res.json({ ok: true });
+          await fetch(`https://api.telegram.org/bot${telegramToken}/answerCallbackQuery`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ callback_query_id: callbackId, text: `Order is already ${order.orderStatus}!`, show_alert: true })
+          });
+          return;
         }
 
         const nowIso = new Date().toISOString();
@@ -2531,7 +2531,7 @@ app.post('/api/telegram/webhook', async (req, res) => {
           );
 
           // Telegram edit message text to show Approved status
-          if (telegramToken && messageId) {
+          if (messageId) {
             const items = db.prepare('SELECT * FROM purchase_order_items WHERE orderId = ?').all(poId);
             let itemDetails = '';
             if (items && items.length > 0) {
@@ -2577,7 +2577,7 @@ app.post('/api/telegram/webhook', async (req, res) => {
             VALUES (?, ?, ?, ?, ?)
           `).run(`track-${Date.now()}`, poId, 'Rejected', nowIso, `Rejected by Owner (${fromUser}) via Telegram`);
 
-          if (telegramToken && messageId) {
+          if (messageId) {
             const updatedMsg = `❌ *SMART PROCUREMENT ORDER REJECTED*\n\n` +
               `📌 *PO Number:* \`${poId}\`\n` +
               `🏢 *Branch:* ${order.branchName || 'VESU Outlet'}\n` +
@@ -2607,12 +2607,27 @@ app.post('/api/telegram/webhook', async (req, res) => {
         if (io) io.emit('requisition_update');
       }
     }
-    res.json({ ok: true });
   } catch (err) {
     console.error('Error handling Telegram webhook:', err);
-    res.json({ ok: true });
   }
 });
+
+// Auto-register Telegram Webhook URL on startup
+(async () => {
+  try {
+    const token = process.env.TELEGRAM_BOT_TOKEN || '7912100960:AAGQXpd1mTWfOt3bAyuVvio0QBcnzNEUKK4';
+    const webhookUrl = 'https://ops.badikatori.in/api/telegram/webhook';
+    const res = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: webhookUrl, allowed_updates: ['callback_query', 'message'] })
+    });
+    const data = await res.json();
+    console.log('Auto-registered Telegram Webhook:', data);
+  } catch (err) {
+    console.warn('Failed to auto-register Telegram Webhook:', err.message);
+  }
+})();
 
 app.post('/api/pos/requisitions/:id/status', authenticateToken, (req, res) => {
   const { id } = req.params;
