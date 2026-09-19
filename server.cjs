@@ -214,37 +214,28 @@ app.get('/api/state', authenticateToken, (req, res) => {
 
     const posAuditLogs = db.prepare("SELECT * FROM pos_audit_logs WHERE timestamp >= datetime('now', '-7 days')").all();
     const posStockMovement = db.prepare('SELECT * FROM pos_stock_movement WHERE timestamp >= ?').all(sixtyDaysAgo);
-    const purchases = db.prepare('SELECT * FROM purchases').all();
-    const expenses = db.prepare('SELECT * FROM expenses').all();
+    const purchases = db.prepare('SELECT * FROM purchases WHERE date >= ?').all(sixtyDaysAgo);
+    const expenses = db.prepare('SELECT * FROM expenses WHERE date >= ?').all(sixtyDaysAgo);
 
-    const todayStr = new Date().toISOString().split('T')[0];
     const topSellingByStore = {};
     try {
       const stores = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
-      stores.forEach(st => {
-        let items = db.prepare(`
-          SELECT productName, SUM(quantity) as qty
-          FROM pos_order_items oi
-          JOIN pos_orders o ON oi.orderId = o.id
-          WHERE o.store = ? AND o.date = ? AND o.status NOT IN ('Refunded', 'Cancelled', 'Deleted')
-          GROUP BY productName
-          ORDER BY qty DESC
-          LIMIT 5
-        `).all(st, todayStr);
+      stores.forEach(st => { topSellingByStore[st] = []; });
 
-        if (items.length === 0) {
-          items = db.prepare(`
-            SELECT productName, SUM(quantity) as qty
-            FROM pos_order_items oi
-            JOIN pos_orders o ON oi.orderId = o.id
-            WHERE o.store = ? AND o.date >= ? AND o.status NOT IN ('Refunded', 'Cancelled', 'Deleted')
-            GROUP BY productName
-            ORDER BY qty DESC
-            LIMIT 5
-          `).all(st, sixtyDaysAgo);
+      const topRows = db.prepare(`
+        SELECT o.store, oi.productName, SUM(oi.quantity) as qty
+        FROM pos_order_items oi
+        JOIN pos_orders o ON oi.orderId = o.id
+        WHERE o.date >= ? AND o.status NOT IN ('Refunded', 'Cancelled', 'Deleted')
+        GROUP BY o.store, oi.productName
+        ORDER BY o.store, qty DESC
+      `).all(sixtyDaysAgo);
+
+      for (const r of topRows) {
+        if (topSellingByStore[r.store] && topSellingByStore[r.store].length < 5) {
+          topSellingByStore[r.store].push({ productName: r.productName, qty: r.qty });
         }
-        topSellingByStore[st] = items;
-      });
+      }
     } catch (e) {
       console.error('Failed to compute topSellingByStore:', e);
     }

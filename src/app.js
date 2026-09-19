@@ -80,13 +80,13 @@ function initApp() {
                 
                 localStorage.setItem("bk_current_role_key", roleKey);
                 
-                // Hide login overlay
+                // Hide login overlay & switch role instantly
                 const overlay = document.getElementById("login-overlay");
                 if (overlay) overlay.style.display = "none";
-                
-                // Initialize/sync app state
-                await syncStateFromServer(true);
                 setRole(roleKey);
+                
+                // Initialize/sync app state in background
+                syncStateFromServer(true);
                 
             } catch (err) {
                 if (errorMsg) errorMsg.textContent = err.message;
