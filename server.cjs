@@ -9,7 +9,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, 'env', '.env') });
 const express = require('express');
 const compression = require('compression');
-const { db, dbReady } = require('./db.cjs');
+const { db, dbReady, getEstimatedUnitCost, syncAndRepairInventoryUnitCosts } = require('./db.cjs');
 const jwt = require('jsonwebtoken');
 const { hashPassword, verifyPassword } = require('./src/cryptoHelper.cjs');
 const XLSX = require('xlsx');
@@ -446,10 +446,11 @@ app.put('/api/sops/:id/status', authenticateToken, (req, res) => {
 app.post('/api/inventory', authenticateToken, (req, res) => {
   try {
     const { id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status } = req.body;
+    const finalCost = (parseFloat(unitCost) > 0) ? parseFloat(unitCost) : getEstimatedUnitCost(label, category, unit);
     db.prepare(`
       INSERT INTO inventory (id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status);
+    `).run(id, label, category, stock, unit, reorder, finalCost, expiryDate, store, status);
     res.json({ success: true });
   } catch (err) {
     console.error('Error adding inventory:', err);
@@ -473,11 +474,22 @@ app.put('/api/inventory/:id/edit', authenticateToken, (req, res) => {
   try {
     const { id } = req.params;
     const { label, category, stock, unit, reorder, unitCost, expiryDate, status } = req.body;
+    const finalCost = (parseFloat(unitCost) > 0) ? parseFloat(unitCost) : getEstimatedUnitCost(label, category, unit);
     db.prepare('UPDATE inventory SET label = ?, category = ?, stock = ?, unit = ?, reorder = ?, unitCost = ?, expiryDate = ?, status = ? WHERE id = ?')
-      .run(label, category, stock, unit, reorder, unitCost, expiryDate, status, id);
+      .run(label, category, stock, unit, reorder, finalCost, expiryDate, status, id);
     res.json({ success: true });
   } catch (err) {
     console.error('Error editing inventory:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/inventory/repair-costs', authenticateToken, (req, res) => {
+  try {
+    const count = syncAndRepairInventoryUnitCosts();
+    res.json({ success: true, repaired: count });
+  } catch (err) {
+    console.error('Error repairing inventory costs:', err);
     res.status(500).json({ error: err.message });
   }
 });

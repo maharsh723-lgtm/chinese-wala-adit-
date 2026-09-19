@@ -2112,7 +2112,7 @@ try {
   
   const checkInv = db.prepare("SELECT id, stock FROM inventory WHERE LOWER(label) = LOWER(?) AND store = ?");
   const updateInv = db.prepare("UPDATE inventory SET stock = 500 WHERE id = ?");
-  const insertInv = db.prepare("INSERT INTO inventory (id, label, category, stock, unit, reorder, store, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'In Stock')");
+  const insertInv = db.prepare("INSERT INTO inventory (id, label, category, stock, unit, reorder, store, status, unitCost) VALUES (?, ?, ?, ?, ?, ?, ?, 'In Stock', ?)");
   
   branches.forEach(storeName => {
     baseItems.forEach(itemLabel => {
@@ -2123,7 +2123,8 @@ try {
         }
       } else {
         const invId = `inv-seed-${storeName.toLowerCase().replace(/\s+/g, '-')}-${itemLabel.toLowerCase().replace(/\s+/g, '-')}`;
-        insertInv.run(invId, itemLabel, 'Raw Materials', 500, 'Piece', 20, storeName);
+        const estimatedCost = getEstimatedUnitCost(itemLabel, 'Raw Materials', 'Piece');
+        insertInv.run(invId, itemLabel, 'Raw Materials', 500, 'Piece', 20, storeName, estimatedCost);
       }
     });
   });
@@ -2668,4 +2669,94 @@ try {
   console.warn('POS order sync to product_sales warning:', e.message);
 }
 
-module.exports = { db, dbReady };
+function getEstimatedUnitCost(label, category, unit) {
+  const name = (label || '').toLowerCase().trim();
+  
+  if (name.includes('milk')) return 0.06;
+  if (name.includes('coffee')) return 1.20;
+  if (name.includes('tea')) return 0.40;
+  if (name.includes('burger bun') || name.includes('bun')) return 10.00;
+  if (name.includes('veg patty') || name.includes('patty')) return 15.00;
+  if (name.includes('bread')) return 4.00;
+  if (name.includes('maggie') || name.includes('noodle')) return 12.00;
+  if (name.includes('fries') || name.includes('french fries')) return 0.15;
+  if (name.includes('dahi') || name.includes('curd')) return 0.08;
+  if (name.includes('pani puri')) return 1.50;
+  if (name.includes('papdi')) return 1.00;
+  if (name.includes('tokari') || name.includes('tokri')) return 8.00;
+  if (name.includes('tikki')) return 6.00;
+  if (name.includes('bhatura') || name.includes('bhature')) return 7.00;
+  if (name.includes('dish') || name.includes('bowl') || name.includes('spoon') || name.includes('plate')) return 2.50;
+  
+  if (name.includes('chatny') || name.includes('chutney') || name.includes('sauce') || name.includes('sonth') || name.includes('sotha')) return 0.08;
+  if (name.includes('sev') || name.includes('namkeen') || name.includes('bhujiya') || name.includes('bundi') || name.includes('namkin')) return 0.18;
+  if (name.includes('masala') || name.includes('powder') || name.includes('amchur') || name.includes('haldi') || name.includes('mirchi')) return 0.25;
+  if (name.includes('jira') || name.includes('hing') || name.includes('ajvain')) return 0.45;
+  if (name.includes('namak') || name.includes('salt') || name.includes('baking')) return 0.03;
+  if (name.includes('maida') || name.includes('atta') || name.includes('flour') || name.includes('suji')) return 0.04;
+  if (name.includes('chana') || name.includes('mung') || name.includes('moth') || name.includes('dal') || name.includes('mater')) return 0.10;
+  if (name.includes('aloo') || name.includes('aaloo') || name.includes('potato')) return 0.025;
+  if (name.includes('onion') || name.includes('laccha')) return 0.034;
+  if (name.includes('mirchi') || name.includes('mircha') || name.includes('chilli')) return 0.06;
+  if (name.includes('oil') || name.includes('ghee')) return 0.14;
+  if (name.includes('nimbu') || name.includes('lemon')) return 0.10;
+  if (name.includes('dhaniya') || name.includes('dhanya') || name.includes('dhaniy') || name.includes('garnice') || name.includes('garnish') || name.includes('palak') || name.includes('annar') || name.includes('anar')) return 0.08;
+  if (name.includes('bura') || name.includes('sugar')) return 0.05;
+  if (name.includes('aachar') || name.includes('pickle')) return 0.12;
+  
+  // Category fallbacks
+  const cat = (category || '').toLowerCase();
+  const u = (unit || '').toLowerCase();
+  
+  if (cat.includes('bread') || u === 'piece') return 10.00;
+  if (cat.includes('frozen')) return 15.00;
+  if (cat.includes('sauce') || cat.includes('spread')) return 0.08;
+  if (cat.includes('dairy')) return 0.08;
+  if (cat.includes('produce')) return 0.04;
+  if (cat.includes('packaging')) return 2.50;
+  
+  return 10.00;
+}
+
+function syncAndRepairInventoryUnitCosts() {
+  try {
+    // 1. Delete section headers that were erroneously inserted into inventory
+    db.prepare("DELETE FROM inventory WHERE label IN ('GARMA - GARAM CHAAT - JAIN', 'SUBAH KA NASHTA ( 8 AM - 12 PM)', 'THANDA-THANDA CHAAT', 'DIN BHAR, GARMA - GARAM', 'SUBAH KA NASHTA', 'ITEM DETAILS', 'STOCK STATUS')").run();
+
+    // 2. Select items with NULL or <= 0 unitCost
+    const zeroItems = db.prepare("SELECT id, label, category, unit FROM inventory WHERE unitCost IS NULL OR unitCost <= 0").all();
+    if (zeroItems.length === 0) return 0;
+
+    const updateStmt = db.prepare("UPDATE inventory SET unitCost = ?, category = CASE WHEN category = 'Uncategorized' OR category IS NULL OR category = '' THEN ? ELSE category END WHERE id = ?");
+
+    function getCategoryHelper(name) {
+      const lower = (name || '').toLowerCase();
+      if (lower.includes('bun') || lower.includes('bread') || lower.includes('kulche') || lower.includes('bhature') || lower.includes('puri') || lower.includes('kachori') || lower.includes('samosa')) return 'Bakery Breads';
+      if (lower.includes('patty') || lower.includes('patties') || lower.includes('bhalla') || lower.includes('tikki') || lower.includes('munglet')) return 'Frozen Foods';
+      if (lower.includes('chutney') || lower.includes('sauce') || lower.includes('chatney') || lower.includes('oil') || lower.includes('syrup') || lower.includes('kadi') || lower.includes('chatny')) return 'Sauces & Spreads';
+      if (lower.includes('dahi') || lower.includes('cheese') || lower.includes('butter') || lower.includes('cream') || lower.includes('milk')) return 'Dairy Packets';
+      if (lower.includes('lettuce') || lower.includes('beet') || lower.includes('carrot') || lower.includes('onion') || lower.includes('tomato') || lower.includes('chilli') || lower.includes('adrak') || lower.includes('dhania') || lower.includes('lemon') || lower.includes('potato') || lower.includes('alu') || lower.includes('chana') || lower.includes('spices') || lower.includes('masala') || lower.includes('aaloo') || lower.includes('dhanya')) return 'Fresh Produce';
+      if (lower.includes('spoon') || lower.includes('dish') || lower.includes('bowl') || lower.includes('tissue') || lower.includes('paper') || lower.includes('plastic') || lower.includes('bio')) return 'Packaging & Cutlery';
+      return 'Chaat Ingredients';
+    }
+
+    let repaired = 0;
+    zeroItems.forEach(item => {
+      const cost = getEstimatedUnitCost(item.label, item.category, item.unit);
+      const newCat = getCategoryHelper(item.label);
+      updateStmt.run(cost, newCat, item.id);
+      repaired++;
+    });
+
+    console.log(`Successfully repaired unit cost for ${repaired} inventory items.`);
+    return repaired;
+  } catch (err) {
+    console.error('Error repairing inventory unit costs:', err);
+    return 0;
+  }
+}
+
+// Run inventory unit cost repair on database init
+syncAndRepairInventoryUnitCosts();
+
+module.exports = { db, dbReady, getEstimatedUnitCost, syncAndRepairInventoryUnitCosts };
