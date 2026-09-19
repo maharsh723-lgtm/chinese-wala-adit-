@@ -13206,6 +13206,9 @@ function initApp() {
 
     window.quickRequestItem = function(productId, productName, rate) {
         openRequisitionCartModal();
+        const searchInput = document.getElementById("cartSearchInput");
+        if (searchInput) searchInput.value = productName || "";
+        renderCartInventoryItems(productName || "");
         window.addToRequisitionCart(productId, productName, rate, "");
     };
 
@@ -13213,6 +13216,9 @@ function initApp() {
         const invItem = (inventory || []).find(i => i.id === itemId);
         if (!invItem) return alert("Inventory item not found!");
         openRequisitionCartModal();
+        const searchInput = document.getElementById("cartSearchInput");
+        if (searchInput) searchInput.value = invItem.label || "";
+        renderCartInventoryItems(invItem.label || "");
         window.addToRequisitionCart(invItem.id, invItem.label, invItem.unitCost || 0, invItem.unit || "");
     };
 

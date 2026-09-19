@@ -6015,37 +6015,45 @@
 
     <!-- Modal: Requisition Cart -->
     <div class="modal-overlay" id="modalRequisitionCart" style="display:none; justify-content:center; align-items:center; z-index:9999;">
-        <div class="modal-content" style="max-width: 900px; width: 95%; display: flex; flex-direction: column; max-height: 85vh; padding: 0; background: var(--bg-surface); border-radius: 12px; overflow: hidden; border: 1px solid var(--border);">
-            <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover);">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <i data-lucide="shopping-cart" style="width:20px; height:20px; color:var(--pos-espresso);"></i>
-                    <h3 style="font-size:1.1rem; font-weight:800; color:var(--pos-espresso); margin:0;">Stock Requisition Cart</h3>
+        <div class="modal-content" style="max-width: 920px; width: 95%; display: flex; flex-direction: column; max-height: 88vh; padding: 0; background: var(--bg-card, #1e1915); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 16px 40px rgba(0,0,0,0.6);">
+            <div class="modal-header" style="padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="background: rgba(212, 175, 55, 0.12); color: #d4af37; padding: 8px; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.25);">
+                        <i data-lucide="shopping-cart" style="width:20px; height:20px;"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size:1.15rem; font-weight:800; color:var(--text-primary); margin:0;">Stock Requisition & Purchase Order</h3>
+                        <span style="font-size:0.75rem; color:var(--text-tertiary);">Select item quantities to place requisition with supplier</span>
+                    </div>
                 </div>
-                <div class="modal-close" id="btnCloseRequisitionCart" style="cursor:pointer; padding:4px; border-radius:4px; transition:0.2s;">
-                    <i data-lucide="x" style="width: 20px; height: 20px; color:var(--text-secondary);"></i>
+                <div class="modal-close" id="btnCloseRequisitionCart" style="cursor:pointer; padding:6px; border-radius:6px; background:rgba(255,255,255,0.05); color:var(--text-secondary);" onclick="document.getElementById('modalRequisitionCart').style.display='none'">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1.5fr 1fr; flex: 1; overflow: hidden; min-height: 0;">
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; flex: 1; overflow: hidden; min-height: 0;">
                 <!-- Left panel: Search and Add items -->
-                <div style="display:flex; flex-direction:column; padding:20px; border-right:1px solid var(--border); overflow-y:auto;">
-                    <div class="saas-form-group" style="margin-bottom: 16px;">
-                        <input type="text" class="saas-form-input" id="cartSearchInput" placeholder="Search product by name or category..." style="width:100%;">
+                <div style="display:flex; flex-direction:column; padding:20px; border-right:1px solid var(--border); background:rgba(0,0,0,0.15); overflow-y:auto;">
+                    <div style="position:relative; margin-bottom: 16px;">
+                        <input type="text" id="cartSearchInput" placeholder="Search product by name or category..." style="width:100%; padding:10px 14px 10px 36px; background:var(--bg-sidebar, #120f0d); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:0.85rem; outline:none; box-sizing:border-box;">
+                        <i data-lucide="search" style="position:absolute; left:12px; top:11px; width:16px; height:16px; color:var(--text-tertiary);"></i>
                     </div>
-                    <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;" id="cartInventoryItemsList">
+                    <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px;" id="cartInventoryItemsList">
                         <!-- Dynamic items to add -->
                     </div>
                 </div>
 
                 <!-- Right panel: Cart Checkout summary -->
-                <div style="display:flex; flex-direction:column; background:rgba(46, 35, 31, 0.01); padding:20px; overflow-y:auto;">
-                    <h4 style="font-size:0.9rem; font-weight:800; color:var(--pos-espresso); margin-top:0; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:6px;">Order Items Checklist</h4>
-                    <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:16px;" id="cartCheckoutItemsList">
+                <div style="display:flex; flex-direction:column; padding:20px; overflow-y:auto; background:var(--bg-card, #1e1915);">
+                    <h4 style="font-size:0.9rem; font-weight:800; color:var(--text-primary); margin-top:0; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:8px; display:flex; align-items:center; gap:6px;">
+                        <i data-lucide="clipboard-list" style="width:16px; height:16px; color:#d4af37;"></i> Order Items Checklist
+                    </h4>
+                    <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:16px; min-height:100px; padding-right:4px;" id="cartCheckoutItemsList">
                         <!-- Items currently in the cart -->
                     </div>
                     
-                    <div class="saas-form-group" style="margin-bottom: 12px;">
-                        <label class="saas-form-label">Payment Method</label>
-                        <select class="saas-form-select" id="cartPaymentMethod" style="width:100%;">
+                    <div style="margin-bottom: 12px;">
+                        <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px;">Payment Method</label>
+                        <select id="cartPaymentMethod" style="width:100%; padding:10px 14px; background:var(--bg-sidebar, #120f0d); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:0.85rem; outline:none; box-sizing:border-box;">
                             <option value="UPI">UPI Instant (Dynamic QR)</option>
                             <option value="Bank Transfer">Bank NEFT/IMPS Transfer</option>
                             <option value="Cash Approval">Cash on Delivery Approval</option>
@@ -6053,33 +6061,33 @@
                         </select>
                     </div>
                     
-                    <div class="saas-form-group" style="margin-bottom: 12px;">
-                        <label class="saas-form-label">Expected Delivery Date</label>
-                        <input type="date" class="saas-form-input" id="cartDeliveryDate" style="width:100%;">
+                    <div style="margin-bottom: 12px;">
+                        <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px;">Expected Delivery Date</label>
+                        <input type="date" id="cartDeliveryDate" style="width:100%; padding:10px 14px; background:var(--bg-sidebar, #120f0d); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:0.85rem; outline:none; box-sizing:border-box;">
                     </div>
 
-                    <div class="saas-form-group" style="margin-bottom: 16px;">
-                        <label class="saas-form-label">Requisition Notes</label>
-                        <textarea class="saas-form-input" id="cartNotes" placeholder="e.g. Please supply fresh stock only..." rows="2" style="width:100%; resize:none;"></textarea>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px;">Requisition Notes</label>
+                        <textarea id="cartNotes" placeholder="e.g. Please supply fresh stock only..." rows="2" style="width:100%; padding:10px 14px; background:var(--bg-sidebar, #120f0d); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:0.85rem; outline:none; resize:none; box-sizing:border-box;"></textarea>
                     </div>
 
                     <!-- Ledger Summary -->
-                    <div style="background:var(--bg-hover); padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:6px; font-size:0.8rem; margin-bottom:16px; border:1px solid var(--border);">
-                        <div style="display:flex; justify-content:space-between;">
+                    <div style="background:rgba(0,0,0,0.25); padding:14px; border-radius:8px; display:flex; flex-direction:column; gap:6px; font-size:0.8rem; margin-bottom:16px; border:1px solid var(--border);">
+                        <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
                             <span>Subtotal:</span>
-                            <span id="cartSubtotal" style="font-weight:700;">₹0.00</span>
+                            <span id="cartSubtotal" style="font-weight:700; color:var(--text-primary);">₹0.00</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between;">
+                        <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
                             <span>GST (18%):</span>
-                            <span id="cartGST" style="font-weight:700;">₹0.00</span>
+                            <span id="cartGST" style="font-weight:700; color:var(--text-primary);">₹0.00</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; font-size:0.9rem; border-top:1px dashed var(--border); padding-top:6px; margin-top:4px;">
-                            <strong style="color:var(--pos-espresso);">Grand Total:</strong>
-                            <strong id="cartGrandTotal" style="color:var(--pos-accent-orange);">₹0.00</strong>
+                        <div style="display:flex; justify-content:space-between; font-size:0.95rem; border-top:1px dashed var(--border); padding-top:8px; margin-top:4px;">
+                            <strong style="color:var(--text-primary);">Grand Total:</strong>
+                            <strong id="cartGrandTotal" style="color:var(--orange-primary, #d4af37);">₹0.00</strong>
                         </div>
                     </div>
 
-                    <button class="saas-btn saas-btn-primary" id="btnCartSubmit" style="width:100%; padding:10px; font-weight:800; font-size:0.9rem;">
+                    <button class="saas-btn saas-btn-primary" id="btnCartSubmit" style="width:100%; padding:12px; font-weight:800; font-size:0.92rem; background:linear-gradient(135deg, #d4af37, #9f7c46); color:#000; border:none; border-radius:8px; cursor:pointer;">
                         Generate Purchase Order
                     </button>
                 </div>
