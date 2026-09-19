@@ -2629,7 +2629,7 @@ app.post('/api/telegram/webhook', async (req, res) => {
   }
 })();
 
-app.post('/api/pos/requisitions/:id/status', authenticateToken, (req, res) => {
+app.post('/api/pos/requisitions/:id/status', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { status, notes } = req.body;
   try {
