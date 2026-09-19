@@ -409,6 +409,11 @@ db.exec(`
   )
 `);
 
+try { db.exec("ALTER TABLE purchase_orders ADD COLUMN telegramMessageId INTEGER"); } catch(e){}
+try { db.exec("ALTER TABLE purchase_orders ADD COLUMN telegramChatId TEXT"); } catch(e){}
+try { db.exec("ALTER TABLE purchase_orders ADD COLUMN approvedBy TEXT"); } catch(e){}
+try { db.exec("ALTER TABLE purchase_orders ADD COLUMN approvedAt TEXT"); } catch(e){}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS notifications (
     id TEXT PRIMARY KEY,

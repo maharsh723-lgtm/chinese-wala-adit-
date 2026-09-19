@@ -2383,15 +2383,21 @@ app.post('/api/pos/requisitions', authenticateToken, (req, res) => {
   }
 });
 
-app.post('/api/pos/requisitions/:id/pay', authenticateToken, (req, res) => {
+app.post('/api/pos/requisitions/:id/pay', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { transactionId } = req.body;
   try {
+    const order = db.prepare('SELECT * FROM purchase_orders WHERE id = ?').get(id);
+    if (!order) return res.status(404).json({ error: 'Purchase Order not found' });
+
+    const items = db.prepare('SELECT * FROM purchase_order_items WHERE orderId = ?').all(id);
+
+    // 1. Update status to Payment Paid, but Order Status to PENDING_TELEGRAM_APPROVAL
     db.prepare(`
       UPDATE purchase_orders
-      SET paymentStatus = 'Paid', orderStatus = 'Order Placed', transactionId = ?
+      SET paymentStatus = 'Paid', orderStatus = 'PENDING_TELEGRAM_APPROVAL', transactionId = ?
       WHERE id = ?
-    `).run(transactionId, id);
+    `).run(transactionId || 'TXN-' + Date.now(), id);
 
     db.prepare(`
       INSERT INTO order_tracking (id, orderId, status, timestamp, notes)
@@ -2401,27 +2407,220 @@ app.post('/api/pos/requisitions/:id/pay', authenticateToken, (req, res) => {
       id,
       'Payment Received',
       new Date().toISOString(),
-      `Payment verified. Transaction ID: ${transactionId}`
+      `Payment submitted (${transactionId || 'Online'}). Awaiting Telegram Owner Approval.`
     );
 
-    db.prepare(`
-      INSERT INTO notifications (id, title, message, timestamp, role, store)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(
-      `notif-${Date.now()}`,
-      `Payment Success for PO ${id}`,
-      `Payment received. Order is now queued for Warehouse packing.`,
-      new Date().toISOString(),
-      'admin',
-      'WAREHOUSE'
-    );
+    // 2. Dispatch interactive Telegram message with Inline Approval Buttons
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+    const telegramChatId = process.env.TELEGRAM_CHAT_ID || '-5352187849';
+
+    let itemDetails = '';
+    if (items && items.length > 0) {
+      itemDetails = '\n\n*📋 Items Ordered:*\n' + items.map(i => `• ${i.productName || i.name} - ${i.quantity || i.qty} units (₹${parseFloat(i.total || i.amount || 0).toFixed(2)})`).join('\n');
+    }
+
+    const messageText = `🛍️ *SMART PROCUREMENT ORDER SUBMITTED*\n\n` +
+      `📌 *PO Number:* \`${id}\`\n` +
+      `🏢 *Branch:* ${order.branchName || 'VESU Outlet'}\n` +
+      `👤 *Manager:* ${order.managerName || 'Store Manager'}\n` +
+      `💰 *Amount Paid:* ₹${parseFloat(order.grandTotal || 0).toFixed(2)}\n` +
+      `💳 *Txn Ref:* \`${transactionId || 'ONLINE'}\`` +
+      itemDetails +
+      `\n\n⏳ *Status:* _Awaiting Owner Confirmation_`;
+
+    const inlineKeyboard = {
+      inline_keyboard: [
+        [
+          { text: "✅ Approve & Place Order", callback_data: `approve_po_${id}` },
+          { text: "❌ Reject Order", callback_data: `reject_po_${id}` }
+        ]
+      ]
+    };
+
+    let telegramMsgId = null;
+    if (telegramToken && telegramChatId) {
+      try {
+        const tgRes = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            text: messageText,
+            parse_mode: 'Markdown',
+            reply_markup: inlineKeyboard
+          })
+        });
+        const tgData = await tgRes.json();
+        if (tgData.ok && tgData.result) {
+          telegramMsgId = tgData.result.message_id;
+          db.prepare('UPDATE purchase_orders SET telegramMessageId = ?, telegramChatId = ? WHERE id = ?').run(telegramMsgId, String(telegramChatId), id);
+        }
+      } catch (tgErr) {
+        console.error('Error sending Telegram inline button message:', tgErr.message);
+      }
+    }
 
     const io = req.app.get('io');
     if (io) io.emit('requisition_update');
 
-    res.json({ success: true });
+    res.json({ success: true, telegramSent: !!telegramMsgId, message: 'Payment recorded. Sent for Telegram approval.' });
   } catch (err) {
+    console.error('Requisition pay error:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// === Telegram Webhook Endpoint for Interactive Button Callbacks ===
+app.post('/api/telegram/webhook', async (req, res) => {
+  try {
+    const body = req.body;
+    
+    // Handle Telegram Inline Button Callback Queries
+    if (body && body.callback_query) {
+      const callbackQuery = body.callback_query;
+      const callbackId = callbackQuery.id;
+      const callbackData = callbackQuery.data || '';
+      const fromUser = callbackQuery.from ? `@${callbackQuery.from.username || callbackQuery.from.first_name || 'Owner'}` : '@Owner';
+      const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+      const telegramChatId = callbackQuery.message?.chat?.id || process.env.TELEGRAM_CHAT_ID;
+      const messageId = callbackQuery.message?.message_id;
+
+      if (callbackData.startsWith('approve_po_') || callbackData.startsWith('reject_po_')) {
+        const isApprove = callbackData.startsWith('approve_po_');
+        const poId = callbackData.replace('approve_po_', '').replace('reject_po_', '');
+
+        const order = db.prepare('SELECT * FROM purchase_orders WHERE id = ?').get(poId);
+        if (!order) {
+          if (telegramToken) {
+            await fetch(`https://api.telegram.org/bot${telegramToken}/answerCallbackQuery`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ callback_query_id: callbackId, text: 'Order not found in database!', show_alert: true })
+            });
+          }
+          return res.json({ ok: true });
+        }
+
+        if (order.orderStatus === 'Order Placed' || order.orderStatus === 'Approved' || order.orderStatus === 'Rejected') {
+          if (telegramToken) {
+            await fetch(`https://api.telegram.org/bot${telegramToken}/answerCallbackQuery`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ callback_query_id: callbackId, text: `Order is already ${order.orderStatus}!`, show_alert: true })
+            });
+          }
+          return res.json({ ok: true });
+        }
+
+        const nowIso = new Date().toISOString();
+        const nowFormatted = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+        if (isApprove) {
+          // Update Order Status to Order Placed
+          db.prepare(`
+            UPDATE purchase_orders
+            SET orderStatus = 'Order Placed', approvedBy = ?, approvedAt = ?
+            WHERE id = ?
+          `).run(fromUser, nowIso, poId);
+
+          db.prepare(`
+            INSERT INTO order_tracking (id, orderId, status, timestamp, notes)
+            VALUES (?, ?, ?, ?, ?)
+          `).run(`track-${Date.now()}`, poId, 'Order Placed', nowIso, `Approved by Owner (${fromUser}) via Telegram`);
+
+          db.prepare(`
+            INSERT INTO notifications (id, title, message, timestamp, role, store)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).run(
+            `notif-${Date.now()}`,
+            `PO ${poId} Approved & Placed`,
+            `Approved by ${fromUser} on Telegram. Ready for packing.`,
+            nowIso,
+            'admin',
+            'WAREHOUSE'
+          );
+
+          // Telegram edit message text to show Approved status
+          if (telegramToken && messageId) {
+            const items = db.prepare('SELECT * FROM purchase_order_items WHERE orderId = ?').all(poId);
+            let itemDetails = '';
+            if (items && items.length > 0) {
+              itemDetails = '\n\n*📋 Items Ordered:*\n' + items.map(i => `• ${i.productName || i.name} - ${i.quantity || i.qty} units`).join('\n');
+            }
+
+            const updatedMsg = `✅ *SMART PROCUREMENT ORDER APPROVED & PLACED*\n\n` +
+              `📌 *PO Number:* \`${poId}\`\n` +
+              `🏢 *Branch:* ${order.branchName || 'VESU Outlet'}\n` +
+              `💰 *Amount Paid:* ₹${parseFloat(order.grandTotal || 0).toFixed(2)}\n` +
+              `👤 *Manager:* ${order.managerName || 'Store Manager'}\n` +
+              `👑 *Approved By Owner:* ${fromUser} at ${nowFormatted}` +
+              itemDetails +
+              `\n\n_Order is committed and queued for warehouse dispatch._`;
+
+            await fetch(`https://api.telegram.org/bot${telegramToken}/editMessageText`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: telegramChatId,
+                message_id: messageId,
+                text: updatedMsg,
+                parse_mode: 'Markdown'
+              })
+            });
+
+            await fetch(`https://api.telegram.org/bot${telegramToken}/answerCallbackQuery`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ callback_query_id: callbackId, text: '✅ Order Approved & Placed Successfully!', show_alert: true })
+            });
+          }
+        } else {
+          // Reject Order
+          db.prepare(`
+            UPDATE purchase_orders
+            SET orderStatus = 'Rejected', approvedBy = ?, approvedAt = ?
+            WHERE id = ?
+          `).run(fromUser, nowIso, poId);
+
+          db.prepare(`
+            INSERT INTO order_tracking (id, orderId, status, timestamp, notes)
+            VALUES (?, ?, ?, ?, ?)
+          `).run(`track-${Date.now()}`, poId, 'Rejected', nowIso, `Rejected by Owner (${fromUser}) via Telegram`);
+
+          if (telegramToken && messageId) {
+            const updatedMsg = `❌ *SMART PROCUREMENT ORDER REJECTED*\n\n` +
+              `📌 *PO Number:* \`${poId}\`\n` +
+              `🏢 *Branch:* ${order.branchName || 'VESU Outlet'}\n` +
+              `💰 *Amount:* ₹${parseFloat(order.grandTotal || 0).toFixed(2)}\n` +
+              `👑 *Rejected By Owner:* ${fromUser} at ${nowFormatted}`;
+
+            await fetch(`https://api.telegram.org/bot${telegramToken}/editMessageText`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: telegramChatId,
+                message_id: messageId,
+                text: updatedMsg,
+                parse_mode: 'Markdown'
+              })
+            });
+
+            await fetch(`https://api.telegram.org/bot${telegramToken}/answerCallbackQuery`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ callback_query_id: callbackId, text: '❌ Order Rejected.', show_alert: true })
+            });
+          }
+        }
+
+        const io = req.app.get('io');
+        if (io) io.emit('requisition_update');
+      }
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Error handling Telegram webhook:', err);
+    res.json({ ok: true });
   }
 });
 

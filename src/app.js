@@ -12875,6 +12875,7 @@ function initApp() {
                 let statusBadge = `<span class="pill-badge pill-badge-secondary">${po.orderStatus}</span>`;
                 if (po.orderStatus === "Completed") statusBadge = `<span class="pill-badge pill-badge-success">Completed</span>`;
                 if (po.orderStatus === "Rejected") statusBadge = `<span class="pill-badge pill-badge-danger">Rejected</span>`;
+                if (po.orderStatus === "PENDING_TELEGRAM_APPROVAL") statusBadge = `<span class="pill-badge" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-weight:700;">⏳ Awaiting Telegram Owner Approval</span>`;
                 if (po.orderStatus === "Dispatched" || po.orderStatus === "In Transit") statusBadge = `<span class="pill-badge pill-badge-warning" style="background:#3b82f615; color:#3b82f6;">${po.orderStatus}</span>`;
 
                 card.innerHTML = `
