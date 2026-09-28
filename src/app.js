@@ -11558,23 +11558,23 @@ function initApp() {
                         <style>
                             @page { size: auto; margin: 0; }
                             html, body {
-                                font-family: 'Courier New', Courier, monospace, Arial, sans-serif;
-                                font-weight: 900;
+                                font-family: 'Segoe UI', Arial, sans-serif;
+                                font-weight: 600;
                                 color: #000;
                                 background: #fff;
                                 margin: 0;
                                 padding: 3mm;
                                 width: 78mm;
-                                font-size: 13px;
+                                font-size: 12px;
                                 line-height: 1.3;
                             }
                             img { max-width: 150px; height: auto; display: block; margin: 0 auto 6px; filter: grayscale(1); }
                             .receipt-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px; }
                             .receipt-divider { border-top: 2px dashed #000; margin: 8px 0; }
                             .receipt-item-row { margin-bottom: 4px; }
-                            .receipt-item-top { display: flex; justify-content: space-between; font-weight: 900; font-size: 13px; }
-                            .receipt-item-mods { font-size: 11px; padding-left: 8px; font-weight: bold; }
-                            .receipt-totals { font-weight: 900; font-size: 15px; margin-top: 6px; }
+                            .receipt-item-top { display: flex; justify-content: space-between; font-weight: 600; font-size: 12px; }
+                            .receipt-item-mods { font-size: 11px; padding-left: 8px; font-weight: 600; }
+                            .receipt-totals { font-weight: 700; font-size: 14px; margin-top: 6px; }
                             .receipt-brand-logo-container { width: 140px; margin: 0 auto 6px; }
                             .receipt-header { text-align: center; }
                             .kot-print-section { margin-top: 10px; padding-top: 10px; border-top: 2px dashed #000; }
@@ -11668,7 +11668,7 @@ function initApp() {
                     ${(order.store || currentStore).includes('VESU') ? '<div style="font-size:10px;">Contact: +91 9428510400</div>' : ''}
                     <div style="font-size:10px; margin-top:4px;">GSTIN: 27AABCB1234F1Z0</div>
                     ${order.tokenNumber ? `
-                    <div style="margin-top: 10px; padding: 6px; border: 2px dashed #000; border-radius: 4px; display: inline-block; font-weight: 900; font-size: 1.15rem; font-family: monospace; background: #fcfcfc;">
+                    <div style="margin-top: 10px; padding: 6px; border: 2px dashed #000; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 1.15rem; font-family: monospace; background: #fcfcfc;">
                         TOKEN: #${order.tokenNumber}
                     </div>
                     ` : ''}
@@ -11745,14 +11745,14 @@ function initApp() {
                         return `
                             <div class="tear-line-section" style="text-align:center; margin-top: 30px; font-weight: bold; font-size: 12px; letter-spacing: 2px;">✂ --- TEAR HERE --- ✂</div>
                             <div class="kot-print-section" style="margin-top: 10px; padding-top: 20px; border-top: 2px dashed #000;">
-                                <div style="text-align:center; font-weight: 900; font-size: 18px; margin-bottom: 4px;">BADI KATORI</div>
-                                <div style="text-align:center; font-weight: 900; font-size: 14px; margin-bottom: 8px;">${title}</div>
+                                <div style="text-align:center; font-weight: 700; font-size: 18px; margin-bottom: 4px;">BADI KATORI</div>
+                                <div style="text-align:center; font-weight: 700; font-size: 14px; margin-bottom: 8px;">${title}</div>
                                 
                                 <div style="text-align:center; margin-bottom:10px; display:flex; justify-content:center; gap:8px; align-items:center;">
-                                    <span style="font-size: 16px; font-weight: 900; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
+                                    <span style="font-size: 16px; font-weight: 700; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
                                         ${kotDisplay.startsWith('KOT') ? kotDisplay : 'KOT: ' + kotDisplay}
                                     </span>
-                                    <span style="font-size: 16px; font-weight: 900; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
+                                    <span style="font-size: 16px; font-weight: 700; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
                                         TOKEN: ${tokenDisplay}
                                     </span>
                                 </div>
@@ -11761,7 +11761,7 @@ function initApp() {
                                 <div style="font-weight:700; margin-bottom:8px; font-size:13px; text-align:center;">ITEMS TO PREPARE</div>
                                 ${items.map(item => `
                                     <div class="receipt-item-row" style="margin-bottom: 6px;">
-                                        <div class="receipt-item-top" style="font-size: 16px; font-weight: 900;">
+                                        <div class="receipt-item-top" style="font-size: 15px; font-weight: 700;">
                                             <span>[ ${item.quantity || item.qty || 1} ] x ${item.productName || item.name || 'Item'}</span>
                                         </div>
                                         ${item.modifiers && item.modifiers.length > 0 ? `<div class="receipt-item-mods" style="font-size: 13px; margin-left: 20px; font-weight: bold;">+ ${item.modifiers.join(', ')}</div>` : ''}
