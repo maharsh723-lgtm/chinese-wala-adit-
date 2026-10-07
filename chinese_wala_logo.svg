@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 160" width="440" height="160">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d52bf"/>
+      <stop offset="100%" stop-color="#05317b"/>
+    </linearGradient>
+    <linearGradient id="yellowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff200"/>
+      <stop offset="100%" stop-color="#ffaa00"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background Card -->
+  <rect width="440" height="160" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+  
+  <!-- Blue Banner Pill -->
+  <rect x="18" y="18" width="404" height="80" rx="14" fill="url(#bgGrad)" filter="url(#shadow)"/>
+  
+  <!-- Chopsticks Graphic Overlay -->
+  <path d="M 38 42 L 68 70 M 42 36 L 72 64" stroke="#fff200" stroke-width="4.5" stroke-linecap="round"/>
+  
+  <!-- CHINESE Text -->
+  <text x="45" y="73" font-family="'Impact', 'Arial Black', 'Trebuchet MS', sans-serif" font-size="46" font-weight="900" fill="#ffffff" letter-spacing="2.5">CHINESE</text>
+  
+  <!-- Hindi والا Text -->
+  <text x="300" y="74" font-family="'Segoe UI', 'Mukta', 'Arial', sans-serif" font-size="44" font-weight="900" fill="url(#yellowGrad)">वाला</text>
+  
+  <!-- Red Accent Splash Line under banner -->
+  <path d="M 30 106 C 140 101, 300 110, 410 105" stroke="#e63946" stroke-width="6" stroke-linecap="round" fill="none"/>
+  
+  <!-- ADIT CAMPUS Subtitle -->
+  <text x="220" y="142" font-family="'Trebuchet MS', 'Arial Black', sans-serif" font-size="25" font-weight="900" fill="#05317b" text-anchor="middle" letter-spacing="4">ADIT CAMPUS</text>
+</svg>

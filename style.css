@@ -3,37 +3,37 @@
 
 :root {
     color-scheme: light;
-    /* Color Palette - Light Theme */
-    --bg-app: #FAF6F0;
-    --bg-sidebar: #2E231F;
-    --bg-content: #FAF6F0;
+    /* Color Palette - Chinese Wala ADIT Campus Theme */
+    --bg-app: #F4F6FB;
+    --bg-sidebar: #051D42;
+    --bg-content: #F4F6FB;
     --bg-card: #ffffff;
-    --bg-hover: rgba(255, 255, 255, 0.08);
-    --bg-active: rgba(255, 255, 255, 0.15);
+    --bg-hover: rgba(13, 82, 191, 0.08);
+    --bg-active: rgba(13, 82, 191, 0.18);
     
-    --text-primary: #2E231F;
-    --text-secondary: #584F4B;
-    --text-tertiary: #8E8480;
-    --text-heading: #2E231F;
+    --text-primary: #0F172A;
+    --text-secondary: #334155;
+    --text-tertiary: #64748B;
+    --text-heading: #05317B;
     
-    --border: rgba(46, 35, 31, 0.08);
-    --border-glass: rgba(255, 255, 255, 0.4);
-    --antique-brass: #C29F68;
+    --border: #E2E8F0;
+    --border-glass: rgba(13, 82, 191, 0.15);
+    --antique-brass: #0D52BF;
     
-    --orange-primary: #5C4033;
-    --orange-hover: #2E231F;
-    --orange-light: #FAF6F0;
+    --orange-primary: #0D52BF;
+    --orange-hover: #05317B;
+    --orange-light: #EEF4FF;
     
     --success: #10B981;
-    --success-light: #ecfdf5;
-    --warning: #A64B2A;
-    --warning-light: rgba(166, 75, 42, 0.1);
-    --danger: #EF4444;
-    --danger-light: #fef2f2;
+    --success-light: #ECFDF5;
+    --warning: #FFB700;
+    --warning-light: #FFFBEB;
+    --danger: #E63946;
+    --danger-light: #FEF2F2;
     
-    --shadow-sm: 0 1px 3px rgba(46,35,31,0.05), 0 1px 2px rgba(46,35,31,0.03);
-    --shadow-md: 0 4px 20px rgba(46,35,31,0.04), 0 2px 8px rgba(46,35,31,0.02);
-    --shadow-lg: 0 15px 35px rgba(46,35,31,0.06), 0 5px 15px rgba(46,35,31,0.03);
+    --shadow-sm: 0 1px 3px rgba(13, 82, 191, 0.06);
+    --shadow-md: 0 4px 20px rgba(13, 82, 191, 0.08);
+    --shadow-lg: 0 15px 35px rgba(13, 82, 191, 0.12);
     
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -2971,13 +2971,14 @@ body.sidebar-collapsed .pos-bottom-actions {
    ========================================================================== */
 
 :root {
-    --pos-cream-bg: #F8F3ED;
-    --pos-espresso: #2E231F;
-    --pos-beige: #C29F68;
+    --pos-cream-bg: #F4F6FB;
+    --pos-espresso: #05317B;
+    --pos-beige: #0D52BF;
     --pos-accent-green: #10B981;
-    --pos-accent-red: #EF4444;
-    --pos-card-shadow: 0 4px 20px rgba(46, 35, 31, 0.05);
-    --pos-button-shadow: 0 2px 8px rgba(194, 159, 104, 0.2);
+    --pos-accent-red: #E63946;
+    --pos-accent-yellow: #FFB700;
+    --pos-card-shadow: 0 4px 20px rgba(13, 82, 191, 0.08);
+    --pos-button-shadow: 0 2px 8px rgba(13, 82, 191, 0.25);
     --pos-font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -3408,7 +3409,7 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
     font-size: 0.58rem;
     font-weight: 800;
     color: #ffffff;
-    background: var(--pos-beige);
+    background: #e63946;
     padding: 2px 6px;
     border-radius: 4px;
     letter-spacing: 0.5px;
@@ -3417,15 +3418,15 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
 .tile-chef-badge {
     font-size: 0.58rem;
     font-weight: 800;
-    color: #2B241F;
-    background: #E2C293;
+    color: #05317b;
+    background: #ffea00;
     padding: 2px 6px;
     border-radius: 4px;
     letter-spacing: 0.5px;
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    border: 1px solid rgba(194, 159, 104, 0.4);
+    border: 1px solid rgba(255, 183, 0, 0.6);
 }
 
 .tile-chef-badge i {

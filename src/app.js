@@ -261,7 +261,7 @@ function initApp() {
     let currentActiveScreen = "dashboard";
     let isDarkMode = false;
     let currentRole = "bm"; // "bm" or "owner"
-    let currentStore = "VESU"; // Active store for Branch Manager
+    let currentStore = "ADIT CAMPUS"; // Active store for Branch Manager
     let lastStateJson = ""; // For comparing state changes in polling
     
     // Premium Smart AI Procurement State
@@ -308,10 +308,10 @@ function initApp() {
     };
     
     // Owner specific views state
-    let ownerAttendanceStore = "VESU";
-    let ownerChecklistStoreDetail = "VESU";
-    let ownerEodStore = "VESU";
-    let ownerInventoryStore = "VESU";
+    let ownerAttendanceStore = "ADIT CAMPUS";
+    let ownerChecklistStoreDetail = "ADIT CAMPUS";
+    let ownerEodStore = "ADIT CAMPUS";
+    let ownerInventoryStore = "ADIT CAMPUS";
     let ownerEodDate = "2026-06-15";
     let ownerAttendanceTab = "daily"; // "daily" or "monthly"
     let ownerAttendanceSelectedEmployee = ""; // Selected employee for monthly history
@@ -320,15 +320,15 @@ function initApp() {
 
 
     const defaultEmployees = {
-        "1": { id: "1", name: "Crew Member 1", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
-        "EMP102": { id: "EMP102", name: "Kitchen Staff 1", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "1": { id: "1", name: "Crew Member 1", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] },
+        "EMP102": { id: "EMP102", name: "Kitchen Staff 1", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] },
         "EMP103": { id: "EMP103", name: "Manager GAURAV PATH", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "", status: "Active", store: "GAURAV PATH", activePunch: null, history: [] },
-        "EMP104": { id: "EMP104", name: "Manager VESU", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "VESU", activePunch: null, history: [] },
+        "EMP104": { id: "EMP104", name: "Manager ADIT CAMPUS", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] },
         "EMP105": { id: "EMP105", name: "Manager LP SAVANI", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "LP SAVANI", activePunch: null, history: [] },
         "EMP106": { id: "EMP106", name: "Manager SUDAMA CHOWK", role: "Branch Manager", mobile: "9876543215", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "SUDAMA CHOWK", activePunch: null, history: [] },
         "OWNER101": { id: "OWNER101", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "", status: "Active", store: "All", activePunch: null, history: [] },
         "bk2022": { id: "bk2022", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "", status: "Active", store: "All", activePunch: null, history: [] },
-        "manager/123": { id: "manager/123", name: "Store Manager", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "VESU", activePunch: null, history: [] }
+        "manager/123": { id: "manager/123", name: "Store Manager", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] }
     };
 
     // Helper: Compress image file using canvas resize & quality adjustment
@@ -449,7 +449,7 @@ function initApp() {
     }
 
     function getPOSStore() {
-        return (currentStore === 'All') ? 'VESU' : currentStore;
+        return (currentStore === 'All') ? 'ADIT CAMPUS' : currentStore;
     }
 
     // === 2. STATE SYNCHRONIZATION FROM SERVER ===
@@ -663,7 +663,7 @@ function initApp() {
         } else {
             currentRole = "bm";
             if (roleKey === "bm-vesu") {
-                currentStore = "VESU";
+                currentStore = "ADIT CAMPUS";
                 currentUser = empList["EMP104"] || defaultEmployees["EMP104"];
             } else if (roleKey === "bm-lpsavani") {
                 currentStore = "LP SAVANI";
@@ -976,7 +976,7 @@ function initApp() {
         const ctx = document.getElementById("ownerSalesComparisonChart");
         if (!ctx) return;
 
-        const labels = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+        const labels = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
         const todayStr = getTodayDateStr();
         const salesData = labels.map(lbl => {
             const storeOrders = posOrders.filter(o => o.store === lbl && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted');
@@ -1078,7 +1078,7 @@ function initApp() {
         if (!container) return;
         container.innerHTML = "";
 
-        const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+        const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
         branches.forEach(branch => {
             const branchCol = document.createElement("div");
             branchCol.style.display = "flex";
@@ -1136,7 +1136,7 @@ function initApp() {
         container.innerHTML = "";
 
         const todayStr = getTodayDateStr();
-        const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+        const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
 
         branches.forEach(branch => {
             const branchCls = checklists.filter(c => c.store === branch && c.date === todayStr);
@@ -1660,7 +1660,7 @@ function initApp() {
                 }
         } else {
             // Owner View
-            const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+            const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
             let branchRowsHTML = "";
 
             branches.forEach(branch => {
@@ -1938,7 +1938,7 @@ function initApp() {
             `;
 
             if (ownerAttendanceTab === "daily") {
-                const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+                const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
                 let storeOptionsHTML = "";
                 branches.forEach(branch => {
                     storeOptionsHTML += `<option value="${branch}" ${ownerAttendanceStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -2305,7 +2305,7 @@ function initApp() {
         // Branch Switcher dropdown for owner
         let selectHeaderHTML = "";
         if (currentRole === "owner") {
-            const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+            const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
             let storeOptionsHTML = "";
             branches.forEach(branch => {
                 storeOptionsHTML += `<option value="${branch}" ${ownerInventoryStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -2707,7 +2707,7 @@ function initApp() {
         // Populate dropdown of items based on selected store's inventory
         function populateWastageItemDropdown() {
             if (!itemSelect) return;
-            const selectedStore = (currentRole === "bm") ? currentStore : (storeSelect ? storeSelect.value : "VESU");
+            const selectedStore = (currentRole === "bm") ? currentStore : (storeSelect ? storeSelect.value : "ADIT CAMPUS");
             const storeInventory = inventory.filter(item => item.store === selectedStore);
 
             itemSelect.innerHTML = "";
@@ -3002,7 +3002,7 @@ function initApp() {
                 let gauravpathCost = 0;
                 let sudamachowkCost = 0;
                 
-                const branchCosts = { "VESU": 0, "LP SAVANI": 0, "GAURAV PATH": 0, "SUDAMA CHOWK": 0 };
+                const branchCosts = { "ADIT CAMPUS": 0, "LP SAVANI": 0, "GAURAV PATH": 0, "SUDAMA CHOWK": 0 };
                 const reasonCosts = {
                     "Expired": 0,
                     "Burnt": 0,
@@ -3018,7 +3018,7 @@ function initApp() {
                     const wCost = w.cost || (w.qty * uCost);
                     
                     totalFranchiseCost += wCost;
-                    if (w.store === "VESU") vesuCost += wCost;
+                    if (w.store === "ADIT CAMPUS") vesuCost += wCost;
                     else if (w.store === "LP SAVANI") lpsavaniCost += wCost;
                     else if (w.store === "GAURAV PATH") gauravpathCost += wCost;
                     else if (w.store === "SUDAMA CHOWK") sudamachowkCost += wCost;
@@ -3050,10 +3050,10 @@ function initApp() {
                     chartOwnerWasteBranch = new Chart(branchCtx, {
                         type: 'bar',
                         data: {
-                            labels: ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"],
+                            labels: ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"],
                             datasets: [{
                                 label: 'Wastage Loss (₹)',
-                                data: [branchCosts["VESU"], branchCosts["LP SAVANI"], branchCosts["GAURAV PATH"], branchCosts["SUDAMA CHOWK"]],
+                                data: [branchCosts["ADIT CAMPUS"], branchCosts["LP SAVANI"], branchCosts["GAURAV PATH"], branchCosts["SUDAMA CHOWK"]],
                                 backgroundColor: ['#A64B2A', '#D7A86E', '#8E806A'],
                                 borderRadius: 6
                             }]
@@ -3116,7 +3116,7 @@ function initApp() {
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 
-                const store = (currentRole === "bm") ? currentStore : (storeSelect ? storeSelect.value : "VESU");
+                const store = (currentRole === "bm") ? currentStore : (storeSelect ? storeSelect.value : "ADIT CAMPUS");
                 const name = itemSelect.value;
                 const qty = parseFloat(document.getElementById("wasteQtyInput").value);
                 const unit = unitSelect.value;
@@ -3215,7 +3215,7 @@ function initApp() {
         if (downloadTemplateBtn && !downloadTemplateBtn.dataset.listenerBound) {
             downloadTemplateBtn.dataset.listenerBound = "true";
             downloadTemplateBtn.addEventListener("click", () => {
-                const sampleBranch = currentRole === "bm" ? currentStore : "VESU";
+                const sampleBranch = currentRole === "bm" ? currentStore : "ADIT CAMPUS";
                 const sampleInvItem = inventory.find(inv => inv.store === sampleBranch) || { label: "Whopper Sesame Buns" };
                 
                 const templateData = [
@@ -3291,7 +3291,7 @@ function initApp() {
                             return;
                         }
                         
-                        const validBranches = ["VESU", "ADAJAN", "CT LIGHT"];
+                        const validBranches = ["ADIT CAMPUS", "ADAJAN", "CT LIGHT"];
                         const recordsToSave = [];
                         const errors = [];
                         
@@ -3326,7 +3326,7 @@ function initApp() {
                                 return;
                             }
                             if (!validBranches.includes(branch)) {
-                                errors.push(`Row ${rowNum}: Invalid branch '${branch}'. Must be VESU, ADAJAN, or CT LIGHT.`);
+                                errors.push(`Row ${rowNum}: Invalid branch '${branch}'. Must be ADIT CAMPUS, ADAJAN, or CT LIGHT.`);
                                 return;
                             }
                             
@@ -3469,7 +3469,7 @@ function initApp() {
                         
                         totalMonthWasteFound = true;
                         
-                        const vesuItems = dayWastage.filter(w => w.store === "VESU");
+                        const vesuItems = dayWastage.filter(w => w.store === "ADIT CAMPUS");
                         const lpsavaniItems = dayWastage.filter(w => w.store === "LP SAVANI");
                         const gauravpathItems = dayWastage.filter(w => w.store === "GAURAV PATH");
                         const sudamachowkItems = dayWastage.filter(w => w.store === "SUDAMA CHOWK");
@@ -3647,7 +3647,7 @@ function initApp() {
                 "Category": exp.category || 'General',
                 "Description / Note": exp.description || '-',
                 "Payment Method": exp.paymentMethod || 'Cash',
-                "Outlet / Store": exp.store || 'VESU',
+                "Outlet / Store": exp.store || 'ADIT CAMPUS',
                 "Added By": exp.addedBy || 'Staff',
                 "Amount (INR)": amt
             };
@@ -4077,7 +4077,7 @@ function initApp() {
                 id: ord.id,
                 orderTime: ord.timestamp || (ord.date + (ord.time ? `T${ord.time}` : '')),
                 tokenNumber: finalTokenStr,
-                store: ord.store || 'VESU',
+                store: ord.store || 'ADIT CAMPUS',
                 orderType: ord.orderType || 'Dine In',
                 tableName: ord.tableName,
                 customerName: ord.customerName || 'Walk-in Guest',
@@ -4185,7 +4185,7 @@ function initApp() {
                 deletedRecords.push({
                     id: ord.id,
                     tokenNumber: ord.tokenNumber ? `#${ord.tokenNumber}` : `#${ord.id.slice(-4)}`,
-                    store: ord.store || 'VESU',
+                    store: ord.store || 'ADIT CAMPUS',
                     orderTime: ord.timestamp || (ord.date + (ord.time ? `T${ord.time}` : '')),
                     paymentMethod: ord.paymentMethod || 'Cash',
                     splitCashAmount: ord.splitCashAmount || 0,
@@ -4215,7 +4215,7 @@ function initApp() {
                         deletedRecords.push({
                             id: det.orderId || log.id,
                             tokenNumber: det.tokenNumber ? `#${det.tokenNumber}` : `#DEL`,
-                            store: log.store || det.store || 'VESU',
+                            store: log.store || det.store || 'ADIT CAMPUS',
                             orderTime: log.timestamp || det.date || '',
                             paymentMethod: det.paymentMethod || 'Cash',
                             splitCashAmount: det.splitCashAmount || 0,
@@ -4304,7 +4304,7 @@ function initApp() {
             return alert("No sales orders recorded to export for the selected date.");
         }
 
-        const chosenStore = currentRole === "bm" ? currentStore : (getPOSStore() || 'VESU');
+        const chosenStore = currentRole === "bm" ? currentStore : (getPOSStore() || 'ADIT CAMPUS');
         const reportDateStr = (selectedLiveSalesFilterDate && selectedLiveSalesFilterDate !== 'ALL') ? selectedLiveSalesFilterDate : 'ALL DATES';
         
         // Formatted display date (e.g. 01-08-2026 or DD-MM-YYYY)
@@ -4597,14 +4597,14 @@ function initApp() {
         const selectedMonth = monthSelect ? (monthSelect.value || currentMonthStr) : currentMonthStr;
 
         const unifiedSales = [...(productSales || [])];
-        const existingKeys = new Set(unifiedSales.map(s => `${s.store || 'VESU'}_${s.date}_${(s.itemName || '').toLowerCase()}`));
+        const existingKeys = new Set(unifiedSales.map(s => `${s.store || 'ADIT CAMPUS'}_${s.date}_${(s.itemName || '').toLowerCase()}`));
 
         // Aggregate from posOrders and posOrderItems
         const posSalesMap = {};
         (posOrders || []).forEach(order => {
             if (order.status === 'Refunded' || order.status === 'Cancelled' || order.status === 'Deleted') return;
             const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : getTodayDateStr());
-            const orderStore = order.store || 'VESU';
+            const orderStore = order.store || 'ADIT CAMPUS';
             
             let items = order.items;
             if (!items || !Array.isArray(items) || items.length === 0) {
@@ -4780,7 +4780,7 @@ function initApp() {
                     return;
                 }
 
-                const targetStore = (currentRole === "bm") ? currentStore : (storeSelect && storeSelect.value !== "All" ? storeSelect.value : "VESU");
+                const targetStore = (currentRole === "bm") ? currentStore : (storeSelect && storeSelect.value !== "All" ? storeSelect.value : "ADIT CAMPUS");
                 const retailPrice = cleanFloat(recipe.retailPrice);
                 const totalRevenue = qty * retailPrice;
 
@@ -4881,7 +4881,7 @@ function initApp() {
                             return;
                         }
 
-                        const validBranches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+                        const validBranches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
                         const recordsToSave = [];
                         const errors = [];
 
@@ -4890,8 +4890,8 @@ function initApp() {
 
                             const branchInput = (row.Branch || row.branch || row.Store || row.store || "").toString().trim().toUpperCase();
                             let branch = "";
-                            if (branchInput.includes("VESU")) {
-                                branch = "VESU";
+                            if (branchInput.includes("ADIT CAMPUS")) {
+                                branch = "ADIT CAMPUS";
                             } else if (branchInput.includes("LP SAVANI") || branchInput.includes("LPSAVANI") || branchInput.includes("SAVANI")) {
                                 branch = "LP SAVANI";
                             } else if (branchInput.includes("GAURAV PATH") || branchInput.includes("GAURAVPATH") || branchInput.includes("GAURAV")) {
@@ -4910,7 +4910,7 @@ function initApp() {
                                 return;
                             }
                             if (!validBranches.includes(branch)) {
-                                errors.push(`Row ${rowNum}: Invalid branch '${branch}'. Must be VESU, ADAJAN, or CT LIGHT.`);
+                                errors.push(`Row ${rowNum}: Invalid branch '${branch}'. Must be ADIT CAMPUS, ADAJAN, or CT LIGHT.`);
                                 return;
                             }
 
@@ -5201,7 +5201,7 @@ function initApp() {
 
         } else {
             // Owner view
-            const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+            const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
             let storeOptionsHTML = "";
             branches.forEach(branch => {
                 storeOptionsHTML += `<option value="${branch}" ${ownerEodStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -6411,7 +6411,7 @@ function initApp() {
     };
 
     window.triggerWhatsAppSend = function() {
-        const selectedStore = (currentRole === "bm") ? currentStore : "VESU";
+        const selectedStore = (currentRole === "bm") ? currentStore : "ADIT CAMPUS";
         const todayStr = getTodayDateStr();
         
         const storeEods = eodReports.filter(e => e.store === selectedStore);
@@ -7434,6 +7434,36 @@ function initApp() {
         }
     };
 
+    window.clearAllRecipesPrompt = async function() {
+        if (currentRole !== "owner") {
+            alert("Permission denied. Only Franchise Owner can perform this action.");
+            return;
+        }
+
+        const confirmClear = confirm("Are you sure you want to remove ALL recipes from recipe costing?");
+        if (!confirmClear) return;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/recipes/clear-all`, {
+                method: 'POST',
+                headers: {
+                    'X-User-Role': currentRole
+                }
+            });
+
+            if (res.ok) {
+                alert("All recipes cleared successfully.");
+                await syncStateFromServer();
+            } else {
+                const errData = await res.json();
+                alert("Error: " + (errData.error || "Failed to clear recipes"));
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Failed to clear recipes.");
+        }
+    };
+
     // === RECIPE BULK IMPORT (EXCEL) ===
     function parseIngredientsString(str) {
         if (!str) return [];
@@ -7939,7 +7969,7 @@ function initApp() {
     function initReconciliationState() {
         const list = [];
         const managers = {
-            'VESU': 'Manager VESU',
+            'ADIT CAMPUS': 'Manager ADIT CAMPUS',
             'LP SAVANI': 'Manager LP SAVANI',
             'GAURAV PATH': 'Manager GAURAV PATH',
             'SUDAMA CHOWK': 'Manager SUDAMA CHOWK'
@@ -7963,11 +7993,11 @@ function initApp() {
         const sortedDates = Array.from(dateSet).sort((a, b) => b.localeCompare(a));
 
         sortedDates.forEach(dateStr => {
-            ['VESU', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'].forEach(store => {
+            ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'].forEach(store => {
                 // Filter active orders (excluding Deleted, Cancelled, Refunded)
                 const activeOrders = (posOrders || []).filter(o => {
                     const oDate = o.date || (o.timestamp ? o.timestamp.split('T')[0] : '');
-                    const oStore = o.store || 'VESU';
+                    const oStore = o.store || 'ADIT CAMPUS';
                     return oStore === store && oDate === dateStr && o.status !== 'Deleted' && o.status !== 'Cancelled' && o.status !== 'Refunded';
                 });
 
@@ -7998,7 +8028,7 @@ function initApp() {
                 });
 
                 // Filter expenses
-                const storeExpenses = (expenses || []).filter(e => (e.store || 'VESU') === store && e.date === dateStr);
+                const storeExpenses = (expenses || []).filter(e => (e.store || 'ADIT CAMPUS') === store && e.date === dateStr);
                 let cashExpenses = 0;
                 let creditExpenses = 0;
                 storeExpenses.forEach(e => {
@@ -8021,7 +8051,7 @@ function initApp() {
                     id: `${store}-${dateStr}`,
                     date: dateStr,
                     store: store,
-                    auditedBy: managers[store] || 'Manager VESU',
+                    auditedBy: managers[store] || 'Manager ADIT CAMPUS',
                     totalSales: totalSales,
                     cashSales: cashSales,
                     upiSales: upiSales,
@@ -9890,14 +9920,23 @@ function initApp() {
             const activeClass = cat === posSelectedCategory ? 'active' : '';
             let icon = 'chef-hat';
             const catLower = cat.toLowerCase();
-            if (catLower.includes('burger')) icon = 'beef';
-            else if (catLower.includes('sandwich') || catLower.includes('b.t.b')) icon = 'sandwich';
-            else if (catLower.includes('chaat') || catLower.includes('tikki') || catLower.includes('samosa') || catLower.includes('ragda') || catLower.includes('kachori') || catLower.includes('chhole') || catLower.includes('kulcha') || catLower.includes('paani puri')) icon = 'soup';
-            else if (catLower.includes('fries') || catLower.includes('apu-shtik') || catLower.includes('sides')) icon = 'container';
-            else if (catLower.includes('maggie')) icon = 'cup-soda';
-            else if (catLower.includes('paratha') || catLower.includes('prontha')) icon = 'circle';
+            if (catLower.includes('noodle')) icon = 'utensils';
+            else if (catLower.includes('rice')) icon = 'utensils';
+            else if (catLower.includes('chinese starter') || catLower.includes('starter')) icon = 'flame';
+            else if (catLower.includes('fries')) icon = 'container';
+            else if (catLower.includes('momo')) icon = 'soup';
+            else if (catLower.includes('cold drink') || catLower.includes('drink')) icon = 'cup-soda';
+            else if (catLower.includes('chai') || catLower.includes('coffee')) icon = 'coffee';
+            else if (catLower.includes('breakfast')) icon = 'coffee';
+            else if (catLower.includes('pizza')) icon = 'pizza';
+            else if (catLower.includes('burger')) icon = 'beef';
+            else if (catLower.includes('sandwich')) icon = 'sandwich';
+            else if (catLower.includes('garlic bread') || catLower.includes('bread')) icon = 'sandwich';
+            else if (catLower.includes('thali') || catLower.includes('gujarati')) icon = 'utensils-crossed';
+            else if (catLower.includes('chaat') || catLower.includes('tikki') || catLower.includes('samosa')) icon = 'soup';
+            else if (catLower.includes('paratha') || catLower.includes('thepla')) icon = 'circle';
             else if (catLower.includes('dessert') || catLower.includes('sweet')) icon = 'cookie';
-            else if (catLower.includes('cooler') || catLower.includes('beverage') || catLower.includes('frappe') || catLower.includes('coffee') || catLower.includes('tea') || catLower.includes('shake') || catLower.includes('lassi')) icon = 'cup-soda';
+            else if (catLower.includes('cooler') || catLower.includes('shake') || catLower.includes('lassi')) icon = 'cup-soda';
 
             html += `
                 <div class="category-tab category-pill-new ${activeClass}" data-category="${cat}">
@@ -10132,16 +10171,16 @@ function initApp() {
                     <div class="quick-add-section">
                         <span class="quick-add-title">Quick Add Popular</span>
                         <div class="quick-add-grid">
-                            <button type="button" class="quick-add-btn" data-id="pos-p-1">
-                                <i data-lucide="plus"></i> Whopper Veg
+                            <button type="button" class="quick-add-btn" data-id="cw-n-1">
+                                <i data-lucide="plus"></i> Hakka Noodles
                             </button>
-                            <button type="button" class="quick-add-btn" data-id="pos-p-7">
-                                <i data-lucide="plus"></i> BK Fries
+                            <button type="button" class="quick-add-btn" data-id="cw-c-1">
+                                <i data-lucide="plus"></i> Dry Manchurian
                             </button>
-                            <button type="button" class="quick-add-btn" data-id="pos-p-3">
-                                <i data-lucide="plus"></i> Margherita
+                            <button type="button" class="quick-add-btn" data-id="cw-pz-1">
+                                <i data-lucide="plus"></i> Margariba Pizza
                             </button>
-                            <button type="button" class="quick-add-btn" data-id="pos-p-10">
+                            <button type="button" class="quick-add-btn" data-id="cw-cc-3">
                                 <i data-lucide="plus"></i> Cold Coffee
                             </button>
                         </div>
@@ -11662,10 +11701,10 @@ function initApp() {
                 <div class="bill-print-section">
                 <div class="receipt-header">
                     <div class="receipt-brand-logo-container" style="width: 160px; height: auto; display: block; margin: 0 auto 8px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));">
-                        <img src="brand_logo.jpg" alt="Badi Katori Logo" style="width: 100%; height: auto; display: block; border-radius: 4px; filter: grayscale(1);"/>
+                        <img src="chinese_wala_logo.svg" alt="Chinese Wala ADIT Campus Logo" style="width: 100%; height: auto; display: block; border-radius: 4px;"/>
                     </div>
                     <div style="font-size:10px;">Store: ${order.store || currentStore}</div>
-                    ${(order.store || currentStore).includes('VESU') ? '<div style="font-size:10px;">Contact: +91 9428510400</div>' : ''}
+                    ${(order.store || currentStore).includes('ADIT CAMPUS') ? '<div style="font-size:10px;">Contact: +91 9428510400</div>' : ''}
                     <div style="font-size:10px; margin-top:4px;">GSTIN: 27AABCB1234F1Z0</div>
                     ${order.tokenNumber ? `
                     <div style="margin-top: 10px; padding: 6px; border: 2px dashed #000; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 1.15rem; font-family: monospace; background: #fcfcfc;">
@@ -11807,7 +11846,7 @@ function initApp() {
         doc.text(`Store: ${order.store || currentStore}`, 40, 18, { align: "center" });
         
         let startHeaderY = 22;
-        if ((order.store || currentStore).includes('VESU')) {
+        if ((order.store || currentStore).includes('ADIT CAMPUS')) {
             doc.text("Contact: +91 9428510400", 40, startHeaderY, { align: "center" });
             startHeaderY += 4;
         }
@@ -12046,8 +12085,8 @@ function initApp() {
         }
 
         window.simulateDeliveryOrder = async function(platform) {
-            if (currentStore !== 'VESU' && currentStore !== 'All') {
-                showToast("Integrations for Swiggy & Zomato are only connected for the VESU branch.");
+            if (currentStore !== 'ADIT CAMPUS' && currentStore !== 'All') {
+                showToast("Integrations for Swiggy & Zomato are only connected for the ADIT CAMPUS branch.");
                 return;
             }
 
@@ -12127,7 +12166,7 @@ function initApp() {
     function renderDeliveryOrdersScreen() {
         const badgesContainer = document.getElementById("deliveryConnectionBadgesContainer");
         if (badgesContainer) {
-            const isVesu = currentStore === 'VESU' || currentStore === 'All';
+            const isVesu = currentStore === 'ADIT CAMPUS' || currentStore === 'All';
             if (isVesu) {
                 badgesContainer.innerHTML = `
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -12798,7 +12837,7 @@ function initApp() {
     }
 
     function renderBMRequisitions() {
-        const targetStore = currentStore === 'All' ? 'VESU' : currentStore;
+        const targetStore = currentStore === 'All' ? 'ADIT CAMPUS' : currentStore;
         const storeInv = inventory.filter(i => i.store === targetStore);
         const inStockCount = storeInv.filter(i => i.stock > i.reorder).length;
         const lowStockCount = storeInv.filter(i => i.stock <= i.reorder && i.stock > 0).length;
@@ -13164,7 +13203,7 @@ function initApp() {
         if (!listDiv) return;
         listDiv.innerHTML = "";
 
-        const targetStore = currentStore === 'All' ? 'VESU' : currentStore;
+        const targetStore = currentStore === 'All' ? 'ADIT CAMPUS' : currentStore;
         const storeInv = inventory.filter(i => i.store === targetStore);
         const filtered = storeInv.filter(item => {
             const labelMatch = item.label.toLowerCase().includes(searchQuery.toLowerCase());
@@ -13335,7 +13374,7 @@ function initApp() {
         const expectedDeliveryDate = document.getElementById("cartDeliveryDate").value;
         const notes = document.getElementById("cartNotes").value;
 
-        const branchName = currentStore === 'All' ? 'VESU' : currentStore;
+        const branchName = currentStore === 'All' ? 'ADIT CAMPUS' : currentStore;
         const managerName = currentUser ? currentUser.name : "Ops Manager";
         const poId = `PO-${Date.now().toString().slice(-6)}`;
 
@@ -13678,7 +13717,7 @@ function initApp() {
     }
 
     async function renderProcurementScreen() {
-        const targetStore = currentStore === 'All' ? 'VESU' : currentStore;
+        const targetStore = currentStore === 'All' ? 'ADIT CAMPUS' : currentStore;
         const token = localStorage.getItem("bk_jwt_token") || "";
         
         // Silently scan for low stock on dashboard load to trigger auto-replenishment workflow
@@ -14190,7 +14229,7 @@ function initApp() {
                     },
                     body: JSON.stringify({
                         status: 'Inventory Updated',
-                        notes: 'Branch Manager confirmed stock receipt at Vesu outlet.'
+                        notes: 'Branch Manager confirmed stock receipt at ADIT Campus outlet.'
                     })
                 });
                 const data = await res.json();
@@ -14304,13 +14343,14 @@ function initApp() {
     }
 
     // === INITIAL STARTUP SYNC ===
-    // Always clear tokens on startup to force login screen
-    localStorage.removeItem("bk_jwt_token");
-    localStorage.removeItem("bk_logged_in_user");
-    localStorage.removeItem("bk_current_role_key");
+    // Auto-login bypass: default to Owner role without login prompt
+    localStorage.setItem("bk_current_role_key", "owner");
+    localStorage.setItem("bk_logged_in_user", JSON.stringify({ id: "bk2022", name: "Franchise Partner", role: "Owner", roleKey: "owner", store: "All" }));
     
     const overlay = document.getElementById("login-overlay");
-    if (overlay) overlay.style.display = "flex";
+    if (overlay) overlay.style.display = "none";
+    setRole("owner");
+    syncStateFromServer(true);
 
         // =========================================================================
     // PREMIUM SMART AI-POWERED PROCUREMENT SYSTEM UPGRADE
@@ -14323,7 +14363,7 @@ function initApp() {
         const activeContainer = subProcureContainer && subProcureContainer.style.display !== 'none' ? subProcureContainer : mainContainer;
         
         // Scan current inventory for low stock items to dynamically populate the PO
-        const storeFilter = currentStore === 'All' ? 'VESU' : currentStore;
+        const storeFilter = currentStore === 'All' ? 'ADIT CAMPUS' : currentStore;
         const lowStock = inventory.filter(item => item.stock < item.reorder && item.store === storeFilter);
         
         if (currentPoState.items.length === 0) {
@@ -14415,7 +14455,7 @@ function initApp() {
 
     // Sub-view: Dashboard (with 6 animated cards & Purchase Request Details)
     function renderProcurementDashboard() {
-        const storeFilter = currentStore === 'All' ? 'VESU' : currentStore;
+        const storeFilter = currentStore === 'All' ? 'ADIT CAMPUS' : currentStore;
         
         // Dynamic counts
         const lowStockCount = inventory.filter(item => item.stock < item.reorder && item.store === storeFilter).length;
@@ -15073,7 +15113,7 @@ function initApp() {
                         </div>
                         <div>
                             <span style="color:#71717a; display:block; font-weight:700;">DELIVERY ADDRESS</span>
-                            <span style="color:#fff; font-weight:600;">${currentStore === 'All' ? 'Vesu Branch' : currentStore}</span>
+                            <span style="color:#fff; font-weight:600;">${currentStore === 'All' ? 'ADIT Campus' : currentStore}</span>
                         </div>
                     </div>
                     <div style="border-top:1px solid #1f1f23; padding-top:10px;">
@@ -15317,7 +15357,7 @@ function initApp() {
                             body: JSON.stringify({ 
                                 poId: currentPoState.poNumber, 
                                 amount: grandTotal,
-                                branchName: currentStore || "VESU",
+                                branchName: currentStore || "ADIT CAMPUS",
                                 items: procItems
                             })
                         }).then(res => res.json())
@@ -15414,7 +15454,7 @@ function initApp() {
                 btnSbDeliver.innerHTML = '<i class="spinner-icon"></i> Restocking...';
 
                 try {
-                    const storeFilter = currentStore === 'All' ? 'VESU' : currentStore;
+                    const storeFilter = currentStore === 'All' ? 'ADIT CAMPUS' : currentStore;
                     const itemsToReceive = currentPoState.items.map(it => ({
                         label: it.label,
                         qty: it.qty
@@ -15758,7 +15798,7 @@ window.fetchAndRenderPnL = async function() {
     try {
         const apiBase = (window.bk_state && window.bk_state.API_BASE) || '';
         const token = localStorage.getItem("bk_jwt_token") || "";
-        const res = await fetch(`${apiBase}/api/pl/live-summary?branch=VESU&dateFilter=month`, {
+        const res = await fetch(`${apiBase}/api/pl/live-summary?branch=ADIT CAMPUS&dateFilter=month`, {
             headers: {
                 'Authorization': 'Bearer ' + token
             }

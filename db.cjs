@@ -531,17 +531,17 @@ const insertEmp = db.prepare(`
 `);
 
 const seededEmployees = [
-  // VESU
+  // ADIT CAMPUS
   {
     id: "EMP104",
-    name: "Manager VESU",
+    name: "Manager ADIT CAMPUS",
     role: "Branch Manager",
     mobile: "9876543213",
     shiftStart: "09:00",
     roleKey: "sm",
     password: "password123",
     status: "Active",
-    store: "VESU",
+    store: "ADIT CAMPUS",
     activePunch: null,
     history: [],
     salary: 35000
@@ -629,7 +629,7 @@ for (const emp of seededEmployees) {
 console.log('Seeding leave requests...');
 db.prepare(`
   INSERT INTO leave_requests (id, empId, name, store, date, reason, status)
-  VALUES ('lv-1', '1', 'Crew Member 1', 'VESU', ?, 'Medical Checkup', 'PENDING')
+  VALUES ('lv-1', '1', 'Crew Member 1', 'ADIT CAMPUS', ?, 'Medical Checkup', 'PENDING')
 `).run(getOffsetDateStr(1));
 
 
@@ -640,7 +640,7 @@ const insertSOP = db.prepare(`
   INSERT INTO sops (id, title, dept, priority, freq, instructions, assignedTo, store, status, completionPct, dueDate)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
-insertSOP.run('sop-1', 'Whopper Broiler Calibration', 'Kitchen', 'High', 'daily', 'Calibrate broiler temp to 350C.', 'Kitchen Staff', 'VESU', 'OVERDUE', 40, '11:00 AM');
+insertSOP.run('sop-1', 'Whopper Broiler Calibration', 'Kitchen', 'High', 'daily', 'Calibrate broiler temp to 350C.', 'Kitchen Staff', 'ADIT CAMPUS', 'OVERDUE', 40, '11:00 AM');
 insertSOP.run('sop-2', 'Deep Fryer Salting Standard', 'Kitchen', 'Medium', 'daily', 'Salt french fries immediately after fry cycle.', 'Kitchen Staff', 'LP SAVANI', 'PENDING', 75, '2:00 PM');
 insertSOP.run('sop-3', 'Cold storage audit log', 'Management', 'High', 'weekly', 'Audit chiller and freezer temp history sheets.', 'Branch Manager', 'GAURAV PATH', 'COMPLETED', 100, 'Yesterday');
 insertSOP.run('sop-4', 'Hygiene checklist audit', 'Management', 'Medium', 'daily', 'Verify general store hygiene and cleanliness.', 'Branch Manager', 'SUDAMA CHOWK', 'PENDING', 50, '5:00 PM');
@@ -925,7 +925,7 @@ const insertInv = db.prepare(`
   INSERT INTO inventory (id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status, openingStock, closingStock)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
-const branches = ['VESU', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK', 'WAREHOUSE'];
+const branches = ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK', 'WAREHOUSE'];
 
 let invCounter = 1;
 for (const branch of branches) {
@@ -959,7 +959,7 @@ try {
     db.prepare(`
       INSERT INTO suppliers (id, name, contactPerson, mobileNumber, whatsappNumber, email, gstNumber, address, paymentTerms, deliveryDays, notes, status, isPreferred)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run('SUP-001', 'Anand Verma (GM Supplies)', 'Anand Verma', '+91 99786 73137', '+91 99786 73137', 'supplies@badikatori.com', '24AAACB1234F1Z5', 'Vesu, Surat, Gujarat', 'Net 30', 3, 'Default brand partner for all frozen items.', 'Active', 1);
+    `).run('SUP-001', 'Anand Verma (GM Supplies)', 'Anand Verma', '+91 99786 73137', '+91 99786 73137', 'supplies@badikatori.com', '24AAACB1234F1Z5', 'ADIT Campus, Surat, Gujarat', 'Net 30', 3, 'Default brand partner for all frozen items.', 'Active', 1);
 
     db.prepare(`
       INSERT INTO suppliers (id, name, contactPerson, mobileNumber, whatsappNumber, email, gstNumber, address, paymentTerms, deliveryDays, notes, status, isPreferred)
@@ -1009,14 +1009,14 @@ const insertWastage = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
-insertWastage.run('w-1', 'VESU', 'Raw Chicken Patties (Whopper)', 2, 'Box', 'Expired', getOffsetDateStr(0), 900.00, '🍔', 'Manager VESU');
+insertWastage.run('w-1', 'ADIT CAMPUS', 'Raw Chicken Patties (Whopper)', 2, 'Box', 'Expired', getOffsetDateStr(0), 900.00, '🍔', 'Manager ADIT CAMPUS');
 insertWastage.run('w-2', 'LP SAVANI', 'Whopper Sesame Buns', 12, 'Piece', 'Spillage', getOffsetDateStr(0), 186.00, '🍞', 'Manager LP SAVANI');
 insertWastage.run('w-3', 'GAURAV PATH', 'Cheddar Cheese Slices', 50, 'Piece', 'Expired', getOffsetDateStr(1), 425.00, '🧀', 'Manager GAURAV PATH');
-insertWastage.run('w-4', 'VESU', 'Whopper Sesame Buns', 40, 'Piece', 'Burnt', getOffsetDateStr(2), 620.00, '🍞', 'Manager VESU');
+insertWastage.run('w-4', 'ADIT CAMPUS', 'Whopper Sesame Buns', 40, 'Piece', 'Burnt', getOffsetDateStr(2), 620.00, '🍞', 'Manager ADIT CAMPUS');
 insertWastage.run('w-5', 'LP SAVANI', 'Raw Chicken Patties (Whopper)', 1, 'Box', 'Preparation Error', getOffsetDateStr(3), 450.00, '🍔', 'Manager LP SAVANI');
 insertWastage.run('w-6', 'GAURAV PATH', 'Whopper Sesame Buns', 15, 'Piece', 'Spillage', getOffsetDateStr(4), 232.50, '🍞', 'Manager GAURAV PATH');
-insertWastage.run('w-7', 'VESU', 'Cheddar Cheese Slices', 30, 'Piece', 'Customer Return', getOffsetDateStr(5), 255.00, '🧀', 'Manager VESU');
-insertWastage.run('w-8', 'VESU', 'Paneer cubes', 500, 'gm', 'Spillage', getOffsetDateStr(0), 140.00, '🧀', 'Manager VESU');
+insertWastage.run('w-7', 'ADIT CAMPUS', 'Cheddar Cheese Slices', 30, 'Piece', 'Customer Return', getOffsetDateStr(5), 255.00, '🧀', 'Manager ADIT CAMPUS');
+insertWastage.run('w-8', 'ADIT CAMPUS', 'Paneer cubes', 500, 'gm', 'Spillage', getOffsetDateStr(0), 140.00, '🧀', 'Manager ADIT CAMPUS');
 insertWastage.run('w-9', 'LP SAVANI', 'Basmati Rice', 1000, 'gm', 'Pest Damage', getOffsetDateStr(0), 70.00, '🌾', 'Manager LP SAVANI');
 insertWastage.run('w-10', 'GAURAV PATH', 'Chicken chunks', 1500, 'gm', 'Spoiled', getOffsetDateStr(0), 525.00, '🍗', 'Manager GAURAV PATH');
 insertWastage.run('w-11', 'SUDAMA CHOWK', 'Raw Chicken Patties (Whopper)', 3, 'Box', 'Expired', getOffsetDateStr(0), 1350.00, '🍔', 'Manager SUDAMA CHOWK');
@@ -1045,27 +1045,27 @@ const yesterdayStr = getOffsetDateStr(1);
 insertEod.run(`eod-LP SAVANI-${yesterdayStr}`, 'LP SAVANI', yesterdayStr, 185000, 24000, 45000, 110000, 30000, 850, 'Manager LP SAVANI', `${yesterdayStr} 10:15 PM`);
 insertEod.run(`eod-GAURAV PATH-${yesterdayStr}`, 'GAURAV PATH', yesterdayStr, 165000, 18000, 35000, 95000, 35000, 780, 'Manager GAURAV PATH', `${yesterdayStr} 09:45 PM`);
 // Seed Mumbai for yesterday
-insertEod.run(`eod-VESU-${yesterdayStr}`, 'VESU', yesterdayStr, 210000, 31000, 50000, 120000, 40000, 1020, 'Manager VESU', `${yesterdayStr} 10:30 PM`);
+insertEod.run(`eod-ADIT CAMPUS-${yesterdayStr}`, 'ADIT CAMPUS', yesterdayStr, 210000, 31000, 50000, 120000, 40000, 1020, 'Manager ADIT CAMPUS', `${yesterdayStr} 10:30 PM`);
 insertEod.run(`eod-SUDAMA CHOWK-${yesterdayStr}`, 'SUDAMA CHOWK', yesterdayStr, 195000, 26000, 48000, 115000, 32000, 910, 'Manager SUDAMA CHOWK', `${yesterdayStr} 10:00 PM`);
 
-// Seed Recipes
-console.log('Seeding recipes...');
-const insertRecipe = db.prepare(`
-  INSERT INTO recipes (id, name, portion, status, ingredients, rawCost, retailPrice)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
-`);
-
-for (const recipe of recipesList) {
-  insertRecipe.run(
-    recipe.id,
-    recipe.name,
-    recipe.portion,
-    recipe.status,
-    JSON.stringify(recipe.ingredients),
-    recipe.rawCost,
-    recipe.retailPrice
-  );
-}
+// Seed Recipes (Disabled - Recipe Costing empty by user choice)
+// console.log('Seeding recipes...');
+// const insertRecipe = db.prepare(`
+//   INSERT INTO recipes (id, name, portion, status, ingredients, rawCost, retailPrice)
+//   VALUES (?, ?, ?, ?, ?, ?, ?)
+// `);
+// 
+// for (const recipe of recipesList) {
+//   insertRecipe.run(
+//     recipe.id,
+//     recipe.name,
+//     recipe.portion,
+//     recipe.status,
+//     JSON.stringify(recipe.ingredients),
+//     recipe.rawCost,
+//     recipe.retailPrice
+//   );
+// }
 
 // Seed Product Sales
 console.log('Seeding product sales...');
@@ -1075,15 +1075,15 @@ const insertProductSale = db.prepare(`
 `);
 
 const seededProductSales = [
-  // VESU - 2026-06-15
-  { id: "ps-vesu-1", store: "VESU", date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 150, revenue: 30000, image: "🍢" },
-  { id: "ps-vesu-2", store: "VESU", date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 120, revenue: 30000, image: "🍲" },
-  { id: "ps-vesu-3", store: "VESU", date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 100, revenue: 25000, image: "🥘" },
-  { id: "ps-vesu-4", store: "VESU", date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 90, revenue: 16200, image: "🥞" },
-  { id: "ps-vesu-5", store: "VESU", date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 80, revenue: 14800, image: "🍲" },
-  { id: "ps-vesu-6", store: "VESU", date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 70, revenue: 6300, image: "🧆" },
-  { id: "ps-vesu-7", store: "VESU", date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 60, revenue: 11040, image: "🍜" },
-  { id: "ps-vesu-8", store: "VESU", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 50, revenue: 4500, image: "🍨" },
+  // ADIT CAMPUS - 2026-06-15
+  { id: "ps-vesu-1", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 150, revenue: 30000, image: "🍢" },
+  { id: "ps-vesu-2", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 120, revenue: 30000, image: "🍲" },
+  { id: "ps-vesu-3", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 100, revenue: 25000, image: "🥘" },
+  { id: "ps-vesu-4", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 90, revenue: 16200, image: "🥞" },
+  { id: "ps-vesu-5", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 80, revenue: 14800, image: "🍲" },
+  { id: "ps-vesu-6", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 70, revenue: 6300, image: "🧆" },
+  { id: "ps-vesu-7", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 60, revenue: 11040, image: "🍜" },
+  { id: "ps-vesu-8", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 50, revenue: 4500, image: "🍨" },
 
   // LP SAVANI - 2026-06-15
   { id: "ps-lpsavani-1", store: "LP SAVANI", date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 160, revenue: 32000, image: "🍢" },
@@ -1128,139 +1128,119 @@ const insertPosProduct = db.prepare(`
 `);
 
 const seededPosProducts = [
-  { id: "pos-p-1", name: "Paani Puri", category: "Paani Puri", price: 50.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-2", name: "Marwadi Mirchi Bada", category: "Chaat", price: 50.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-3", name: "Kurkure Tawa Aloo Chaat", category: "Chaat", price: 75.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-4", name: "Sabudana Khichadi", category: "Chaat", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-5", name: "Pocket Chhole Chaat", category: "Chaat", price: 110.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-6", name: "Moonglet", category: "Chaat", price: 125.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-7", name: "Paneer Chilla", category: "Chaat", price: 150.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-8", name: "Tikki Chaat", category: "Tikki", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-9", name: "Tikki Ragda", category: "Tikki", price: 90.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-10", name: "Tikki Chhole", category: "Tikki", price: 100.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-11", name: "Samosa Chaat", category: "Samosa", price: 60.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-12", name: "Samosa Ragda", category: "Samosa", price: 70.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-13", name: "Samosa Chhole", category: "Samosa", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-14", name: "Samosa Kadhi", category: "Samosa", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-15", name: "Ragda Kachori", category: "Ragda", price: 70.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-16", name: "Ragda Samosa", category: "Ragda", price: 70.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-17", name: "Ragda Tikki", category: "Ragda", price: 90.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-18", name: "Ragda Kulcha", category: "Ragda", price: 160.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-19", name: "Kachori Chaat", category: "Kachori", price: 60.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-20", name: "Kachori Ragda", category: "Kachori", price: 70.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-21", name: "Kachori Chhole", category: "Kachori", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-22", name: "Kachori Kadhi", category: "Kachori", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-23", name: "Chhole Samosa", category: "Chhole", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-24", name: "Chhole Kachori", category: "Chhole", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-25", name: "Chhole Kulcha", category: "Chhole", price: 140.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-26", name: "Chhole Bhatura", category: "Chhole", price: 180.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-27", name: "Batata Wada", category: "Pav", price: 25.00, image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-28", name: "Samosa Pav", category: "Pav", price: 30.00, image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-29", name: "Dabeli", category: "Pav", price: 70.00, image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-30", name: "Kolhapuri Misal", category: "Pav", price: 95.00, image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-31", name: "Pav Bhaji", category: "Pav", price: 180.00, image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-32", name: "Kulcha Chhole", category: "Kulcha", price: 140.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-33", name: "Kulcha Matar", category: "Kulcha", price: 160.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-34", name: "Regular Maggie", category: "Maggie", price: 50.00, image: "https://images.unsplash.com/photo-1612927601601-6638404737ce?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-35", name: "Cheese Maggie", category: "Maggie", price: 70.00, image: "https://images.unsplash.com/photo-1612927601601-6638404737ce?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-36", name: "Veg Maggie", category: "Maggie", price: 70.00, image: "https://images.unsplash.com/photo-1612927601601-6638404737ce?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-37", name: "Szechuan Maggie", category: "Maggie", price: 80.00, image: "https://images.unsplash.com/photo-1612927601601-6638404737ce?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-38", name: "Sev Poori", category: "Cold Chaat", price: 60.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-39", name: "Masala Poori", category: "Cold Chaat", price: 60.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-40", name: "Dahi Poori", category: "Cold Chaat", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-41", name: "Palak Patta Chaat", category: "Cold Chaat", price: 85.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-42", name: "Aloo Papdi", category: "Cold Chaat", price: 90.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-43", name: "Bhalla Papdi", category: "Cold Chaat", price: 110.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-44", name: "Raj Kachori Chaat", category: "Cold Chaat", price: 170.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-45", name: "Kaju katori Chaat", category: "Cold Chaat", price: 220.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-46", name: "Jain Kacha Kela Chaat", category: "Jain", price: 70.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-47", name: "Jain Kacha Kela Ragda", category: "Jain", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-48", name: "Jain Kacha Kela Chhole", category: "Jain", price: 90.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-49", name: "Jain Kachori Chaat", category: "Jain", price: 70.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-50", name: "Jain Kachori Ragda", category: "Jain", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-51", name: "Jain Kachori Chhole", category: "Jain", price: 90.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-52", name: "Jain Bhalla Papdi Chaat", category: "Jain", price: 120.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-53", name: "Jain Dahi Bhalle", category: "Jain", price: 130.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-54", name: "Jain Raj Kachori Chaat", category: "Jain", price: 200.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-55", name: "Street Style Sandwich", category: "B.T.B", price: 120.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-56", name: "Chowpatty Toast", category: "B.T.B", price: 130.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-57", name: "Paneer Bhurjee", category: "B.T.B", price: 150.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-58", name: "Vegetable Club", category: "B.T.B", price: 180.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-59", name: "Classic Patty Burger", category: "Burgers", price: 130.00, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-60", name: "Desi Patty Burger", category: "Burgers", price: 150.00, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-61", name: "Spicy Paneer Patty Burger", category: "Burgers", price: 160.00, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-62", name: "Aloo Paratha", category: "Prontha", price: 150.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-63", name: "Mix Veg Paratha", category: "Prontha", price: 170.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-64", name: "Paneer Paratha", category: "Prontha", price: 190.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-65", name: "Cheese Paratha", category: "Prontha", price: 220.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-66", name: "Kulfi stick", category: "Desserts", price: 60.00, image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-67", name: "Gulab jamun", category: "Desserts", price: 60.00, image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-68", name: "Rabdi", category: "Desserts", price: 70.00, image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-69", name: "Rabdi Gulab jamun", category: "Desserts", price: 110.00, image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-70", name: "Whole Fruit kulfi", category: "Desserts", price: 180.00, image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-71", name: "Samosa bucket (6 pcs)", category: "Desserts", price: 130.00, image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-72", name: "Kachori bucket (6 pcs)", category: "Desserts", price: 130.00, image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-73", name: "Vadapav", category: "Apu-Shtik", price: 25.00, image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-74", name: "Sabudana vada", category: "Apu-Shtik", price: 70.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-75", name: "Cholli garlic pops", category: "Apu-Shtik", price: 75.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-76", name: "French fries", category: "Apu-Shtik", price: 80.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-77", name: "Peri peri french fries", category: "Apu-Shtik", price: 90.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-78", name: "Veggie sticks", category: "Apu-Shtik", price: 110.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-79", name: "Hara bhara kebab", category: "Apu-Shtik", price: 120.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-80", name: "Mix veg gyozas", category: "Apu-Shtik", price: 120.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-81", name: "Jalapeno cheese pops", category: "Apu-Shtik", price: 130.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-82", name: "Mozzarella sticks", category: "Apu-Shtik", price: 150.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-83", name: "Poppers bucket", category: "Apu-Shtik", price: 180.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-84", name: "Fingers bucket", category: "Apu-Shtik", price: 180.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-85", name: "Chilli guava", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-86", name: "Masala Lemonade", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-87", name: "Mint Mojito", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-88", name: "Hajma Hajam", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-89", name: "Masala Kaccha Aam", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-90", name: "Shikanji", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-91", name: "Kala Khatta", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-92", name: "Kokum Drink", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-93", name: "Watermelon Cooler", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-94", name: "Orange Cooler", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-95", name: "Alphanso Mango Cooler", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-96", name: "Classic Jeeru", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-97", name: "Imli Banta", category: "Indian Coolers", price: 99.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-98", name: "Mocha Cold Coffee", category: "Frappe", price: 110.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-99", name: "Classic Cold Coffee", category: "Frappe", price: 120.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-100", name: "Cappucino Cold Coffee", category: "Frappe", price: 120.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-101", name: "Filter Coffee 100ml", category: "Hot Coffee Mix", price: 99.00, image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-102", name: "Ginger Tea", category: "Hot Tea", price: 50.00, image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-103", name: "Pudina Tea", category: "Hot Tea", price: 50.00, image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-104", name: "Masala Tea", category: "Hot Tea", price: 50.00, image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-105", name: "Rose Milkshake", category: "Milkshakes", price: 110.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-106", name: "Chocolate Milkshake", category: "Milkshakes", price: 120.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-107", name: "Kesar Thandai", category: "Milkshakes", price: 120.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-108", name: "Nutella Milkshake", category: "Milkshakes", price: 150.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-109", name: "Brownie Milkshake", category: "Milkshakes", price: 150.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-110", name: "Tiramisu Milkshake", category: "Milkshakes", price: 150.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-111", name: "Ferrero Rocher Milkshake", category: "Milkshakes", price: 150.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-112", name: "Kit Kat Milkshake", category: "Milkshakes", price: 150.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-113", name: "Kaju Anjeer Milkshake", category: "Milkshakes", price: 165.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-114", name: "Strawberry Cheesecake Shake", category: "Cheese Cake Shakes", price: 160.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-115", name: "Tiramisu Cheesecake Shake", category: "Cheese Cake Shakes", price: 170.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-116", name: "Chocolate Cheesecake Shake", category: "Cheese Cake Shakes", price: 170.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-117", name: "Mango Cheesecake Shake", category: "Cheese Cake Shakes", price: 180.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-118", name: "Berry Blast Cheesecake Shake", category: "Cheese Cake Shakes", price: 190.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-119", name: "Mango Lassi", category: "Lassi", price: 90.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-120", name: "Saffron Lassi", category: "Lassi", price: 100.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-121", name: "Rajbhog Lassi", category: "Lassi", price: 100.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-122", name: "Rajwadi Lassi", category: "Lassi", price: 100.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-123", name: "Rose Lassi", category: "Lassi", price: 100.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-124", name: "Chowpatty bhel", category: "Chaat", price: 60.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-125", name: "Jhal muri", category: "Chaat", price: 70.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-126", name: "Dahi Chowpati bhel", category: "Chaat", price: 80.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-127", name: "Kulche 1 pcs", category: "Kulcha", price: 25.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-128", name: "bhature 1 pcs", category: "Chaat", price: 20.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-129", name: "Pav 1 pcs", category: "Pav", price: 10.00, image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-130", name: "Water", category: "Indian Coolers", price: 10.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-131", name: "Samosa", category: "Samosa", price: 25.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-132", name: "Kachori", category: "Kachori", price: 25.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) },
-  { id: "pos-p-133", name: "Dahi", category: "Chaat", price: 20.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100, ingredients: JSON.stringify([]) }
+  // --- Noodles ---
+  { id: "cw-n-1", name: "Hakka Noodles", category: "Noodles", price: 99.00, image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-n-2", name: "Manchurian Noodles", category: "Noodles", price: 99.00, image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-n-3", name: "Schezwan Noodles", category: "Noodles", price: 99.00, image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-n-4", name: "Singapoori Noodles", category: "Noodles", price: 99.00, image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-n-5", name: "Hong Kong Noodles", category: "Noodles", price: 99.00, image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-n-6", name: "Paneer Fry Noodles", category: "Noodles", price: 109.00, image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100 },
+  { id: "cw-n-7", name: "Hyderabadi Noodles", category: "Noodles", price: 129.00, image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+
+  // --- Rice ---
+  { id: "cw-r-1", name: "Veg Fried Rice", category: "Rice", price: 99.00, image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-r-2", name: "Manchurian Rice", category: "Rice", price: 99.00, image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-r-3", name: "Schezwan Rice", category: "Rice", price: 99.00, image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-r-4", name: "Singapore Rice", category: "Rice", price: 99.00, image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-r-5", name: "Hong Kong Fried Rice", category: "Rice", price: 99.00, image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-r-6", name: "Paneer Fried Rice", category: "Rice", price: 109.00, image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 1, stock: 100 },
+  { id: "cw-r-7", name: "Hyderabadi Fried Rice", category: "Rice", price: 129.00, image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+
+  // --- Chinese Starters ---
+  { id: "cw-c-1", name: "Dry Manchurian", category: "Chinese Starters", price: 99.00, image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-c-2", name: "Paneer Chilli", category: "Chinese Starters", price: 139.00, image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-c-3", name: "Chinese Bhel", category: "Chinese Starters", price: 139.00, image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-c-4", name: "Bombay Bhel", category: "Chinese Starters", price: 139.00, image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-c-5", name: "Honey Chilli Potato", category: "Chinese Starters", price: 149.00, image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+
+  // --- French Fries ---
+  { id: "cw-ff-1", name: "Salty French Fries", category: "French Fries", price: 99.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-ff-2", name: "Pari Pari French Fries", category: "French Fries", price: 109.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-ff-3", name: "Cheese French Fries", category: "French Fries", price: 129.00, image: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+
+  // --- Momos ---
+  { id: "cw-m-1", name: "Steam Momos", category: "Momos", price: 99.00, image: "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-m-2", name: "Fry Momos", category: "Momos", price: 109.00, image: "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-m-3", name: "Cheese Fry Momos", category: "Momos", price: 129.00, image: "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+
+  // --- Cold Drinks ---
+  { id: "cw-cd-1", name: "Pepsi", category: "Cold Drinks", price: 15.00, image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-cd-2", name: "Mountain Dew", category: "Cold Drinks", price: 15.00, image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-cd-3", name: "7 Up", category: "Cold Drinks", price: 15.00, image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+
+  // --- Chai Coffee ---
+  { id: "cw-cc-1", name: "Chai", category: "Chai Coffee", price: 10.00, image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-cc-2", name: "Coffee", category: "Chai Coffee", price: 15.00, image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-cc-3", name: "Cold Coffee", category: "Chai Coffee", price: 75.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-cc-4", name: "Cold Bournvita", category: "Chai Coffee", price: 40.00, image: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-cc-5", name: "Hot Bournvita", category: "Chai Coffee", price: 45.00, image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-cc-6", name: "Plain Thepla", category: "Chai Coffee", price: 20.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-cc-7", name: "Cheese Thepla", category: "Chai Coffee", price: 30.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-cc-8", name: "Butter Thepla", category: "Chai Coffee", price: 25.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-cc-9", name: "Aloo Paratha", category: "Chai Coffee", price: 25.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-cc-10", name: "Aloo Schezwan Paratha", category: "Chai Coffee", price: 30.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-cc-11", name: "Cheese Aloo Paratha", category: "Chai Coffee", price: 35.00, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-cc-12", name: "Cheese Sev Thepla", category: "Chai Coffee", price: 35.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+
+  // --- Breakfast ---
+  { id: "cw-bf-1", name: "Bataka Pauva", category: "Breakfast", price: 20.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-2", name: "Indori Bataka Pauva", category: "Breakfast", price: 30.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-bf-3", name: "Regular Puff", category: "Breakfast", price: 15.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-4", name: "Sev Puff", category: "Breakfast", price: 20.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-5", name: "Punjabi Puff", category: "Breakfast", price: 20.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-6", name: "Punjabi Sev Puff", category: "Breakfast", price: 25.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-7", name: "Punjabi Cheese Puff", category: "Breakfast", price: 30.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-8", name: "Chinese Puff", category: "Breakfast", price: 20.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-9", name: "Chinese Cheese Puff", category: "Breakfast", price: 30.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-10", name: "Schezwan Sev Cheese Puff", category: "Breakfast", price: 35.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-11", name: "Cheese Puff", category: "Breakfast", price: 25.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-12", name: "Paneer Puff", category: "Breakfast", price: 25.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-13", name: "Schezwan Puff", category: "Breakfast", price: 20.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-14", name: "Samosa", category: "Breakfast", price: 17.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-15", name: "Bread Butter", category: "Breakfast", price: 40.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-16", name: "Bread Butter Cheese", category: "Breakfast", price: 60.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-17", name: "Bread Butter Jam", category: "Breakfast", price: 50.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-bf-18", name: "Sev Khamani", category: "Breakfast", price: 25.00, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+
+  // --- Pizza ---
+  { id: "cw-pz-1", name: "Margariba Pizza", category: "Pizza", price: 99.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-pz-2", name: "Tandoori Pizza", category: "Pizza", price: 99.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-pz-3", name: "Butter Garlic Pizza", category: "Pizza", price: 99.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-pz-4", name: "Eggsotic Pizza", category: "Pizza", price: 109.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-pz-5", name: "Paneer Makhani Pizza", category: "Pizza", price: 99.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-pz-6", name: "Pari Pari Pizza", category: "Pizza", price: 99.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-pz-7", name: "Hot N Spicy Pizza", category: "Pizza", price: 99.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-pz-8", name: "Corn Pizza", category: "Pizza", price: 99.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-pz-9", name: "Country Sp. Pizza", category: "Pizza", price: 159.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-pz-10", name: "Double Cheese Pizza", category: "Pizza", price: 199.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-pz-11", name: "Mexican Pizza", category: "Pizza", price: 99.00, image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+
+  // --- Burger ---
+  { id: "cw-bg-1", name: "Aloo Tikki Burger", category: "Burger", price: 80.00, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-bg-2", name: "Mexican Burger", category: "Burger", price: 80.00, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+
+  // --- Sandwich ---
+  { id: "cw-sw-1", name: "Veg. Sandwich", category: "Sandwich", price: 99.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-sw-2", name: "Bombay Sandwich", category: "Sandwich", price: 99.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-sw-3", name: "Tandoori Paneer Sandwich", category: "Sandwich", price: 99.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-sw-4", name: "Cheese Corn Sandwich", category: "Sandwich", price: 99.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-sw-5", name: "Cheese Crunchy Sandwich", category: "Sandwich", price: 99.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-sw-6", name: "Hot N Spicy Sandwich", category: "Sandwich", price: 99.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-sw-7", name: "Cheese Chilli Sandwich", category: "Sandwich", price: 99.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-sw-8", name: "Pizza Sandwich", category: "Sandwich", price: 120.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+  { id: "cw-sw-9", name: "Mexican Sandwich", category: "Sandwich", price: 99.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-sw-10", name: "Veg. Cheese Sandwich", category: "Sandwich", price: 99.00, image: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+
+  // --- Garlic Bread ---
+  { id: "cw-gb-1", name: "Plain Garlic Bread", category: "Garlic Bread", price: 99.00, image: "https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-gb-2", name: "Cheese Garlic Bread", category: "Garlic Bread", price: 119.00, image: "https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-gb-3", name: "Cheese Chilli Garlic Bread", category: "Garlic Bread", price: 129.00, image: "https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-gb-4", name: "Supreme Garlic Bread", category: "Garlic Bread", price: 150.00, image: "https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 0, stock: 100 },
+
+  // --- Fix Gujarati Thali ---
+  { id: "cw-gt-1", name: "Fix Gujarati Thali", category: "Gujarati Thali", price: 80.00, image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 1, isFavorite: 1, stock: 100 },
+  { id: "cw-gt-2", name: "Extra Roti", category: "Gujarati Thali", price: 9.00, image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 },
+  { id: "cw-gt-3", name: "Extra Subji", category: "Gujarati Thali", price: 20.00, image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?q=80&w=300&auto=format&fit=crop", isVeg: 1, isPopular: 0, isFavorite: 0, stock: 100 }
 ];
 
 for (const p of seededPosProducts) {
@@ -1385,7 +1365,7 @@ const insertPosTable = db.prepare(`
   INSERT INTO pos_tables (id, name, status, store)
   VALUES (?, ?, ?, ?)
 `);
-for (const branch of ['VESU', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK']) {
+for (const branch of ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK']) {
   for (let i = 1; i <= 8; i++) {
     insertPosTable.run(`tbl-${branch.toLowerCase()}-${i}`, `Table ${i}`, 'Available', branch);
   }
@@ -1424,9 +1404,9 @@ const insertPurchase = db.prepare(`
   INSERT INTO purchases (id, itemId, itemName, qty, unit, unitCost, totalCost, date, store, supplier)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
-insertPurchase.run('pur-1', 'inv-1', 'Whopper Sesame Buns', 100, 'Piece', 15.00, 1500.00, getOffsetDateStr(0), 'VESU', 'BK SOHO');
-insertPurchase.run('pur-2', 'inv-3', 'Cheddar Cheese Slices', 200, 'Piece', 8.00, 1600.00, getOffsetDateStr(0), 'VESU', 'Amul Outlet');
-insertPurchase.run('pur-3', 'inv-4', 'Veg Whopper Patty', 150, 'Piece', 22.00, 3300.00, getOffsetDateStr(0), 'VESU', 'BK SOHO');
+insertPurchase.run('pur-1', 'inv-1', 'Whopper Sesame Buns', 100, 'Piece', 15.00, 1500.00, getOffsetDateStr(0), 'ADIT CAMPUS', 'BK SOHO');
+insertPurchase.run('pur-2', 'inv-3', 'Cheddar Cheese Slices', 200, 'Piece', 8.00, 1600.00, getOffsetDateStr(0), 'ADIT CAMPUS', 'Amul Outlet');
+insertPurchase.run('pur-3', 'inv-4', 'Veg Whopper Patty', 150, 'Piece', 22.00, 3300.00, getOffsetDateStr(0), 'ADIT CAMPUS', 'BK SOHO');
 
 console.log('Creating and Seeding expenses...');
 db.exec(`
@@ -1443,10 +1423,10 @@ const insertExpense = db.prepare(`
   INSERT INTO expenses (id, category, amount, date, store, description)
   VALUES (?, ?, ?, ?, ?, ?)
 `);
-insertExpense.run('exp-1', 'Rent', 85000.00, getOffsetDateStr(0), 'VESU', 'Monthly Outlet Rent');
-insertExpense.run('exp-2', 'Utilities', 15000.00, getOffsetDateStr(0), 'VESU', 'Electricity & Water Bill');
-insertExpense.run('exp-3', 'Marketing', 12000.00, getOffsetDateStr(0), 'VESU', 'Instagram Ad Campaign');
-insertExpense.run('exp-4', 'Salaries', 48000.00, getOffsetDateStr(0), 'VESU', 'Staff Salaries');
+insertExpense.run('exp-1', 'Rent', 85000.00, getOffsetDateStr(0), 'ADIT CAMPUS', 'Monthly Outlet Rent');
+insertExpense.run('exp-2', 'Utilities', 15000.00, getOffsetDateStr(0), 'ADIT CAMPUS', 'Electricity & Water Bill');
+insertExpense.run('exp-3', 'Marketing', 12000.00, getOffsetDateStr(0), 'ADIT CAMPUS', 'Instagram Ad Campaign');
+insertExpense.run('exp-4', 'Salaries', 48000.00, getOffsetDateStr(0), 'ADIT CAMPUS', 'Staff Salaries');
 
 // Create P&L Transactions table for multi-branch cafe tracking
 db.exec(`
@@ -2012,45 +1992,7 @@ if (videoCount === 0) {
   );
 }
 
-// Migration: Ensure the 10 new products requested by the user exist in the pos_products database table
-const newMenuProducts = [
-  { id: "pos-p-124", name: "Chowpatty bhel", category: "Chaat", price: 60.00 },
-  { id: "pos-p-125", name: "Jhal muri", category: "Chaat", price: 70.00 },
-  { id: "pos-p-126", name: "Dahi Chowpati bhel", category: "Chaat", price: 80.00 },
-  { id: "pos-p-127", name: "Kulche 1 pcs", category: "Kulcha", price: 25.00 },
-  { id: "pos-p-128", name: "bhature 1 pcs", category: "Chaat", price: 20.00 },
-  { id: "pos-p-129", name: "Pav 1 pcs", category: "Pav", price: 10.00 },
-  { id: "pos-p-130", name: "Water", category: "Indian Coolers", price: 10.00 },
-  { id: "pos-p-131", name: "Samosa", category: "Samosa", price: 25.00 },
-  { id: "pos-p-132", name: "Kachori", category: "Kachori", price: 25.00 },
-  { id: "pos-p-133", name: "Dahi", category: "Chaat", price: 20.00 }
-];
-
-try {
-  const checkProduct = db.prepare("SELECT COUNT(*) as count FROM pos_products WHERE name = ?");
-  const insertProduct = db.prepare(`
-    INSERT INTO pos_products (id, name, category, price, image, isVeg, isPopular, isFavorite, stock, ingredients)
-    VALUES (?, ?, ?, ?, ?, 1, 0, 0, 100, ?)
-  `);
-
-  for (const p of newMenuProducts) {
-    const exists = checkProduct.get(p.name).count > 0;
-    if (!exists) {
-      const mockIngredients = JSON.stringify([{ name: 'Chat Masala', qty: 2, unit: 'gm', cost: 0.36 }]);
-      const fallbackImg = p.category === "Pav" 
-        ? "https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=300&auto=format&fit=crop"
-        : p.category === "Kulcha"
-        ? "https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=300&auto=format&fit=crop"
-        : p.category === "Indian Coolers"
-        ? "https://images.unsplash.com/photo-1572490122747-3968b75cc699?q=80&w=300&auto=format&fit=crop"
-        : "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?q=80&w=300&auto=format&fit=crop";
-      insertProduct.run(p.id, p.name, p.category, p.price, fallbackImg, mockIngredients);
-      console.log(`Migration: Added new menu product: ${p.name} (₹${p.price})`);
-    }
-  }
-} catch (err) {
-  console.error("Migration Error adding new menu products:", err);
-}
+// Old menu migration disabled - replaced with Chinese Wala ADIT Campus menu
 
 // Migration: Ensure the owner (bk2022) and store manager (manager/123) exist in the employees table
 try {
@@ -2091,7 +2033,7 @@ try {
       "sm",
       hashPassword("managerbk/09#"),
       "Active",
-      "VESU",
+      "ADIT CAMPUS",
       null,
       JSON.stringify([])
     );
@@ -2107,7 +2049,7 @@ try {
   db.prepare("UPDATE pos_products SET stock = 100 WHERE stock <= 0 OR stock IS NULL").run();
   
   // Seed/Replenish Kachori and Chaat raw bases across all store branches
-  const branches = ['VESU', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'];
+  const branches = ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'];
   const baseItems = ['Kachori', 'Samosa', 'Aloo Tikki', 'Pani Puri', 'Papdi', 'Bhalla', 'Dahi', 'Sonth Chutney', 'Green Chutney', 'Nylon Sev'];
   
   const checkInv = db.prepare("SELECT id, stock FROM inventory WHERE LOWER(label) = LOWER(?) AND store = ?");
@@ -2325,7 +2267,7 @@ try {
         INSERT INTO inventory (id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status, openingStock, closingStock)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      const branches = ['VESU', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK', 'WAREHOUSE'];
+      const branches = ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK', 'WAREHOUSE'];
       let invCounter = 1;
       for (const branch of branches) {
         Object.keys(uniqueIngredients).forEach(name => {
@@ -2493,11 +2435,12 @@ try {
     { name: "Dahi", file: "dahi-puri.jpg" }
   ];
 
-  const updateStmt = db.prepare("UPDATE pos_products SET image = ? WHERE name = ?");
-  for (const pair of websiteImageMappings) {
-    updateStmt.run("https://badikatori.in/" + pair.file, pair.name);
-  }
-  console.log("Successfully updated all POS products images with badikatori.in website URLs.");
+  // Website image mappings commented out to preserve custom dish images
+  // const updateStmt = db.prepare("UPDATE pos_products SET image = ? WHERE name = ?");
+  // for (const pair of websiteImageMappings) {
+  //   updateStmt.run("https://badikatori.in/" + pair.file, pair.name);
+  // }
+  // console.log("Successfully updated all POS products images with badikatori.in website URLs.");
 } catch (err) {
   console.error("Error updating POS product images with website URLs:", err);
 }
@@ -2536,7 +2479,7 @@ try {
 // --- SEED HISTORICAL POS ORDERS FOR RECENT DATES IF EMPTY ---
 try {
   const datesToEnsure = ['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04'];
-  const storesToEnsure = ['VESU', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'];
+  const storesToEnsure = ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'];
   const posProducts = db.prepare('SELECT * FROM pos_products').all();
 
   if (posProducts.length > 0) {
@@ -2651,10 +2594,10 @@ try {
   unSyncedOrders.forEach(row => {
     const prod = db.prepare('SELECT category, image FROM pos_products WHERE id = ? OR name = ?').get(row.productId, row.productName);
     const safeName = (row.productName || 'item').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-    const id = `ps-${row.store || 'VESU'}-${row.date}-${safeName}`;
+    const id = `ps-${row.store || 'ADIT CAMPUS'}-${row.date}-${safeName}`;
     insertOrUpdatePs.run(
       id,
-      row.store || 'VESU',
+      row.store || 'ADIT CAMPUS',
       row.date,
       row.productId || 'rec-pos',
       row.productName,
