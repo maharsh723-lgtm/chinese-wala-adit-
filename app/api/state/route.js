@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+let cachedStateResponse = null;
+let cachedStateTime = 0;
+const CACHE_TTL_MS = 2000; // 2 seconds high-performance in-memory cache
+
 function safeQuery(sql, fallback = []) {
   try {
     return db.prepare(sql).all();
@@ -19,8 +23,20 @@ function safeJsonParse(val, fallback = []) {
   }
 }
 
-export async function GET() {
+export async function GET(req) {
   try {
+    const now = Date.now();
+
+    // Fast path: Return cached state if fresh (within 2 seconds)
+    if (cachedStateResponse && (now - cachedStateTime < CACHE_TTL_MS)) {
+      return NextResponse.json(cachedStateResponse, {
+        headers: {
+          'Cache-Control': 'private, max-age=2, stale-while-revalidate=5',
+          'X-State-Cache': 'HIT'
+        }
+      });
+    }
+
     const empRows = safeQuery('SELECT * FROM employees');
     const employees = {};
     for (const row of empRows) {
@@ -82,6 +98,9 @@ export async function GET() {
         .filter(item => item.orderId === order.id)
         .map(item => ({
           ...item,
+          name: item.productName || item.name,
+          qty: item.quantity || item.qty,
+          total: (item.price || 0) * (item.quantity || item.qty || 1),
           modifiers: safeJsonParse(item.modifiers, [])
         }));
       return {
@@ -113,9 +132,14 @@ export async function GET() {
       itemSuppliers
     };
 
+    // Update in-memory cache
+    cachedStateResponse = state;
+    cachedStateTime = now;
+
     return NextResponse.json(state, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, private'
+        'Cache-Control': 'private, max-age=2, stale-while-revalidate=5',
+        'X-State-Cache': 'MISS'
       }
     });
   } catch (err) {
