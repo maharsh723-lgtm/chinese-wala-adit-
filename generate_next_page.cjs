@@ -17,18 +17,13 @@ const bodyInnerHtml = bodyMatch[1].trim();
 const pageJsContent = `'use client';
 
 import { useEffect } from 'react';
+import '../src/app.js';
 
 export default function Home() {
   useEffect(() => {
-    // Dynamically load src/app.js when component mounts
-    import('../src/app.js').then((module) => {
-      console.log('Main App mounted successfully.');
-      if (typeof window !== 'undefined' && window.initApp) {
-        window.initApp();
-      }
-    }).catch(err => {
-      console.error('Failed to load main app logic:', err);
-    });
+    if (typeof window !== 'undefined' && window.initApp) {
+      window.initApp();
+    }
   }, []);
 
   return (

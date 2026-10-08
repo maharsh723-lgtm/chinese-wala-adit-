@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 
 let cachedStateResponse = null;
 let cachedStateTime = 0;
-const CACHE_TTL_MS = 2000; // 2 seconds high-performance in-memory cache
+const CACHE_TTL_MS = 5000; // 5 seconds high-performance in-memory cache
 
 function safeQuery(sql, fallback = []) {
   try {
@@ -27,11 +27,11 @@ export async function GET(req) {
   try {
     const now = Date.now();
 
-    // Fast path: Return cached state if fresh (within 2 seconds)
+    // Fast path: Return cached state if fresh (within 5 seconds)
     if (cachedStateResponse && (now - cachedStateTime < CACHE_TTL_MS)) {
       return NextResponse.json(cachedStateResponse, {
         headers: {
-          'Cache-Control': 'private, max-age=2, stale-while-revalidate=5',
+          'Cache-Control': 'private, max-age=5, stale-while-revalidate=10',
           'X-State-Cache': 'HIT'
         }
       });
