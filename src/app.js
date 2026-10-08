@@ -16,14 +16,15 @@ function initApp() {
     }
 
     // Override window.fetch to automatically include JWT token
-    const originalFetch = window.fetch;
+    if (!window._bk_originalFetch) window._bk_originalFetch = window.fetch;
+    const originalFetch = window._bk_originalFetch;
     window.fetch = function (url, options = {}) {
         const token = localStorage.getItem("bk_jwt_token");
         if (token) {
             options.headers = options.headers || {};
             options.headers["Authorization"] = `Bearer ${token}`;
         }
-        return originalFetch(url, options);
+        return window._bk_originalFetch(url, options);
     };
 
     // Listen for User ID inputs to show/hide branch selector
