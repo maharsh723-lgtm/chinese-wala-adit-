@@ -15845,5 +15845,10 @@ setInterval(() => {
 
 }
 if (typeof window !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', initApp);
+    window.initApp = initApp;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+        setTimeout(initApp, 0);
+    }
 }
