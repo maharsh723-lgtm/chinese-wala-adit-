@@ -644,9 +644,9 @@ function initApp() {
     const dashboardWelcomeTitle = document.getElementById("dashboardWelcomeTitle");
 
     function setRole(roleKey) {
-        const validRoles = ["owner", "bm-vesu", ];
+        const validRoles = ["owner", "bm-vesu"];
         if (!validRoles.includes(roleKey)) {
-            roleKey = "bm-vesu";
+            roleKey = "owner";
         }
         const empList = Object.keys(employees).length > 0 ? employees : defaultEmployees;
 
@@ -15838,6 +15838,9 @@ setInterval(() => {
         window.fetchAndRenderPnL();
     }
 }, 5000);
+
+    const initialRole = localStorage.getItem("bk_current_role_key") || "owner";
+    setRole(initialRole);
 
 
 }

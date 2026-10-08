@@ -67,12 +67,20 @@ export default function Home() {
                 <div class="role-select-box" id="roleSelectBtn">
                     <div class="role-select-box-info">
                         <i data-lucide="shield"></i>
-                        <span id="currentRoleText">Head Office Operations</span>
+                        <span id="currentRoleText">Franchise Owner</span>
                     </div>
                     <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
                 </div>
                 <div class="role-options-panel" id="roleDropdownPanel">
-                    <div class="role-option" id="btn-logout" style="color: var(--pos-accent-red); font-weight:800; display:flex; align-items:center; gap:8px;">
+                    <div class="role-option" data-role="owner" style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="crown" style="width:14px; height:14px;"></i>
+                        <span>Franchise Owner</span>
+                    </div>
+                    <div class="role-option" data-role="bm-vesu" style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="store" style="width:14px; height:14px;"></i>
+                        <span>Branch Manager (ADIT CAMPUS)</span>
+                    </div>
+                    <div class="role-option" id="btn-logout" style="color: var(--pos-accent-red); font-weight:800; display:flex; align-items:center; gap:8px; padding: 10px 14px;">
                         <i data-lucide="log-out" style="width:14px; height:14px;"></i>
                         <span>Exit / Logout</span>
                     </div>
