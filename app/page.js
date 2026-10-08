@@ -302,8 +302,8 @@ export default function Home() {
                 <div class="app-screen active" id="screen-dashboard">
                     <div class="screen-header-layout">
                         <div class="screen-title-desc">
-                            <h1 id="dashboardWelcomeTitle">Welcome Back, National Ops Lead</h1>
-                            <p>Here is your franchise operational summary for today across India.</p>
+                            <h1 id="dashboardWelcomeTitle">Welcome Back, Operations Lead</h1>
+                            <p>Chinese Wala ADIT Campus Outlet Operations Summary.</p>
                         </div>
                         <div class="screen-actions">
                             <button class="saas-btn saas-btn-secondary" id="dashGenReportBtn">
@@ -337,48 +337,48 @@ export default function Home() {
                                 <span>Today's Sales</span>
                                 <i data-lucide="indian-rupee"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-sales">₹2,84,500</div>
-                            <div class="kpi-meta"><span class="trend-up">▲ +6.4%</span> vs last week</div>
+                            <div class="kpi-value" id="kpi-sales">₹0.00</div>
+                            <div class="kpi-meta"><span class="trend-up">▲ Live</span> ADIT Campus</div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span>Food Cost %</span>
                                 <i data-lucide="percent"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-foodcost">28.4%</div>
-                            <div class="kpi-meta"><span class="trend-up" style="color: var(--success);">▼ -0.8%</span> target: 29.0%</div>
+                            <div class="kpi-value" id="kpi-foodcost">0.0%</div>
+                            <div class="kpi-meta"><span class="trend-up" style="color: var(--success);">Target: 32.0%</span></div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span>Inventory Value</span>
                                 <i data-lucide="package"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-invhealth">₹14,50,000</div>
-                            <div class="kpi-meta">512 SKU types</div>
+                            <div class="kpi-value" id="kpi-invhealth">₹0.00</div>
+                            <div class="kpi-meta">Live Stock</div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span>Wastage Cost</span>
                                 <i data-lucide="trash-2" style="color: var(--danger);"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-waste" style="color: var(--danger);">₹12,450</div>
-                            <div class="kpi-meta"><span class="trend-down">▲ +4.2%</span> check Mumbai</div>
+                            <div class="kpi-value" id="kpi-waste" style="color: var(--danger);">₹0.00</div>
+                            <div class="kpi-meta"><span class="trend-down">ADIT CAMPUS</span></div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span>Staff Attendance</span>
                                 <i data-lucide="users"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-attendance">95.4%</div>
-                            <div class="kpi-meta">420 / 440 checked in</div>
+                            <div class="kpi-value" id="kpi-attendance">100%</div>
+                            <div class="kpi-meta">Active Staff</div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span>SOP Compliance</span>
                                 <i data-lucide="shield-check"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-sop">94.2%</div>
-                            <div class="kpi-meta"><span class="trend-up">▲ +1.5%</span> top standard</div>
+                            <div class="kpi-value" id="kpi-sop">100%</div>
+                            <div class="kpi-meta"><span class="trend-up">▲ Standard</span> Verified</div>
                         </div>
                     </div>
 
@@ -422,16 +422,16 @@ export default function Home() {
                             </div>
                             <div class="widget-body" style="display: flex; flex-direction: column; gap: 12px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; font-size:0.85rem;">
-                                    <span style="font-weight: 700;">1. Whopper® Veg Burger</span>
-                                    <span style="color: var(--text-secondary);">1,420 units sold</span>
+                                    <span style="font-weight: 700;">1. Hakka Noodles</span>
+                                    <span style="color: var(--text-secondary);">Live Sales</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; font-size:0.85rem;">
-                                    <span style="font-weight: 700;">2. Paneer King Royale</span>
-                                    <span style="color: var(--text-secondary);">980 units sold</span>
+                                    <span style="font-weight: 700;">2. Dry Manchurian</span>
+                                    <span style="color: var(--text-secondary);">Live Sales</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; font-size:0.85rem;">
-                                    <span style="font-weight: 700;">3. BK Golden Fries</span>
-                                    <span style="color: var(--text-secondary);">840 units sold</span>
+                                    <span style="font-weight: 700;">3. Veg Fried Rice</span>
+                                    <span style="color: var(--text-secondary);">Live Sales</span>
                                 </div>
                             </div>
                         </div>
@@ -440,19 +440,13 @@ export default function Home() {
                         <div class="widget-card">
                             <div class="widget-title">
                                 <span>Low Stock Alerts</span>
-                                <span class="pill-badge pill-badge-warning">3 Alerts</span>
+                                <span class="pill-badge pill-badge-warning">0 Alerts</span>
                             </div>
                             <div class="widget-body" style="display: flex; flex-direction: column; gap: 10px;" id="widgetInventoryAlerts">
                                 <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover); padding: 8px 12px; border-radius: 6px; border-left: 4px solid var(--orange-primary);">
                                     <div style="font-size:0.75rem;">
-                                        <div style="font-weight:700;">Whopper Sesame Buns</div>
-                                        <div style="color:var(--text-tertiary);">ADIT CAMPUS • 45 pieces left</div>
-                                    </div>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover); padding: 8px 12px; border-radius: 6px; border-left: 4px solid var(--danger);">
-                                    <div style="font-size:0.75rem;">
-                                        <div style="font-weight:700;">Paneer Blocks (5kg pack)</div>
-                                        <div style="color:var(--text-tertiary);">Delhi Connaught Pl • 2 packets left</div>
+                                        <div style="font-weight:700;">Refined Sunflower Oil</div>
+                                        <div style="color:var(--text-tertiary);">ADIT CAMPUS • Normal stock</div>
                                     </div>
                                 </div>
                             </div>

@@ -711,7 +711,7 @@ function initApp() {
 
         const todayStr = getTodayDateStr();
 
-        if (currentRole === "bm") {
+        if (true) {
             // 1. Live Sales Today (Sum of active non-refunded/non-deleted grandTotal for today)
             const storeOrdersToday = posOrders.filter(o => o.store === currentStore && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted');
             const liveSalesToday = storeOrdersToday.reduce((sum, o) => sum + (parseFloat(o.grandTotal) || 0), 0);
