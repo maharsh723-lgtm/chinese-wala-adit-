@@ -93,21 +93,24 @@ export async function GET(req) {
     const orderRows = safeQuery('SELECT * FROM pos_orders');
     const itemRows = safeQuery('SELECT * FROM pos_order_items');
 
-    const posOrders = orderRows.map(order => {
-      const items = itemRows
-        .filter(item => item.orderId === order.id)
-        .map(item => ({
-          ...item,
-          name: item.productName || item.name,
-          qty: item.quantity || item.qty,
-          total: (item.price || 0) * (item.quantity || item.qty || 1),
-          modifiers: safeJsonParse(item.modifiers, [])
-        }));
-      return {
-        ...order,
-        items
-      };
-    });
+    const itemsByOrderId = {};
+    for (let i = 0; i < itemRows.length; i++) {
+      const item = itemRows[i];
+      const oid = item.orderId;
+      if (!itemsByOrderId[oid]) itemsByOrderId[oid] = [];
+      itemsByOrderId[oid].push({
+        ...item,
+        name: item.productName || item.name,
+        qty: item.quantity || item.qty,
+        total: (item.price || 0) * (item.quantity || item.qty || 1),
+        modifiers: safeJsonParse(item.modifiers, [])
+      });
+    }
+
+    const posOrders = orderRows.map(order => ({
+      ...order,
+      items: itemsByOrderId[order.id] || []
+    }));
 
     const suppliers = safeQuery('SELECT * FROM suppliers');
     const itemSuppliers = safeQuery('SELECT * FROM inventory_item_suppliers');

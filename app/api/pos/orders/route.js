@@ -6,21 +6,24 @@ export async function GET() {
     const orderRows = db.prepare('SELECT * FROM pos_orders ORDER BY date DESC, time DESC').all();
     const itemRows = db.prepare('SELECT * FROM pos_order_items').all();
 
-    const posOrders = orderRows.map(order => {
-      const items = itemRows
-        .filter(item => item.orderId === order.id)
-        .map(item => ({
-          ...item,
-          name: item.productName || item.name,
-          qty: item.quantity || item.qty,
-          total: (item.price || 0) * (item.quantity || item.qty || 1),
-          modifiers: item.modifiers ? (typeof item.modifiers === 'string' ? JSON.parse(item.modifiers) : item.modifiers) : []
-        }));
-      return {
-        ...order,
-        items
-      };
-    });
+    const itemsByOrderId = {};
+    for (let i = 0; i < itemRows.length; i++) {
+      const item = itemRows[i];
+      const oid = item.orderId;
+      if (!itemsByOrderId[oid]) itemsByOrderId[oid] = [];
+      itemsByOrderId[oid].push({
+        ...item,
+        name: item.productName || item.name,
+        qty: item.quantity || item.qty,
+        total: (item.price || 0) * (item.quantity || item.qty || 1),
+        modifiers: item.modifiers ? (typeof item.modifiers === 'string' ? JSON.parse(item.modifiers) : item.modifiers) : []
+      });
+    }
+
+    const posOrders = orderRows.map(order => ({
+      ...order,
+      items: itemsByOrderId[order.id] || []
+    }));
 
     return NextResponse.json(posOrders);
   } catch (err) {
