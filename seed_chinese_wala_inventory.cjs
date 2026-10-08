@@ -95,7 +95,7 @@ const masterInventory = [
   { label: "Tissue Napkin", category: "Packaging & Disposables", unit: "Piece", unitCost: 0.20, stock: 15000, reorder: 3000 }
 ];
 
-const stores = ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK', 'MAIN', 'WAREHOUSE'];
+const stores = ['ADIT CAMPUS', 'WAREHOUSE'];
 
 const insertInvStmt = db.prepare(`
   INSERT INTO inventory (id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status, openingStock, closingStock)

@@ -556,8 +556,7 @@ const seededEmployees = [
     roleKey: "sm",
     password: "password123",
     status: "Active",
-    store: "LP SAVANI",
-    activePunch: null,
+    store: activePunch: null,
     history: [],
     salary: 38000
   },
@@ -571,8 +570,7 @@ const seededEmployees = [
     roleKey: "sm",
     password: "password123",
     status: "Active",
-    store: "GAURAV PATH",
-    activePunch: null,
+    store: activePunch: null,
     history: [],
     salary: 40000
   },
@@ -586,8 +584,7 @@ const seededEmployees = [
     roleKey: "sm",
     password: "password123",
     status: "Active",
-    store: "SUDAMA CHOWK",
-    activePunch: null,
+    store: activePunch: null,
     history: [],
     salary: 36000
   },
@@ -641,9 +638,9 @@ const insertSOP = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 insertSOP.run('sop-1', 'Whopper Broiler Calibration', 'Kitchen', 'High', 'daily', 'Calibrate broiler temp to 350C.', 'Kitchen Staff', 'ADIT CAMPUS', 'OVERDUE', 40, '11:00 AM');
-insertSOP.run('sop-2', 'Deep Fryer Salting Standard', 'Kitchen', 'Medium', 'daily', 'Salt french fries immediately after fry cycle.', 'Kitchen Staff', 'LP SAVANI', 'PENDING', 75, '2:00 PM');
-insertSOP.run('sop-3', 'Cold storage audit log', 'Management', 'High', 'weekly', 'Audit chiller and freezer temp history sheets.', 'Branch Manager', 'GAURAV PATH', 'COMPLETED', 100, 'Yesterday');
-insertSOP.run('sop-4', 'Hygiene checklist audit', 'Management', 'Medium', 'daily', 'Verify general store hygiene and cleanliness.', 'Branch Manager', 'SUDAMA CHOWK', 'PENDING', 50, '5:00 PM');
+insertSOP.run('sop-2', 'Deep Fryer Salting Standard', 'Kitchen', 'Medium', 'daily', 'Salt french fries immediately after fry cycle.', 'Kitchen Staff', 'PENDING', 75, '2:00 PM');
+insertSOP.run('sop-3', 'Cold storage audit log', 'Management', 'High', 'weekly', 'Audit chiller and freezer temp history sheets.', 'Branch Manager', 'COMPLETED', 100, 'Yesterday');
+insertSOP.run('sop-4', 'Hygiene checklist audit', 'Management', 'Medium', 'daily', 'Verify general store hygiene and cleanliness.', 'Branch Manager', 'PENDING', 50, '5:00 PM');
 
 // Dynamic Excel loader for Inventory & Recipes from recipe costing.xlsx
 const excelFilename = process.env.RECIPE_EXCEL_FILE || 'recipe costing.xlsx';
@@ -925,7 +922,7 @@ const insertInv = db.prepare(`
   INSERT INTO inventory (id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status, openingStock, closingStock)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
-const branches = ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK', 'WAREHOUSE'];
+const branches = ['ADIT CAMPUS', 'WAREHOUSE'];
 
 let invCounter = 1;
 for (const branch of branches) {
@@ -1010,17 +1007,17 @@ const insertWastage = db.prepare(`
 `);
 
 insertWastage.run('w-1', 'ADIT CAMPUS', 'Raw Chicken Patties (Whopper)', 2, 'Box', 'Expired', getOffsetDateStr(0), 900.00, '🍔', 'Manager ADIT CAMPUS');
-insertWastage.run('w-2', 'LP SAVANI', 'Whopper Sesame Buns', 12, 'Piece', 'Spillage', getOffsetDateStr(0), 186.00, '🍞', 'Manager LP SAVANI');
-insertWastage.run('w-3', 'GAURAV PATH', 'Cheddar Cheese Slices', 50, 'Piece', 'Expired', getOffsetDateStr(1), 425.00, '🧀', 'Manager GAURAV PATH');
+insertWastage.run('w-2', 'Whopper Sesame Buns', 12, 'Piece', 'Spillage', getOffsetDateStr(0), 186.00, '🍞', 'Manager LP SAVANI');
+insertWastage.run('w-3', 'Cheddar Cheese Slices', 50, 'Piece', 'Expired', getOffsetDateStr(1), 425.00, '🧀', 'Manager GAURAV PATH');
 insertWastage.run('w-4', 'ADIT CAMPUS', 'Whopper Sesame Buns', 40, 'Piece', 'Burnt', getOffsetDateStr(2), 620.00, '🍞', 'Manager ADIT CAMPUS');
-insertWastage.run('w-5', 'LP SAVANI', 'Raw Chicken Patties (Whopper)', 1, 'Box', 'Preparation Error', getOffsetDateStr(3), 450.00, '🍔', 'Manager LP SAVANI');
-insertWastage.run('w-6', 'GAURAV PATH', 'Whopper Sesame Buns', 15, 'Piece', 'Spillage', getOffsetDateStr(4), 232.50, '🍞', 'Manager GAURAV PATH');
+insertWastage.run('w-5', 'Raw Chicken Patties (Whopper)', 1, 'Box', 'Preparation Error', getOffsetDateStr(3), 450.00, '🍔', 'Manager LP SAVANI');
+insertWastage.run('w-6', 'Whopper Sesame Buns', 15, 'Piece', 'Spillage', getOffsetDateStr(4), 232.50, '🍞', 'Manager GAURAV PATH');
 insertWastage.run('w-7', 'ADIT CAMPUS', 'Cheddar Cheese Slices', 30, 'Piece', 'Customer Return', getOffsetDateStr(5), 255.00, '🧀', 'Manager ADIT CAMPUS');
 insertWastage.run('w-8', 'ADIT CAMPUS', 'Paneer cubes', 500, 'gm', 'Spillage', getOffsetDateStr(0), 140.00, '🧀', 'Manager ADIT CAMPUS');
-insertWastage.run('w-9', 'LP SAVANI', 'Basmati Rice', 1000, 'gm', 'Pest Damage', getOffsetDateStr(0), 70.00, '🌾', 'Manager LP SAVANI');
-insertWastage.run('w-10', 'GAURAV PATH', 'Chicken chunks', 1500, 'gm', 'Spoiled', getOffsetDateStr(0), 525.00, '🍗', 'Manager GAURAV PATH');
-insertWastage.run('w-11', 'SUDAMA CHOWK', 'Raw Chicken Patties (Whopper)', 3, 'Box', 'Expired', getOffsetDateStr(0), 1350.00, '🍔', 'Manager SUDAMA CHOWK');
-insertWastage.run('w-12', 'SUDAMA CHOWK', 'Whopper Sesame Buns', 20, 'Piece', 'Burnt', getOffsetDateStr(0), 310.00, '🍞', 'Manager SUDAMA CHOWK');
+insertWastage.run('w-9', 'Basmati Rice', 1000, 'gm', 'Pest Damage', getOffsetDateStr(0), 70.00, '🌾', 'Manager LP SAVANI');
+insertWastage.run('w-10', 'Chicken chunks', 1500, 'gm', 'Spoiled', getOffsetDateStr(0), 525.00, '🍗', 'Manager GAURAV PATH');
+insertWastage.run('w-11', 'Raw Chicken Patties (Whopper)', 3, 'Box', 'Expired', getOffsetDateStr(0), 1350.00, '🍔', 'Manager SUDAMA CHOWK');
+insertWastage.run('w-12', 'Whopper Sesame Buns', 20, 'Piece', 'Burnt', getOffsetDateStr(0), 310.00, '🍞', 'Manager SUDAMA CHOWK');
 
 // Seed Checklists for today for all 3 branches
 console.log('Seeding checklists for all 3 branches...');
@@ -1042,11 +1039,11 @@ const insertEod = db.prepare(`
 `);
 // Seed Delhi and Bangalore historical EOD for yesterday
 const yesterdayStr = getOffsetDateStr(1);
-insertEod.run(`eod-LP SAVANI-${yesterdayStr}`, 'LP SAVANI', yesterdayStr, 185000, 24000, 45000, 110000, 30000, 850, 'Manager LP SAVANI', `${yesterdayStr} 10:15 PM`);
-insertEod.run(`eod-GAURAV PATH-${yesterdayStr}`, 'GAURAV PATH', yesterdayStr, 165000, 18000, 35000, 95000, 35000, 780, 'Manager GAURAV PATH', `${yesterdayStr} 09:45 PM`);
+insertEod.run(`eod-LP SAVANI-${yesterdayStr}`, yesterdayStr, 185000, 24000, 45000, 110000, 30000, 850, 'Manager LP SAVANI', `${yesterdayStr} 10:15 PM`);
+insertEod.run(`eod-GAURAV PATH-${yesterdayStr}`, yesterdayStr, 165000, 18000, 35000, 95000, 35000, 780, 'Manager GAURAV PATH', `${yesterdayStr} 09:45 PM`);
 // Seed Mumbai for yesterday
 insertEod.run(`eod-ADIT CAMPUS-${yesterdayStr}`, 'ADIT CAMPUS', yesterdayStr, 210000, 31000, 50000, 120000, 40000, 1020, 'Manager ADIT CAMPUS', `${yesterdayStr} 10:30 PM`);
-insertEod.run(`eod-SUDAMA CHOWK-${yesterdayStr}`, 'SUDAMA CHOWK', yesterdayStr, 195000, 26000, 48000, 115000, 32000, 910, 'Manager SUDAMA CHOWK', `${yesterdayStr} 10:00 PM`);
+insertEod.run(`eod-SUDAMA CHOWK-${yesterdayStr}`, yesterdayStr, 195000, 26000, 48000, 115000, 32000, 910, 'Manager SUDAMA CHOWK', `${yesterdayStr} 10:00 PM`);
 
 // Seed Recipes (Disabled - Recipe Costing empty by user choice)
 // console.log('Seeding recipes...');
@@ -1086,34 +1083,34 @@ const seededProductSales = [
   { id: "ps-vesu-8", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 50, revenue: 4500, image: "🍨" },
 
   // LP SAVANI - 2026-06-15
-  { id: "ps-lpsavani-1", store: "LP SAVANI", date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 160, revenue: 32000, image: "🍢" },
-  { id: "ps-lpsavani-2", store: "LP SAVANI", date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 140, revenue: 35000, image: "🍲" },
-  { id: "ps-lpsavani-3", store: "LP SAVANI", date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 110, revenue: 27500, image: "🥘" },
-  { id: "ps-lpsavani-4", store: "LP SAVANI", date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 100, revenue: 18000, image: "🥞" },
-  { id: "ps-lpsavani-5", store: "LP SAVANI", date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 90, revenue: 16650, image: "🍲" },
-  { id: "ps-lpsavani-6", store: "LP SAVANI", date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 80, revenue: 7200, image: "🧆" },
-  { id: "ps-lpsavani-7", store: "LP SAVANI", date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 70, revenue: 12880, image: "🍜" },
-  { id: "ps-lpsavani-8", store: "LP SAVANI", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 60, revenue: 5400, image: "🍨" },
+  { id: "ps-lpsavani-1", store: date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 160, revenue: 32000, image: "🍢" },
+  { id: "ps-lpsavani-2", store: date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 140, revenue: 35000, image: "🍲" },
+  { id: "ps-lpsavani-3", store: date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 110, revenue: 27500, image: "🥘" },
+  { id: "ps-lpsavani-4", store: date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 100, revenue: 18000, image: "🥞" },
+  { id: "ps-lpsavani-5", store: date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 90, revenue: 16650, image: "🍲" },
+  { id: "ps-lpsavani-6", store: date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 80, revenue: 7200, image: "🧆" },
+  { id: "ps-lpsavani-7", store: date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 70, revenue: 12880, image: "🍜" },
+  { id: "ps-lpsavani-8", store: date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 60, revenue: 5400, image: "🍨" },
 
   // GAURAV PATH - 2026-06-15
-  { id: "ps-gauravpath-1", store: "GAURAV PATH", date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 142, revenue: 28400, image: "🍢" },
-  { id: "ps-gauravpath-2", store: "GAURAV PATH", date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 129, revenue: 32250, image: "🍲" },
-  { id: "ps-gauravpath-3", store: "GAURAV PATH", date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 111, revenue: 27750, image: "🥘" },
-  { id: "ps-gauravpath-4", store: "GAURAV PATH", date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 95, revenue: 17100, image: "🥞" },
-  { id: "ps-gauravpath-5", store: "GAURAV PATH", date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 86, revenue: 15910, image: "🍲" },
-  { id: "ps-gauravpath-6", store: "GAURAV PATH", date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 91, revenue: 8190, image: "🧆" },
-  { id: "ps-gauravpath-7", store: "GAURAV PATH", date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 59, revenue: 10856, image: "🍜" },
-  { id: "ps-gauravpath-8", store: "GAURAV PATH", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 44, revenue: 3960, image: "🍨" },
+  { id: "ps-gauravpath-1", store: date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 142, revenue: 28400, image: "🍢" },
+  { id: "ps-gauravpath-2", store: date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 129, revenue: 32250, image: "🍲" },
+  { id: "ps-gauravpath-3", store: date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 111, revenue: 27750, image: "🥘" },
+  { id: "ps-gauravpath-4", store: date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 95, revenue: 17100, image: "🥞" },
+  { id: "ps-gauravpath-5", store: date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 86, revenue: 15910, image: "🍲" },
+  { id: "ps-gauravpath-6", store: date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 91, revenue: 8190, image: "🧆" },
+  { id: "ps-gauravpath-7", store: date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 59, revenue: 10856, image: "🍜" },
+  { id: "ps-gauravpath-8", store: date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 44, revenue: 3960, image: "🍨" },
 
   // SUDAMA CHOWK - 2026-06-15
-  { id: "ps-sudamachowk-1", store: "SUDAMA CHOWK", date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 155, revenue: 31000, image: "🍢" },
-  { id: "ps-sudamachowk-2", store: "SUDAMA CHOWK", date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 130, revenue: 32500, image: "🍲" },
-  { id: "ps-sudamachowk-3", store: "SUDAMA CHOWK", date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 105, revenue: 26250, image: "🥘" },
-  { id: "ps-sudamachowk-4", store: "SUDAMA CHOWK", date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 98, revenue: 17640, image: "🥞" },
-  { id: "ps-sudamachowk-5", store: "SUDAMA CHOWK", date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 88, revenue: 16280, image: "🍲" },
-  { id: "ps-sudamachowk-6", store: "SUDAMA CHOWK", date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 78, revenue: 7020, image: "🧆" },
-  { id: "ps-sudamachowk-7", store: "SUDAMA CHOWK", date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 65, revenue: 11960, image: "🍜" },
-  { id: "ps-sudamachowk-8", store: "SUDAMA CHOWK", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 55, revenue: 4950, image: "🍨" }
+  { id: "ps-sudamachowk-1", store: date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 155, revenue: 31000, image: "🍢" },
+  { id: "ps-sudamachowk-2", store: date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 130, revenue: 32500, image: "🍲" },
+  { id: "ps-sudamachowk-3", store: date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 105, revenue: 26250, image: "🥘" },
+  { id: "ps-sudamachowk-4", store: date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 98, revenue: 17640, image: "🥞" },
+  { id: "ps-sudamachowk-5", store: date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 88, revenue: 16280, image: "🍲" },
+  { id: "ps-sudamachowk-6", store: date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 78, revenue: 7020, image: "🧆" },
+  { id: "ps-sudamachowk-7", store: date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 65, revenue: 11960, image: "🍜" },
+  { id: "ps-sudamachowk-8", store: date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 55, revenue: 4950, image: "🍨" }
 ];
 
 // for (const sale of seededProductSales) {
@@ -1365,7 +1362,7 @@ const insertPosTable = db.prepare(`
   INSERT INTO pos_tables (id, name, status, store)
   VALUES (?, ?, ?, ?)
 `);
-for (const branch of ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK']) {
+for (const branch of ['ADIT CAMPUS', ]) {
   for (let i = 1; i <= 8; i++) {
     insertPosTable.run(`tbl-${branch.toLowerCase()}-${i}`, `Table ${i}`, 'Available', branch);
   }
@@ -2049,7 +2046,7 @@ try {
   db.prepare("UPDATE pos_products SET stock = 100 WHERE stock <= 0 OR stock IS NULL").run();
   
   // Seed/Replenish Kachori and Chaat raw bases across all store branches
-  const branches = ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'];
+  const branches = ['ADIT CAMPUS'];
   const baseItems = ['Kachori', 'Samosa', 'Aloo Tikki', 'Pani Puri', 'Papdi', 'Bhalla', 'Dahi', 'Sonth Chutney', 'Green Chutney', 'Nylon Sev'];
   
   const checkInv = db.prepare("SELECT id, stock FROM inventory WHERE LOWER(label) = LOWER(?) AND store = ?");
@@ -2267,7 +2264,7 @@ try {
         INSERT INTO inventory (id, label, category, stock, unit, reorder, unitCost, expiryDate, store, status, openingStock, closingStock)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      const branches = ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK', 'WAREHOUSE'];
+      const branches = ['ADIT CAMPUS', 'WAREHOUSE'];
       let invCounter = 1;
       for (const branch of branches) {
         Object.keys(uniqueIngredients).forEach(name => {
@@ -2479,7 +2476,7 @@ try {
 // --- SEED HISTORICAL POS ORDERS FOR RECENT DATES IF EMPTY ---
 try {
   const datesToEnsure = ['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04'];
-  const storesToEnsure = ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'];
+  const storesToEnsure = ['ADIT CAMPUS'];
   const posProducts = db.prepare('SELECT * FROM pos_products').all();
 
   if (posProducts.length > 0) {

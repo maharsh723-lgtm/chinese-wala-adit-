@@ -322,10 +322,10 @@ function initApp() {
     const defaultEmployees = {
         "1": { id: "1", name: "Crew Member 1", role: "Crew Member", mobile: "9876543210", shiftStart: "06:00", roleKey: "staff", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] },
         "EMP102": { id: "EMP102", name: "Kitchen Staff 1", role: "Kitchen Staff", mobile: "9876543211", shiftStart: "06:00", roleKey: "kitchen", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] },
-        "EMP103": { id: "EMP103", name: "Manager GAURAV PATH", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "", status: "Active", store: "GAURAV PATH", activePunch: null, history: [] },
+        "EMP103": { id: "EMP103", name: "Assistant Manager", role: "Branch Manager", mobile: "9876543212", shiftStart: "14:00", roleKey: "sm", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] },
         "EMP104": { id: "EMP104", name: "Manager ADIT CAMPUS", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] },
-        "EMP105": { id: "EMP105", name: "Manager LP SAVANI", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "LP SAVANI", activePunch: null, history: [] },
-        "EMP106": { id: "EMP106", name: "Manager SUDAMA CHOWK", role: "Branch Manager", mobile: "9876543215", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "SUDAMA CHOWK", activePunch: null, history: [] },
+        "EMP105": { id: "EMP105", name: "Shift Supervisor 1", role: "Branch Manager", mobile: "9876543214", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] },
+        "EMP106": { id: "EMP106", name: "Shift Supervisor 2", role: "Branch Manager", mobile: "9876543215", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] },
         "OWNER101": { id: "OWNER101", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "", status: "Active", store: "All", activePunch: null, history: [] },
         "bk2022": { id: "bk2022", name: "Franchise Owner", role: "Owner", mobile: "9999999999", shiftStart: "09:00", roleKey: "owner", password: "", status: "Active", store: "All", activePunch: null, history: [] },
         "manager/123": { id: "manager/123", name: "Store Manager", role: "Branch Manager", mobile: "9876543213", shiftStart: "09:00", roleKey: "sm", password: "", status: "Active", store: "ADIT CAMPUS", activePunch: null, history: [] }
@@ -644,7 +644,7 @@ function initApp() {
     const dashboardWelcomeTitle = document.getElementById("dashboardWelcomeTitle");
 
     function setRole(roleKey) {
-        const validRoles = ["owner", "bm-vesu", "bm-lpsavani", "bm-gauravpath", "bm-sudamachowk"];
+        const validRoles = ["owner", "bm-vesu", ];
         if (!validRoles.includes(roleKey)) {
             roleKey = "bm-vesu";
         }
@@ -662,19 +662,8 @@ function initApp() {
             enableWriteControls(true);
         } else {
             currentRole = "bm";
-            if (roleKey === "bm-vesu") {
-                currentStore = "ADIT CAMPUS";
-                currentUser = empList["EMP104"] || defaultEmployees["EMP104"];
-            } else if (roleKey === "bm-lpsavani") {
-                currentStore = "LP SAVANI";
-                currentUser = empList["EMP105"] || defaultEmployees["EMP105"];
-            } else if (roleKey === "bm-gauravpath") {
-                currentStore = "GAURAV PATH";
-                currentUser = empList["EMP103"] || defaultEmployees["EMP103"];
-            } else if (roleKey === "bm-sudamachowk") {
-                currentStore = "SUDAMA CHOWK";
-                currentUser = empList["EMP106"] || defaultEmployees["EMP106"];
-            }
+            currentStore = "ADIT CAMPUS";
+            currentUser = empList["EMP104"] || defaultEmployees["EMP104"];
             if (currentRoleText) currentRoleText.textContent = `BM - ${currentStore.split(' ')[0]}`;
             if (headerUserName) headerUserName.textContent = currentUser.name;
             if (headerUserRole) headerUserRole.textContent = "Branch Manager";
@@ -976,7 +965,7 @@ function initApp() {
         const ctx = document.getElementById("ownerSalesComparisonChart");
         if (!ctx) return;
 
-        const labels = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+        const labels = ["ADIT CAMPUS", ];
         const todayStr = getTodayDateStr();
         const salesData = labels.map(lbl => {
             const storeOrders = posOrders.filter(o => o.store === lbl && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted');
@@ -1078,7 +1067,7 @@ function initApp() {
         if (!container) return;
         container.innerHTML = "";
 
-        const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+        const branches = ["ADIT CAMPUS"];
         branches.forEach(branch => {
             const branchCol = document.createElement("div");
             branchCol.style.display = "flex";
@@ -1090,9 +1079,6 @@ function initApp() {
             branchCol.style.border = "1px solid var(--border)";
 
             let branchHeaderColor = "var(--pos-accent-green, #10b981)";
-            if (branch === "LP SAVANI") branchHeaderColor = "var(--pos-accent-orange, #f97316)";
-            if (branch === "GAURAV PATH") branchHeaderColor = "var(--pos-accent-blue, #3b82f6)";
-            if (branch === "SUDAMA CHOWK") branchHeaderColor = "var(--pos-accent-red, #ef4444)";
 
             const branchHeader = `
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid ${branchHeaderColor}; padding-bottom: 6px; margin-bottom: 8px;">
@@ -1136,7 +1122,7 @@ function initApp() {
         container.innerHTML = "";
 
         const todayStr = getTodayDateStr();
-        const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+        const branches = ["ADIT CAMPUS", ];
 
         branches.forEach(branch => {
             const branchCls = checklists.filter(c => c.store === branch && c.date === todayStr);
@@ -1660,7 +1646,7 @@ function initApp() {
                 }
         } else {
             // Owner View
-            const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+            const branches = ["ADIT CAMPUS", ];
             let branchRowsHTML = "";
 
             branches.forEach(branch => {
@@ -1938,7 +1924,7 @@ function initApp() {
             `;
 
             if (ownerAttendanceTab === "daily") {
-                const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+                const branches = ["ADIT CAMPUS", ];
                 let storeOptionsHTML = "";
                 branches.forEach(branch => {
                     storeOptionsHTML += `<option value="${branch}" ${ownerAttendanceStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -2305,7 +2291,7 @@ function initApp() {
         // Branch Switcher dropdown for owner
         let selectHeaderHTML = "";
         if (currentRole === "owner") {
-            const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+            const branches = ["ADIT CAMPUS", ];
             let storeOptionsHTML = "";
             branches.forEach(branch => {
                 storeOptionsHTML += `<option value="${branch}" ${ownerInventoryStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -2997,12 +2983,9 @@ function initApp() {
                 ownerDashboard.style.display = "flex";
                 
                 let totalFranchiseCost = 0;
-                let vesuCost = 0;
-                let lpsavaniCost = 0;
-                let gauravpathCost = 0;
-                let sudamachowkCost = 0;
+                let aditCost = 0;
                 
-                const branchCosts = { "ADIT CAMPUS": 0, "LP SAVANI": 0, "GAURAV PATH": 0, "SUDAMA CHOWK": 0 };
+                const branchCosts = { "ADIT CAMPUS": 0 };
                 const reasonCosts = {
                     "Expired": 0,
                     "Burnt": 0,
@@ -3018,10 +3001,7 @@ function initApp() {
                     const wCost = w.cost || (w.qty * uCost);
                     
                     totalFranchiseCost += wCost;
-                    if (w.store === "ADIT CAMPUS") vesuCost += wCost;
-                    else if (w.store === "LP SAVANI") lpsavaniCost += wCost;
-                    else if (w.store === "GAURAV PATH") gauravpathCost += wCost;
-                    else if (w.store === "SUDAMA CHOWK") sudamachowkCost += wCost;
+                    if (w.store === "ADIT CAMPUS") aditCost += wCost;
                     
                     if (branchCosts[w.store] !== undefined) {
                         branchCosts[w.store] += wCost;
@@ -3037,12 +3017,6 @@ function initApp() {
                     document.getElementById("kpi-owner-lpsavani-waste").textContent = `₹${lpsavaniCost.toLocaleString()}`;
                 }
                 if (document.getElementById("kpi-owner-gauravpath-waste")) {
-                    document.getElementById("kpi-owner-gauravpath-waste").textContent = `₹${gauravpathCost.toLocaleString()}`;
-                }
-                if (document.getElementById("kpi-owner-sudamachowk-waste")) {
-                    document.getElementById("kpi-owner-sudamachowk-waste").textContent = `₹${sudamachowkCost.toLocaleString()}`;
-                }
-                
                 // Render Branch Cost Bar Chart
                 const branchCtx = document.getElementById("ownerWasteBranchChart");
                 if (branchCtx) {
@@ -3050,11 +3024,11 @@ function initApp() {
                     chartOwnerWasteBranch = new Chart(branchCtx, {
                         type: 'bar',
                         data: {
-                            labels: ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"],
+                            labels: ["ADIT CAMPUS"],
                             datasets: [{
                                 label: 'Wastage Loss (₹)',
-                                data: [branchCosts["ADIT CAMPUS"], branchCosts["LP SAVANI"], branchCosts["GAURAV PATH"], branchCosts["SUDAMA CHOWK"]],
-                                backgroundColor: ['#A64B2A', '#D7A86E', '#8E806A'],
+                                data: [branchCosts["ADIT CAMPUS"]],
+                                backgroundColor: ['#A64B2A'],
                                 borderRadius: 6
                             }]
                         },
@@ -3469,10 +3443,7 @@ function initApp() {
                         
                         totalMonthWasteFound = true;
                         
-                        const vesuItems = dayWastage.filter(w => w.store === "ADIT CAMPUS");
-                        const lpsavaniItems = dayWastage.filter(w => w.store === "LP SAVANI");
-                        const gauravpathItems = dayWastage.filter(w => w.store === "GAURAV PATH");
-                        const sudamachowkItems = dayWastage.filter(w => w.store === "SUDAMA CHOWK");
+                        const aditItems = dayWastage.filter(w => w.store === "ADIT CAMPUS");
                         
                         const dateObj = new Date(year, month, d);
                         const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
@@ -3496,16 +3467,13 @@ function initApp() {
                         const tr = document.createElement("tr");
                         tr.innerHTML = `
                             <td style="font-weight: 700; vertical-align: top; color: var(--text-heading);">${formattedDate}</td>
-                            <td style="vertical-align: top;">${formatItems(vesuItems)}</td>
-                            <td style="vertical-align: top;">${formatItems(lpsavaniItems)}</td>
-                            <td style="vertical-align: top;">${formatItems(gauravpathItems)}</td>
-                            <td style="vertical-align: top;">${formatItems(sudamachowkItems)}</td>
+                            <td style="vertical-align: top;">${formatItems(aditItems)}</td>
                         `;
                         monthTbody.appendChild(tr);
                     }
                     
                     if (!totalMonthWasteFound) {
-                        monthTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-tertiary); padding: 20px;">No wastage logged for the selected month.</td></tr>`;
+                        monthTbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--text-tertiary); padding: 20px;">No wastage logged for the selected month.</td></tr>`;
                     }
                 }
             }
@@ -4881,24 +4849,14 @@ function initApp() {
                             return;
                         }
 
-                        const validBranches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+                        const validBranches = ["ADIT CAMPUS"];
                         const recordsToSave = [];
                         const errors = [];
 
                         rawRows.forEach((row, index) => {
                             const rowNum = index + 2;
 
-                            const branchInput = (row.Branch || row.branch || row.Store || row.store || "").toString().trim().toUpperCase();
-                            let branch = "";
-                            if (branchInput.includes("ADIT CAMPUS")) {
-                                branch = "ADIT CAMPUS";
-                            } else if (branchInput.includes("LP SAVANI") || branchInput.includes("LPSAVANI") || branchInput.includes("SAVANI")) {
-                                branch = "LP SAVANI";
-                            } else if (branchInput.includes("GAURAV PATH") || branchInput.includes("GAURAVPATH") || branchInput.includes("GAURAV")) {
-                                branch = "GAURAV PATH";
-                            } else if (branchInput.includes("SUDAMA CHOWK") || branchInput.includes("SUDAMACHOWK") || branchInput.includes("SUDAMA") || branchInput.includes("CHOWK") || branchInput.includes("CHOK")) {
-                                branch = "SUDAMA CHOWK";
-                            }
+                            let branch = "ADIT CAMPUS";
 
                             const itemName = (row["Menu Item"] || row["menu item"] || row.Item || row.item || row["Item Name"] || row["item name"] || "").toString().trim();
                             const qtyVal = row.Quantity || row.quantity || row.Qty || row.qty || row["Quantity Sold"] || row["quantity sold"];
@@ -5201,7 +5159,7 @@ function initApp() {
 
         } else {
             // Owner view
-            const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+            const branches = ["ADIT CAMPUS", ];
             let storeOptionsHTML = "";
             branches.forEach(branch => {
                 storeOptionsHTML += `<option value="${branch}" ${ownerEodStore === branch ? 'selected' : ''}>${branch}</option>`;
@@ -7969,10 +7927,7 @@ function initApp() {
     function initReconciliationState() {
         const list = [];
         const managers = {
-            'ADIT CAMPUS': 'Manager ADIT CAMPUS',
-            'LP SAVANI': 'Manager LP SAVANI',
-            'GAURAV PATH': 'Manager GAURAV PATH',
-            'SUDAMA CHOWK': 'Manager SUDAMA CHOWK'
+            'ADIT CAMPUS': 'Manager ADIT CAMPUS'
         };
 
         const today = new Date();
@@ -7993,7 +7948,7 @@ function initApp() {
         const sortedDates = Array.from(dateSet).sort((a, b) => b.localeCompare(a));
 
         sortedDates.forEach(dateStr => {
-            ['ADIT CAMPUS', 'LP SAVANI', 'GAURAV PATH', 'SUDAMA CHOWK'].forEach(store => {
+            ['ADIT CAMPUS', ].forEach(store => {
                 // Filter active orders (excluding Deleted, Cancelled, Refunded)
                 const activeOrders = (posOrders || []).filter(o => {
                     const oDate = o.date || (o.timestamp ? o.timestamp.split('T')[0] : '');
@@ -15884,3 +15839,8 @@ setInterval(() => {
     }
 }, 5000);
 
+
+}
+if (typeof window !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', initApp);
+}

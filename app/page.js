@@ -35,9 +35,9 @@ export default function Home() {
                 <label class="login-label" for="login-branch">Select Outlet</label>
                 <select id="login-branch" class="login-select">
                     <option value="bm-vesu">ADIT Campus Outlet</option>
-                    <option value="bm-lpsavani">LP SAVANI Outlet</option>
-                    <option value="bm-gauravpath">GAURAV PATH Outlet</option>
-                    <option value="bm-sudamachowk">SUDAMA CHOWK Outlet</option>
+                    
+                    
+                    
                 </select>
             </div>
             
@@ -1498,9 +1498,9 @@ export default function Home() {
                                     <label class="saas-form-label" for="wasteStoreSelect">Store Name</label>
                                     <select class="saas-form-select" id="wasteStoreSelect">
                                         <option value="ADIT CAMPUS">ADIT Campus</option>
-                                        <option value="LP SAVANI">BK LP SAVANI</option>
-                                        <option value="GAURAV PATH">BK GAURAV PATH</option>
-                                        <option value="SUDAMA CHOWK">BK SUDAMA CHOWK</option>
+                                        
+                                        
+                                        
                                     </select>
                                 </div>
                                 <div class="saas-form-group">
@@ -1632,9 +1632,9 @@ export default function Home() {
                                 <select class="saas-form-select" id="reconOutletSelect" style="width:100%;">
                                     <option value="ALL">All Outlets</option>
                                     <option value="ADIT CAMPUS">ADIT Campus</option>
-                                    <option value="LP SAVANI">LP SAVANI Store</option>
-                                    <option value="GAURAV PATH">GAURAV PATH Store</option>
-                                    <option value="SUDAMA CHOWK">SUDAMA CHOWK Store</option>
+                                    
+                                    
+                                    
                                 </select>
                             </div>
                             <div style="flex: 1; min-width: 200px;">
@@ -1962,9 +1962,9 @@ export default function Home() {
                                     <select id="reportsFilterOutlet" style="padding: 6px 12px; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.8rem; outline: none;">
                                         <option value="All">All Outlets</option>
                                         <option value="ADIT CAMPUS">ADIT CAMPUS</option>
-                                        <option value="LP SAVANI">LP SAVANI</option>
-                                        <option value="GAURAV PATH">GAURAV PATH</option>
-                                        <option value="SUDAMA CHOWK">SUDAMA CHOWK</option>
+                                        
+                                        
+                                        
                                     </select>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -2170,9 +2170,9 @@ export default function Home() {
                             <select class="saas-form-select" id="productSalesStoreSelect" style="width: 200px;">
                                 <option value="All">All Branches</option>
                                 <option value="ADIT CAMPUS">ADIT CAMPUS</option>
-                                <option value="LP SAVANI">LP SAVANI</option>
-                                <option value="GAURAV PATH">GAURAV PATH</option>
-                                <option value="SUDAMA CHOWK">SUDAMA CHOWK</option>
+                                
+                                
+                                
                             </select>
                         </div>
                         <div style="display: flex; gap: 12px; align-items: center; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 16px;">
@@ -2387,9 +2387,9 @@ export default function Home() {
                                 <select id="reconFilterOutletSelect" class="recon-form-select">
                                     <option value="all">All Outlets</option>
                                     <option value="ADIT CAMPUS">ADIT CAMPUS</option>
-                                    <option value="LP SAVANI">LP SAVANI</option>
-                                    <option value="GAURAV PATH">GAURAV PATH</option>
-                                    <option value="SUDAMA CHOWK">SUDAMA CHOWK</option>
+                                    
+                                    
+                                    
                                 </select>
                             </div>
                             <div class="filter-input-group">
@@ -5124,9 +5124,9 @@ export default function Home() {
                             <select id="plBranchSelect" class="saas-select" style="width:150px;">
                                 <option value="All">All Branches</option>
                                 <option value="ADIT CAMPUS">ADIT Campus</option>
-                                <option value="LP SAVANI">LP SAVANI Branch</option>
-                                <option value="GAURAV PATH">GAURAV PATH Branch</option>
-                                <option value="SUDAMA CHOWK">SUDAMA CHOWK Branch</option>
+                                
+                                
+                                
                             </select>
 
                             <!-- Exports dropdown -->
@@ -6485,9 +6485,9 @@ export default function Home() {
                         <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Store Assignment</label>
                         <select id="empStoreSelect" style="width:100%; box-sizing: border-box; background: rgba(21, 19, 18, 0.95); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px; outline: none; font-weight: 600;">
                             <option value="ADIT CAMPUS" style="background:#151312; color:#fff;">ADIT Campus</option>
-                            <option value="LP SAVANI" style="background:#151312; color:#fff;">BK LP SAVANI</option>
-                            <option value="GAURAV PATH" style="background:#151312; color:#fff;">BK GAURAV PATH</option>
-                            <option value="SUDAMA CHOWK" style="background:#151312; color:#fff;">BK SUDAMA CHOWK</option>
+                            
+                            
+                            
                         </select>
                     </div>
                 </div>
