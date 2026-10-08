@@ -1,4 +1,11 @@
 import { trainingData } from "./trainingData.js";
+import { createIcons, icons } from "lucide";
+
+if (typeof window !== "undefined") {
+    window.lucide = {
+        createIcons: (opts = {}) => createIcons({ icons, ...opts })
+    };
+}
 function initApp() {
     // Absolute base URL if opened via file:// protocol or dev ports
     let API_BASE = '';

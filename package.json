@@ -19,6 +19,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "lucide": "^1.53.0",
     "multer": "^2.2.0",
     "next": "^16.3.8",
     "pdf-parse": "^2.4.5",
