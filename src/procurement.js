@@ -28,8 +28,8 @@
 
   // Get active store from bk_state
   function getActiveStore() {
-    const store = (window.bk_state && window.bk_state.getCurrentStore()) || 'VESU';
-    return store === 'All' ? 'VESU' : store;
+    const store = (window.bk_state && window.bk_state.getCurrentStore()) || 'ADIT CAMPUS';
+    return store === 'All' ? 'ADIT CAMPUS' : store;
   }
 
   // Get auth token

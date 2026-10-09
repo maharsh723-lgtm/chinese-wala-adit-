@@ -17,15 +17,15 @@ function _initThisModule() {
 
     // Helper: Get active store and role based on local storage cache
     function getCurrentRoleAndStore() {
-        const cachedRoleKey = localStorage.getItem("bk_current_role_key") || "bm-vesu";
-        let store = "VESU";
+        const cachedRoleKey = localStorage.getItem("bk_current_role_key") || "bm-adit";
+        let store = "ADIT CAMPUS";
         let role = "bm";
 
         if (cachedRoleKey === "owner") {
             role = "owner";
             store = "All";
-        } else if (cachedRoleKey === "bm-vesu") {
-            store = "VESU";
+        } else if (cachedRoleKey === "bm-adit") {
+            store = "ADIT CAMPUS";
         } else if (cachedRoleKey === "bm-adajan") {
             store = "ADAJAN";
         } else if (cachedRoleKey === "bm-ctlight") {
@@ -70,7 +70,7 @@ function _initThisModule() {
                     refundAmount: 380,
                     refundedBy: "Manager VESU",
                     status: "Refunded",
-                    store: "VESU"
+                    store: "ADIT CAMPUS"
                 },
                 {
                     id: "ret-seed-2",
@@ -98,7 +98,7 @@ function _initThisModule() {
                     actual: 43000,
                     difference: 0,
                     status: "Matched",
-                    store: "VESU"
+                    store: "ADIT CAMPUS"
                 },
                 {
                     id: "recon-seed-2",
@@ -108,7 +108,7 @@ function _initThisModule() {
                     actual: 7300,
                     difference: -200,
                     status: "Mismatch",
-                    store: "VESU"
+                    store: "ADIT CAMPUS"
                 }
             ];
             saveState("bk_payment_reconciliations", initialReconciliation);
@@ -275,7 +275,7 @@ function _initThisModule() {
                 refundAmount,
                 refundedBy,
                 status,
-                store: store === "All" ? "VESU" : store // Fallback to current store
+                store: store === "All" ? "ADIT CAMPUS" : store // Fallback to current store
             };
 
             salesReturns.push(newReturn);
@@ -379,7 +379,7 @@ function _initThisModule() {
                 date,
                 mode,
                 actual,
-                store: store === "All" ? "VESU" : store
+                store: store === "All" ? "ADIT CAMPUS" : store
             };
 
             if (existingIdx > -1) {

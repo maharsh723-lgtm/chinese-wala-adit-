@@ -89,7 +89,7 @@ function initApp() {
                 if (data.user.roleKey === "sm") {
                     // Read selected branch from dropdown
                     const branchSelect = document.getElementById("login-branch");
-                    roleKey = branchSelect ? branchSelect.value : "bm-vesu";
+                    roleKey = branchSelect ? branchSelect.value : "bm-adit";
                 }
                 
                 localStorage.setItem("bk_current_role_key", roleKey);
@@ -663,7 +663,7 @@ function initApp() {
     const dashboardWelcomeTitle = document.getElementById("dashboardWelcomeTitle");
 
     function setRole(roleKey) {
-        const validRoles = ["owner", "bm-vesu"];
+        const validRoles = ["owner", "bm-adit"];
         if (!validRoles.includes(roleKey)) {
             roleKey = "owner";
         }
@@ -675,7 +675,7 @@ function initApp() {
             currentUser = empList["OWNER101"] || defaultEmployees["OWNER101"];
             if (currentRoleText) currentRoleText.textContent = "Franchise Owner";
             if (headerUserName) headerUserName.textContent = currentUser.name;
-            if (headerUserRole) headerUserRole.textContent = "Owner";
+            if (headerUserRole) headerUserRole.textContent = "Franchise Owner (ADIT CAMPUS)";
             if (headerUserAvatar) headerUserAvatar.textContent = "FO";
             if (dashboardWelcomeTitle) dashboardWelcomeTitle.textContent = "Welcome Back, Franchise Partner";
             enableWriteControls(true);
@@ -683,11 +683,11 @@ function initApp() {
             currentRole = "bm";
             currentStore = "ADIT CAMPUS";
             currentUser = empList["EMP104"] || defaultEmployees["EMP104"];
-            if (currentRoleText) currentRoleText.textContent = `BM - ${currentStore.split(' ')[0]}`;
+            if (currentRoleText) currentRoleText.textContent = "Branch Manager (ADIT CAMPUS)";
             if (headerUserName) headerUserName.textContent = currentUser.name;
-            if (headerUserRole) headerUserRole.textContent = "Branch Manager";
+            if (headerUserRole) headerUserRole.textContent = "Branch Manager (ADIT CAMPUS)";
             if (headerUserAvatar) headerUserAvatar.textContent = "BM";
-            if (dashboardWelcomeTitle) dashboardWelcomeTitle.textContent = `Welcome Back, Manager (${currentStore.split(' ')[0]})`;
+            if (dashboardWelcomeTitle) dashboardWelcomeTitle.textContent = "Welcome Back, Manager (ADIT CAMPUS)";
             
             enableWriteControls(true);
         }

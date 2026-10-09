@@ -23,15 +23,15 @@ function _initThisModule() {
 
     // Helper: Get active store and role based on local storage cache
     function getCurrentRoleAndStore() {
-        const cachedRoleKey = localStorage.getItem("bk_current_role_key") || "bm-vesu";
-        let store = "VESU";
+        const cachedRoleKey = localStorage.getItem("bk_current_role_key") || "bm-adit";
+        let store = "ADIT CAMPUS";
         let role = "bm";
 
         if (cachedRoleKey === "owner") {
             role = "owner";
             store = "All";
-        } else if (cachedRoleKey === "bm-vesu") {
-            store = "VESU";
+        } else if (cachedRoleKey === "bm-adit") {
+            store = "ADIT CAMPUS";
         } else if (cachedRoleKey === "bm-lpsavani") {
             store = "LP SAVANI";
         } else if (cachedRoleKey === "bm-gauravpath") {
@@ -62,7 +62,7 @@ function _initThisModule() {
                 description: "Cash Sales registry summary",
                 type: "cash",
                 voucherNo: "V-001",
-                store: "VESU",
+                store: "ADIT CAMPUS",
                 lines: [
                     { account: "Cash", debit: 25000, credit: 0 },
                     { account: "Sales", debit: 0, credit: 25000 }
@@ -86,7 +86,7 @@ function _initThisModule() {
                 description: "Paid local veggie vendor cash",
                 type: "cash",
                 voucherNo: "V-003",
-                store: "VESU",
+                store: "ADIT CAMPUS",
                 lines: [
                     { account: "Cost of Goods Sold", debit: 5000, credit: 0 },
                     { account: "Cash", debit: 0, credit: 5000 }
@@ -99,7 +99,7 @@ function _initThisModule() {
                 type: "bank",
                 chequeRef: "TXN-998811",
                 bankAccount: "HDFC Bank",
-                store: "VESU",
+                store: "ADIT CAMPUS",
                 lines: [
                     { account: "HDFC Bank", debit: 12000, credit: 0 },
                     { account: "Sales", debit: 0, credit: 12000 }
@@ -112,7 +112,7 @@ function _initThisModule() {
                 type: "bank",
                 chequeRef: "TXN-884411",
                 bankAccount: "ICICI Bank",
-                store: "VESU",
+                store: "ADIT CAMPUS",
                 lines: [
                     { account: "Rent", debit: 35000, credit: 0 },
                     { account: "ICICI Bank", debit: 0, credit: 35000 }
@@ -124,7 +124,7 @@ function _initThisModule() {
                 description: "Equipment depreciation adjustment",
                 type: "journal",
                 voucherNo: "JV-101",
-                store: "VESU",
+                store: "ADIT CAMPUS",
                 lines: [
                     { account: "Utilities", debit: 2500, credit: 0 },
                     { account: "Cash", debit: 0, credit: 2500 }
@@ -140,7 +140,7 @@ function _initThisModule() {
                 amount: 45000,
                 outstanding: 45000,
                 dueDate: "2026-07-15",
-                store: "VESU",
+                store: "ADIT CAMPUS",
                 status: "Pending"
             },
             {
@@ -150,7 +150,7 @@ function _initThisModule() {
                 amount: 30000,
                 outstanding: 10000,
                 dueDate: "2026-07-12",
-                store: "VESU",
+                store: "ADIT CAMPUS",
                 status: "Partially Paid"
             }
         ];
@@ -163,7 +163,7 @@ function _initThisModule() {
                 amount: 18000,
                 outstanding: 18000,
                 dueDate: "2026-07-18",
-                store: "VESU",
+                store: "ADIT CAMPUS",
                 status: "Pending"
             },
             {
@@ -173,7 +173,7 @@ function _initThisModule() {
                 amount: 12000,
                 outstanding: 0,
                 dueDate: "2026-07-05",
-                store: "VESU",
+                store: "ADIT CAMPUS",
                 status: "Paid"
             }
         ];
@@ -355,7 +355,7 @@ function _initThisModule() {
 
         document.getElementById("jdDate").textContent = tx.date;
         document.getElementById("jdNarration").textContent = tx.description;
-        document.getElementById("jdStore").textContent = tx.store || "VESU";
+        document.getElementById("jdStore").textContent = tx.store || "ADIT CAMPUS";
 
         const tbody = document.querySelector("#tableJournalDetailsLines tbody");
         tbody.innerHTML = "";
@@ -1320,7 +1320,7 @@ function _initThisModule() {
             description: desc,
             type: "cash",
             voucherNo,
-            store: store === "All" ? "VESU" : store, // fallback to active branch
+            store: store === "All" ? "ADIT CAMPUS" : store, // fallback to active branch
             lines
         };
 
@@ -1362,7 +1362,7 @@ function _initThisModule() {
             type: "bank",
             chequeRef,
             bankAccount: bankAcct,
-            store: store === "All" ? "VESU" : store,
+            store: store === "All" ? "ADIT CAMPUS" : store,
             lines
         };
 
@@ -1399,7 +1399,7 @@ function _initThisModule() {
             description: narration,
             type: "journal",
             voucherNo,
-            store: store === "All" ? "VESU" : store,
+            store: store === "All" ? "ADIT CAMPUS" : store,
             lines
         };
 
@@ -1450,7 +1450,7 @@ function _initThisModule() {
             amount,
             outstanding: amount,
             dueDate,
-            store: store === "All" ? "VESU" : store,
+            store: store === "All" ? "ADIT CAMPUS" : store,
             status: "Pending"
         };
 
@@ -1466,7 +1466,7 @@ function _initThisModule() {
             description: `Receivable invoice generated: ${invoiceRef} to ${partyName}`,
             type: "journal",
             voucherNo: "AR-INV",
-            store: store === "All" ? "VESU" : store,
+            store: store === "All" ? "ADIT CAMPUS" : store,
             lines
         };
 
@@ -1496,7 +1496,7 @@ function _initThisModule() {
             amount,
             outstanding: amount,
             dueDate,
-            store: store === "All" ? "VESU" : store,
+            store: store === "All" ? "ADIT CAMPUS" : store,
             status: "Pending"
         };
 
@@ -1512,7 +1512,7 @@ function _initThisModule() {
             description: `Supplier bill recorded: ${billRef} from ${vendorName}`,
             type: "journal",
             voucherNo: "AP-BILL",
-            store: store === "All" ? "VESU" : store,
+            store: store === "All" ? "ADIT CAMPUS" : store,
             lines
         };
 

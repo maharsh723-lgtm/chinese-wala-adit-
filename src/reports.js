@@ -16,15 +16,15 @@ function _initThisModule() {
 
     // Helper: Get active store and role based on local storage cache
     function getCurrentRoleAndStore() {
-        const cachedRoleKey = localStorage.getItem("bk_current_role_key") || "bm-vesu";
-        let store = "VESU";
+        const cachedRoleKey = localStorage.getItem("bk_current_role_key") || "bm-adit";
+        let store = "ADIT CAMPUS";
         let role = "bm";
 
         if (cachedRoleKey === "owner") {
             role = "owner";
             store = "All";
-        } else if (cachedRoleKey === "bm-vesu") {
-            store = "VESU";
+        } else if (cachedRoleKey === "bm-adit") {
+            store = "ADIT CAMPUS";
         } else if (cachedRoleKey === "bm-adajan") {
             store = "ADAJAN";
         } else if (cachedRoleKey === "bm-ctlight") {
@@ -316,7 +316,7 @@ function _initThisModule() {
         const expenses = liveStateData ? (liveStateData.expenses || []) : [];
 
         // App stores registry
-        const stores = ["VESU", "ADAJAN", "CT LIGHT"];
+        const stores = ["ADIT CAMPUS", "ADAJAN", "CT LIGHT"];
         const branchRows = [];
 
         stores.forEach(store => {
@@ -397,7 +397,7 @@ function _initThisModule() {
         const endDate = document.getElementById("consolidatedEndDate").value;
 
         const orders = liveStateData ? (liveStateData.posOrders || []) : [];
-        const stores = ["VESU", "ADAJAN", "CT LIGHT"];
+        const stores = ["ADIT CAMPUS", "ADAJAN", "CT LIGHT"];
         
         let localReturns = [];
         try {

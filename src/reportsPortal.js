@@ -471,7 +471,7 @@ function _initThisModule() {
 
         const outlets = { VESU: 0, ADAJAN: 0, "CT LIGHT": 0 };
         data.orders.forEach(o => {
-            const s = o.store || 'VESU';
+            const s = o.store || 'ADIT CAMPUS';
             outlets[s] = (outlets[s] || 0) + parseFloat(o.grandTotal || 0);
         });
 
@@ -938,7 +938,7 @@ function _initThisModule() {
                                 <tr>
                                     <td><span class="pill-badge pill-badge-secondary">${p.id}</span></td>
                                     <td>${p.date || p.expectedDeliveryDate || 'N/A'}</td>
-                                    <td>${p.branchName || 'VESU'}</td>
+                                    <td>${p.branchName || 'ADIT CAMPUS'}</td>
                                     <td>${p.paymentMethod || 'UPI'}</td>
                                     <td><span class="pill-badge pill-badge-success">${p.orderStatus || 'Completed'}</span></td>
                                     <td style="text-align:right;">₹${parseFloat(p.subtotal || 0).toFixed(2)}</td>

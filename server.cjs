@@ -219,7 +219,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
 
     const topSellingByStore = {};
     try {
-      const stores = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+      const stores = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
       stores.forEach(st => { topSellingByStore[st] = []; });
 
       const topRows = db.prepare(`
@@ -295,7 +295,7 @@ app.post('/api/employees', authenticateToken, (req, res) => {
       roleKey,
       hashPassword(password || ''),
       status || 'Active',
-      store || 'VESU',
+      store || 'ADIT CAMPUS',
       activePunch ? JSON.stringify(activePunch) : null,
       JSON.stringify(history || []),
       salary || 0
@@ -503,14 +503,14 @@ app.post('/api/inventory/upload-excel', authenticateToken, upload.single('file')
 
     let targetStore = req.user.store;
     if (req.user.role === 'owner') {
-      targetStore = req.body.store || 'VESU';
+      targetStore = req.body.store || 'ADIT CAMPUS';
     }
     console.log(`Processing uploaded Excel inventory for store: ${targetStore}`);
 
     const workbook = XLSX.read(file.buffer, { type: 'buffer' });
     const sheetNames = workbook.SheetNames;
 
-    // Find the best sheet matching store name (e.g. VESU -> "VESU CLOSING APR'26" or "VESU")
+    // Find the best sheet matching store name (e.g. VESU -> "VESU CLOSING APR'26" or "ADIT CAMPUS")
     let selectedSheetName = sheetNames[0];
     for (const sheet of sheetNames) {
       if (sheet.toLowerCase().includes(targetStore.toLowerCase())) {
@@ -681,7 +681,7 @@ app.post('/api/inventory/batch-update', authenticateToken, (req, res) => {
 
     let targetStore = req.user.store;
     if (req.user.role === 'owner') {
-      targetStore = store || 'VESU';
+      targetStore = store || 'ADIT CAMPUS';
     }
     console.log(`Processing batch inventory update for store: ${targetStore}`);
 
@@ -905,7 +905,7 @@ function computePLReportData(user, query) {
   
   // Server-side RBAC scoping derived strictly from authenticated user object
   const userRole = user.role === 'owner' ? 'owner' : 'bm';
-  const userBranch = user.store || 'VESU';
+  const userBranch = user.store || 'ADIT CAMPUS';
 
   const todayObj = new Date();
   const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
@@ -976,7 +976,7 @@ function computePLReportData(user, query) {
   // Role-based scoping check
   let activeBranch = branch || "All";
   if (userRole === 'bm') {
-    activeBranch = userBranch || "VESU";
+    activeBranch = userBranch || "ADIT CAMPUS";
   }
 
   let branchQuery = "";
@@ -1059,11 +1059,12 @@ function computePLReportData(user, query) {
     cogsParams.push(activeBranch);
   }
   try {
+    const sDateWhere = dateQuery.includes('date') ? dateQuery.replace(/\bdate\b/g, 's.date') : '1 = 1';
     const cogsRows = db.prepare(`
       SELECT s.qty, r.rawCost 
       FROM product_sales s
       JOIN recipes r ON r.name = s.itemName
-      WHERE s.date ${dateQuery.replace('date', '')} ${cogsBranch}
+      WHERE ${sDateWhere} ${cogsBranch}
     `).all(...cogsParams);
     cogsRows.forEach(row => {
       cogsVal += parseFloat(row.qty || 0) * parseFloat(row.rawCost || 0);
@@ -1076,13 +1077,14 @@ function computePLReportData(user, query) {
       posCogsBranch = "AND o.store = ?";
       posCogsParams.push(activeBranch);
     }
+    const oDateWhere = dateQuery.includes('date') ? dateQuery.replace(/\bdate\b/g, 'o.date') : '1 = 1';
     const posCogsRows = db.prepare(`
       SELECT i.quantity, r.rawCost
       FROM pos_order_items i
       JOIN pos_orders o ON o.id = i.orderId
       JOIN pos_products p ON p.id = i.productId
       JOIN recipes r ON r.id = p.recipeId
-      WHERE o.date ${dateQuery.replace('date', '')} ${posCogsBranch}
+      WHERE ${oDateWhere} ${posCogsBranch}
     `).all(...posCogsParams);
     posCogsRows.forEach(row => {
       cogsVal += parseFloat(row.quantity || 0) * parseFloat(row.rawCost || 0);
@@ -1265,7 +1267,7 @@ function computePLReportData(user, query) {
   }
 
   // 4. Branch comparison cards (VESU, LP SAVANI, GAURAV PATH, SUDAMA CHOWK)
-  const branches = ["VESU", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
+  const branches = ["ADIT CAMPUS", "LP SAVANI", "GAURAV PATH", "SUDAMA CHOWK"];
   const branchDetails = {};
 
   branches.forEach(bName => {
@@ -2037,7 +2039,7 @@ app.post('/api/webhooks/swiggy/order', (req, res) => {
     if (restaurantId && String(restaurantId) !== '1115124') {
       return res.status(400).json({ error: 'Swiggy integration is only configured for Vesu branch (ID: 1115124)' });
     }
-    const store = 'VESU';
+    const store = 'ADIT CAMPUS';
     const result = createExternalOnlineOrder('swiggy', payload, store);
 
     const io = req.app.get('io');
@@ -2062,7 +2064,7 @@ app.post('/api/webhooks/zomato/order', (req, res) => {
     if (restaurantId && String(restaurantId) !== '21659869') {
       return res.status(400).json({ error: 'Zomato integration is only configured for Vesu branch (ID: 21659869)' });
     }
-    const store = 'VESU';
+    const store = 'ADIT CAMPUS';
     const result = createExternalOnlineOrder('zomato', payload, store);
 
     const io = req.app.get('io');
@@ -2083,7 +2085,7 @@ app.post('/api/webhooks/zomato/order', (req, res) => {
 app.put('/api/pos/orders/:id/delivery-status', authenticateToken, (req, res) => {
   const { id } = req.params;
   const { status, notes } = req.body;
-  const store = req.headers['x-store-name'] || req.user.store || 'VESU';
+  const store = req.headers['x-store-name'] || req.user.store || 'ADIT CAMPUS';
 
   try {
     const order = db.prepare('SELECT * FROM pos_orders WHERE id = ?').get(id);
@@ -2178,9 +2180,9 @@ app.put('/api/pos/orders/:id/delivery-status', authenticateToken, (req, res) => 
 
 app.post('/api/pos/delivery/simulate', authenticateToken, (req, res) => {
   const { platform, store } = req.body;
-  const targetStore = store || 'VESU';
-  if (targetStore !== 'VESU' && targetStore !== 'All') {
-    return res.status(400).json({ error: "Zomato & Swiggy integrations are not active for this branch. Please switch to the VESU branch." });
+  const targetStore = store || 'ADIT CAMPUS';
+  if (targetStore !== 'ADIT CAMPUS' && targetStore !== 'All') {
+    return res.status(400).json({ error: "Zomato & Swiggy integrations are not active for this branch. Please switch to the ADIT CAMPUS branch." });
   }
   const targetPlatform = platform || 'swiggy';
 
@@ -2283,7 +2285,7 @@ app.post('/api/pos/requisitions/send-confirmation-sms', authenticateToken, async
 
   const message = `🛍️ *SMART PROCUREMENT ORDER PAID*\n\n` +
     `📌 *PO Number:* \`${poId}\`\n` +
-    `🏢 *Branch:* ${branchName || 'VESU Outlet'}\n` +
+    `🏢 *Branch:* ${branchName || 'ADIT CAMPUS Outlet'}\n` +
     `💰 *Amount Paid:* ₹${parseFloat(amount).toFixed(2)}\n` +
     `✅ *Payment Status:* Verified by AI Auditor` +
     itemDetails +
@@ -2439,7 +2441,7 @@ app.post('/api/pos/requisitions/:id/pay', authenticateToken, async (req, res) =>
 
     const messageText = `🛍️ *SMART PROCUREMENT ORDER SUBMITTED*\n\n` +
       `📌 *PO Number:* \`${id}\`\n` +
-      `🏢 *Branch:* ${order.branchName || 'VESU Outlet'}\n` +
+      `🏢 *Branch:* ${order.branchName || 'ADIT CAMPUS Outlet'}\n` +
       `👤 *Manager:* ${order.managerName || 'Store Manager'}\n` +
       `💰 *Amount Paid:* ₹${parseFloat(order.grandTotal || 0).toFixed(2)}\n` +
       `💳 *Txn Ref:* \`${transactionId || 'ONLINE'}\`` +
@@ -2567,7 +2569,7 @@ app.post('/api/telegram/webhook', async (req, res) => {
 
             const updatedMsg = `✅ *SMART PROCUREMENT ORDER APPROVED & PLACED*\n\n` +
               `📌 *PO Number:* \`${poId}\`\n` +
-              `🏢 *Branch:* ${order.branchName || 'VESU Outlet'}\n` +
+              `🏢 *Branch:* ${order.branchName || 'ADIT CAMPUS Outlet'}\n` +
               `💰 *Amount Paid:* ₹${parseFloat(order.grandTotal || 0).toFixed(2)}\n` +
               `👤 *Manager:* ${order.managerName || 'Store Manager'}\n` +
               `👑 *Approved By Owner:* ${fromUser} at ${nowFormatted}` +
@@ -2607,7 +2609,7 @@ app.post('/api/telegram/webhook', async (req, res) => {
           if (messageId) {
             const updatedMsg = `❌ *SMART PROCUREMENT ORDER REJECTED*\n\n` +
               `📌 *PO Number:* \`${poId}\`\n` +
-              `🏢 *Branch:* ${order.branchName || 'VESU Outlet'}\n` +
+              `🏢 *Branch:* ${order.branchName || 'ADIT CAMPUS Outlet'}\n` +
               `💰 *Amount:* ₹${parseFloat(order.grandTotal || 0).toFixed(2)}\n` +
               `👑 *Rejected By Owner:* ${fromUser} at ${nowFormatted}`;
 
@@ -2769,7 +2771,7 @@ app.post('/api/pos/requisitions/:id/status', authenticateToken, async (req, res)
 
       const messageText = `${statusEmoji} *SMART PROCUREMENT ORDER ${status.toUpperCase()}*\n\n` +
         `📌 *PO Number:* \`${id}\`\n` +
-        `🏢 *Branch:* ${order.branchName || 'VESU Outlet'}\n` +
+        `🏢 *Branch:* ${order.branchName || 'ADIT CAMPUS Outlet'}\n` +
         `💰 *Amount:* ₹${parseFloat(order.grandTotal || 0).toFixed(2)}\n` +
         `👤 *Manager:* ${order.managerName || 'Store Manager'}\n` +
         `⚡ *Current Status:* ${status}\n` +
@@ -3017,7 +3019,7 @@ app.delete('/api/suppliers/:id', authenticateToken, (req, res) => {
 // 7. Get inventory items with mapped suppliers
 app.get('/api/inventory/items', authenticateToken, (req, res) => {
   try {
-    const store = req.query.store || 'VESU';
+    const store = req.query.store || 'ADIT CAMPUS';
     const items = db.prepare('SELECT id, label, unit, unitCost, reorder, stock, store FROM inventory WHERE store = ?').all(store);
     
     const result = items.map(item => {
@@ -3064,7 +3066,7 @@ app.post('/api/inventory/items/suppliers', authenticateToken, (req, res) => {
 // 9. Dashboard statistics
 app.get('/api/procurement/dashboard', authenticateToken, (req, res) => {
   try {
-    const store = req.query.store || 'VESU';
+    const store = req.query.store || 'ADIT CAMPUS';
     
     const totalSuppliers = db.prepare('SELECT COUNT(*) as count FROM suppliers').get().count;
     
@@ -3147,7 +3149,7 @@ app.get('/api/procurement/dashboard', authenticateToken, (req, res) => {
 // 10. Procurement reports
 app.get('/api/procurement/reports', authenticateToken, (req, res) => {
   try {
-    const store = req.query.store || 'VESU';
+    const store = req.query.store || 'ADIT CAMPUS';
     
     // Monthly purchases (last 6 months)
     const monthlyPurchases = db.prepare(`
@@ -3397,7 +3399,7 @@ app.get('/api/pos/requisitions/:id/pdf', authenticateToken, async (req, res) => 
 app.get('/api/pos/notifications', authenticateToken, (req, res) => {
   try {
     const role = req.user.role || 'bm';
-    const store = req.user.store || 'VESU';
+    const store = req.user.store || 'ADIT CAMPUS';
     const items = db.prepare(`
       SELECT * FROM notifications
       WHERE (role = ? AND store = ?) OR role = 'all'
@@ -3413,7 +3415,7 @@ app.get('/api/pos/notifications', authenticateToken, (req, res) => {
 app.post('/api/pos/notifications/read', authenticateToken, (req, res) => {
   try {
     const role = req.user.role || 'bm';
-    const store = req.user.store || 'VESU';
+    const store = req.user.store || 'ADIT CAMPUS';
     db.prepare(`
       UPDATE notifications
       SET isRead = 1
@@ -3433,7 +3435,7 @@ app.get('/api/pos/orders/pending-verification', authenticateToken, (req, res) =>
     if (role === 'owner') {
       orders = db.prepare("SELECT * FROM pos_orders WHERE paymentStatus = 'Pending Verification'").all();
     } else {
-      orders = db.prepare("SELECT * FROM pos_orders WHERE paymentStatus = 'Pending Verification' AND store = ?").all(store || 'VESU');
+      orders = db.prepare("SELECT * FROM pos_orders WHERE paymentStatus = 'Pending Verification' AND store = ?").all(store || 'ADIT CAMPUS');
     }
     res.json({ success: true, orders });
   } catch (err) {
@@ -4186,7 +4188,7 @@ app.post('/api/auth/login', bruteForceCheck, (req, res) => {
       if (rawId.toLowerCase() === 'bk2022' || rawId.toLowerCase() === 'owner' || rawId.toLowerCase() === 'admin') {
         user = { id: 'bk2022', name: 'Franchise Owner', role: 'Owner', roleKey: 'owner', store: 'All', password: hashPassword('bkoperation/89*') };
       } else if (rawId.toLowerCase() === 'manager/123' || rawId.toLowerCase() === 'manager' || rawId.toLowerCase() === 'emp104') {
-        user = { id: 'manager/123', name: 'Store Manager', role: 'Branch Manager', roleKey: 'sm', store: 'VESU', password: hashPassword('managerbk/09#') };
+        user = { id: 'manager/123', name: 'Store Manager', role: 'Branch Manager', roleKey: 'sm', store: 'ADIT CAMPUS', password: hashPassword('managerbk/09#') };
       } else if (['lp', 'lpsavani', 'lp savani', 'emp105'].includes(rawId.toLowerCase())) {
         user = { id: 'LP', name: 'Manager LP SAVANI', role: 'Branch Manager', roleKey: 'sm', store: 'LP SAVANI', password: hashPassword('LPpassword') };
       }
@@ -4300,7 +4302,7 @@ app.put('/api/pos/customers/:id/guest-profile', authenticateToken, (req, res) =>
 
 app.get('/api/pos/tables', authenticateToken, (req, res) => {
   try {
-    const store = req.query.store || 'VESU';
+    const store = req.query.store || 'ADIT CAMPUS';
     const tables = db.prepare('SELECT * FROM pos_tables WHERE store = ?').all(store);
     res.json(tables);
   } catch (err) {
@@ -4339,7 +4341,7 @@ app.put('/api/pos/tables/merge', authenticateToken, (req, res) => {
 
 app.get('/api/pos/kitchen-orders', authenticateToken, (req, res) => {
   try {
-    const store = req.query.store || 'VESU';
+    const store = req.query.store || 'ADIT CAMPUS';
     const kots = db.prepare('SELECT * FROM pos_kitchen_orders WHERE store = ?').all(store);
     res.json(kots.map(k => ({ ...k, items: k.items ? JSON.parse(k.items) : [] })));
   } catch (err) {
@@ -4559,7 +4561,7 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
     bankName = null, upiId = null, notes = null
   } = req.body;
 
-  const store = req.headers['x-store-name'] || req.user.store || 'VESU';
+  const store = req.headers['x-store-name'] || req.user.store || 'ADIT CAMPUS';
   const currentDate = new Date();
   // Get IST offset time for accurate local logging (IST = UTC + 5:30)
   const istDate = new Date(currentDate.getTime() + (330 * 60000));
@@ -4794,7 +4796,7 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
         splitUpiAmount: order.splitUpiAmount || 0,
         date: todayStr,
         time: order.time || '',
-        store: order.store || 'VESU',
+        store: order.store || 'ADIT CAMPUS',
         orderType: order.orderType || 'Dine In',
         tableName: order.tableName || '',
         customerName: order.customerName || 'Walk-in Guest',
@@ -4817,7 +4819,7 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
         req.user ? req.user.id : 'admin',
         req.user ? req.user.name : 'Manager',
         JSON.stringify(auditDetails),
-        order.store || 'VESU'
+        order.store || 'ADIT CAMPUS'
       );
       // Mark as Deleted to track deleted count while removing from active sales
       db.prepare("UPDATE pos_orders SET status = 'Deleted' WHERE id = ?").run(id);
@@ -4827,7 +4829,7 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
         const orderItems = db.prepare('SELECT * FROM pos_order_items WHERE orderId = ?').all(id);
         orderItems.forEach(item => {
           const safeName = (item.productName || 'item').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-          const psId = `ps-${order.store || 'VESU'}-${order.date}-${safeName}`;
+          const psId = `ps-${order.store || 'ADIT CAMPUS'}-${order.date}-${safeName}`;
           db.prepare(`
             UPDATE product_sales
             SET qty = MAX(0, qty - ?), revenue = MAX(0, revenue - ?)

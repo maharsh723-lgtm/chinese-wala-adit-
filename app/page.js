@@ -49,7 +49,7 @@ export default function Home() {
             <div class="login-form-group" id="login-branch-group" style="display: none;">
                 <label class="login-label" for="login-branch">Select Outlet</label>
                 <select id="login-branch" class="login-select">
-                    <option value="bm-vesu">ADIT Campus Outlet</option>
+                    <option value="bm-adit">ADIT Campus Outlet</option>
                     
                     
                     
@@ -91,7 +91,7 @@ export default function Home() {
                         <i data-lucide="crown" style="width:14px; height:14px;"></i>
                         <span>Franchise Owner</span>
                     </div>
-                    <div class="role-option" data-role="bm-vesu" style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                    <div class="role-option" data-role="bm-adit" style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
                         <i data-lucide="store" style="width:14px; height:14px;"></i>
                         <span>Branch Manager (ADIT CAMPUS)</span>
                     </div>

@@ -24,15 +24,15 @@ function _initThisModule() {
 
     // Helper: Get active store and role based on local storage cache
     function getCurrentRoleAndStore() {
-        const cachedRoleKey = localStorage.getItem("bk_current_role_key") || "bm-vesu";
-        let store = "VESU";
+        const cachedRoleKey = localStorage.getItem("bk_current_role_key") || "bm-adit";
+        let store = "ADIT CAMPUS";
         let role = "bm";
 
         if (cachedRoleKey === "owner") {
             role = "owner";
             store = "All";
-        } else if (cachedRoleKey === "bm-vesu") {
-            store = "VESU";
+        } else if (cachedRoleKey === "bm-adit") {
+            store = "ADIT CAMPUS";
         } else if (cachedRoleKey === "bm-adajan") {
             store = "ADAJAN";
         } else if (cachedRoleKey === "bm-ctlight") {
@@ -53,7 +53,7 @@ function _initThisModule() {
                 { report: "Monthly P&L Report", frequency: "Monthly (1st Day)", format: "Excel File (.xlsx)", recipient: "owner@franchise.in", status: "Active" }
             ];
             branchConfigs = JSON.parse(localStorage.getItem("bk_branch_consolidation_status")) || {
-                "VESU": { active: true, included: true },
+                "ADIT CAMPUS": { active: true, included: true },
                 "ADAJAN": { active: true, included: true },
                 "CT LIGHT": { active: true, included: true }
             };
@@ -672,7 +672,7 @@ function _initThisModule() {
         if (!tbody) return;
         tbody.innerHTML = "";
 
-        const stores = ["VESU", "ADAJAN", "CT LIGHT"];
+        const stores = ["ADIT CAMPUS", "ADAJAN", "CT LIGHT"];
 
         stores.forEach(store => {
             const cfg = branchConfigs[store] || { active: true, included: true };
