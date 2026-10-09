@@ -556,7 +556,8 @@ const seededEmployees = [
     roleKey: "sm",
     password: "password123",
     status: "Active",
-    store: activePunch: null,
+    store: "ADIT CAMPUS",
+    activePunch: null,
     history: [],
     salary: 38000
   },
@@ -570,7 +571,8 @@ const seededEmployees = [
     roleKey: "sm",
     password: "password123",
     status: "Active",
-    store: activePunch: null,
+    store: "ADIT CAMPUS",
+    activePunch: null,
     history: [],
     salary: 40000
   },
@@ -584,7 +586,8 @@ const seededEmployees = [
     roleKey: "sm",
     password: "password123",
     status: "Active",
-    store: activePunch: null,
+    store: "ADIT CAMPUS",
+    activePunch: null,
     history: [],
     salary: 36000
   },
@@ -1083,34 +1086,34 @@ const seededProductSales = [
   { id: "ps-vesu-8", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 50, revenue: 4500, image: "🍨" },
 
   // LP SAVANI - 2026-06-15
-  { id: "ps-lpsavani-1", store: date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 160, revenue: 32000, image: "🍢" },
-  { id: "ps-lpsavani-2", store: date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 140, revenue: 35000, image: "🍲" },
-  { id: "ps-lpsavani-3", store: date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 110, revenue: 27500, image: "🥘" },
-  { id: "ps-lpsavani-4", store: date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 100, revenue: 18000, image: "🥞" },
-  { id: "ps-lpsavani-5", store: date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 90, revenue: 16650, image: "🍲" },
-  { id: "ps-lpsavani-6", store: date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 80, revenue: 7200, image: "🧆" },
-  { id: "ps-lpsavani-7", store: date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 70, revenue: 12880, image: "🍜" },
-  { id: "ps-lpsavani-8", store: date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 60, revenue: 5400, image: "🍨" },
+  { id: "ps-lpsavani-1", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 160, revenue: 32000, image: "🍢" },
+  { id: "ps-lpsavani-2", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 140, revenue: 35000, image: "🍲" },
+  { id: "ps-lpsavani-3", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 110, revenue: 27500, image: "🥘" },
+  { id: "ps-lpsavani-4", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 100, revenue: 18000, image: "🥞" },
+  { id: "ps-lpsavani-5", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 90, revenue: 16650, image: "🍲" },
+  { id: "ps-lpsavani-6", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 80, revenue: 7200, image: "🧆" },
+  { id: "ps-lpsavani-7", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 70, revenue: 12880, image: "🍜" },
+  { id: "ps-lpsavani-8", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 60, revenue: 5400, image: "🍨" },
 
   // GAURAV PATH - 2026-06-15
-  { id: "ps-gauravpath-1", store: date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 142, revenue: 28400, image: "🍢" },
-  { id: "ps-gauravpath-2", store: date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 129, revenue: 32250, image: "🍲" },
-  { id: "ps-gauravpath-3", store: date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 111, revenue: 27750, image: "🥘" },
-  { id: "ps-gauravpath-4", store: date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 95, revenue: 17100, image: "🥞" },
-  { id: "ps-gauravpath-5", store: date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 86, revenue: 15910, image: "🍲" },
-  { id: "ps-gauravpath-6", store: date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 91, revenue: 8190, image: "🧆" },
-  { id: "ps-gauravpath-7", store: date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 59, revenue: 10856, image: "🍜" },
-  { id: "ps-gauravpath-8", store: date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 44, revenue: 3960, image: "🍨" },
+  { id: "ps-gauravpath-1", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 142, revenue: 28400, image: "🍢" },
+  { id: "ps-gauravpath-2", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 129, revenue: 32250, image: "🍲" },
+  { id: "ps-gauravpath-3", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 111, revenue: 27750, image: "🥘" },
+  { id: "ps-gauravpath-4", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 95, revenue: 17100, image: "🥞" },
+  { id: "ps-gauravpath-5", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 86, revenue: 15910, image: "🍲" },
+  { id: "ps-gauravpath-6", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 91, revenue: 8190, image: "🧆" },
+  { id: "ps-gauravpath-7", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 59, revenue: 10856, image: "🍜" },
+  { id: "ps-gauravpath-8", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 44, revenue: 3960, image: "🍨" },
 
   // SUDAMA CHOWK - 2026-06-15
-  { id: "ps-sudamachowk-1", store: date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 155, revenue: 31000, image: "🍢" },
-  { id: "ps-sudamachowk-2", store: date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 130, revenue: 32500, image: "🍲" },
-  { id: "ps-sudamachowk-3", store: date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 105, revenue: 26250, image: "🥘" },
-  { id: "ps-sudamachowk-4", store: date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 98, revenue: 17640, image: "🥞" },
-  { id: "ps-sudamachowk-5", store: date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 88, revenue: 16280, image: "🍲" },
-  { id: "ps-sudamachowk-6", store: date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 78, revenue: 7020, image: "🧆" },
-  { id: "ps-sudamachowk-7", store: date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 65, revenue: 11960, image: "🍜" },
-  { id: "ps-sudamachowk-8", store: date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 55, revenue: 4950, image: "🍨" }
+  { id: "ps-sudamachowk-1", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-4", itemName: "Paneer Tikka", category: "Starters", qty: 155, revenue: 31000, image: "🍢" },
+  { id: "ps-sudamachowk-2", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-5", itemName: "Butter Chicken", category: "Main Course", qty: 130, revenue: 32500, image: "🍲" },
+  { id: "ps-sudamachowk-3", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-6", itemName: "Chicken Biryani", category: "Biryani", qty: 105, revenue: 26250, image: "🥘" },
+  { id: "ps-sudamachowk-4", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-7", itemName: "Masala Dosa", category: "South Indian", qty: 98, revenue: 17640, image: "🥞" },
+  { id: "ps-sudamachowk-5", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-8", itemName: "Dal Makhani", category: "Main Course", qty: 88, revenue: 16280, image: "🍲" },
+  { id: "ps-sudamachowk-6", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-9", itemName: "Gulab Jamun", category: "Desserts", qty: 78, revenue: 7020, image: "🧆" },
+  { id: "ps-sudamachowk-7", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-10", itemName: "Veg Manchurian", category: "Starters", qty: 65, revenue: 11960, image: "🍜" },
+  { id: "ps-sudamachowk-8", store: "ADIT CAMPUS", date: "2026-06-15", recipeId: "rec-11", itemName: "Rasgulla", category: "Desserts", qty: 55, revenue: 4950, image: "🍨" }
 ];
 
 // for (const sale of seededProductSales) {
