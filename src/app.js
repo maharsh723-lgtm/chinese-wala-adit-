@@ -480,8 +480,13 @@ function initApp() {
             }
             if (!response.ok) throw new Error("HTTP error " + response.status);
             const data = await response.json();
-            const stateJson = JSON.stringify(data);
+            
+            if (data.version && window._lastStateVersion && data.version === window._lastStateVersion) {
+                return;
+            }
+            if (data.version) window._lastStateVersion = data.version;
 
+            const stateJson = JSON.stringify(data);
             if (stateJson !== lastStateJson) {
                 lastStateJson = stateJson;
 

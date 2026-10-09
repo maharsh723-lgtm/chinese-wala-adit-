@@ -116,6 +116,7 @@ export async function GET(req) {
     const itemSuppliers = safeQuery('SELECT * FROM inventory_item_suppliers');
 
     const state = {
+      version: cachedStateTime || now,
       employees,
       leaveRequests,
       leaveBalances,
