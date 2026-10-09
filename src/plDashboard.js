@@ -1,6 +1,6 @@
 // plDashboard.js - BK Operations India Enterprise P&L Management Module
 
-document.addEventListener("DOMContentLoaded", () => {
+function _initThisModule() {
     // 1. Core API Base Configuration
     // Absolute base URL if opened via file:// protocol or other ports
     let API_BASE = '';
@@ -550,4 +550,11 @@ document.addEventListener("DOMContentLoaded", () => {
             refreshPLDashboard();
         }
     });
-});
+}
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _initThisModule);
+    } else {
+        _initThisModule();
+    }
+}

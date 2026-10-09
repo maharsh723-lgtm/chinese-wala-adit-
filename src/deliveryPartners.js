@@ -1,6 +1,6 @@
 // deliveryPartners.js - BK Operations India Enterprise Delivery Partners Module
 
-document.addEventListener("DOMContentLoaded", () => {
+function _initThisModule() {
     // 1. Core API Base Configuration
     // Absolute base URL if opened via file:// protocol or other ports
     let API_BASE = '';
@@ -492,4 +492,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initial load operations
     loadState();
-});
+}
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _initThisModule);
+    } else {
+        _initThisModule();
+    }
+}

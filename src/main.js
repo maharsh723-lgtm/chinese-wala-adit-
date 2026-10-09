@@ -32,7 +32,7 @@ const dishData = [
   }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+function _initThisModule() {
   // Initialize UI Controllers
   initCursor();
   initScrollTracker();
@@ -354,6 +354,13 @@ function initMobileMenu() {
         bars[1].style.opacity = '1';
         bars[2].style.transform = 'none';
       });
-    });
+    }
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _initThisModule);
+    } else {
+        _initThisModule();
+    }
+}
   }
 }

@@ -1,6 +1,6 @@
 // system.js - BK Operations India Enterprise System Module
 
-document.addEventListener("DOMContentLoaded", () => {
+function _initThisModule() {
     // 1. Core API Base Configuration
     // Absolute base URL if opened via file:// protocol or other ports
     let API_BASE = '';
@@ -773,4 +773,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initial load operations
     loadSystemState();
-});
+}
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _initThisModule);
+    } else {
+        _initThisModule();
+    }
+}

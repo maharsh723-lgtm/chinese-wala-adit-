@@ -3714,7 +3714,7 @@ function initApp() {
     };
 
     // Daily Expense Filters and Edit Form Handlers
-    document.addEventListener("DOMContentLoaded", () => {
+    function initExpenseFiltersAndForms() {
         // Date filter change handler
         const filterDateInput = document.getElementById("filterExpenseDate");
         if (filterDateInput) {
@@ -3877,7 +3877,12 @@ function initApp() {
                 alert("Expense updated successfully!");
             });
         }
-    });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener("DOMContentLoaded", initExpenseFiltersAndForms);
+    } else {
+        initExpenseFiltersAndForms();
+    }
 
     // SCREEN 14: PRODUCT SALES MANAGEMENT & LIVE SALES STREAM
     let selectedLiveSalesFilterDate = getTodayDateStr(); // defaults to today, or specific date string, or 'ALL'
@@ -15756,9 +15761,11 @@ function initTrainingSection() {
 }
 
 // Hook into the DOM loaded
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTrainingSection);
+} else {
     initTrainingSection();
-});
+}
 
 
 

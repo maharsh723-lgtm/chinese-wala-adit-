@@ -1,6 +1,6 @@
 // itemSalesAnalytics.js - BK Operations India Enterprise Item Sales Analytics Module
 
-document.addEventListener("DOMContentLoaded", () => {
+function _initThisModule() {
     // 1. Core Config
     // Absolute base URL if opened via file:// protocol or other ports
     let API_BASE = '';
@@ -701,4 +701,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-});
+}
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _initThisModule);
+    } else {
+        _initThisModule();
+    }
+}
