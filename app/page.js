@@ -1,12 +1,29 @@
 'use client';
 
 import { useEffect } from 'react';
-import '../src/app.js';
 
 export default function Home() {
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.initApp) {
-      window.initApp();
+    if (typeof window !== 'undefined') {
+      Promise.all([
+        import('../src/app.js'),
+        import('../src/accounting.js'),
+        import('../src/sales.js'),
+        import('../src/gst.js'),
+        import('../src/reportsPortal.js'),
+        import('../src/itemSalesAnalytics.js'),
+        import('../src/guestIntelligence.js'),
+        import('../src/system.js'),
+        import('../src/plDashboard.js'),
+        import('../src/procurement.js'),
+        import('../src/training.js')
+      ]).then(() => {
+        if (window.initApp) {
+          window.initApp();
+        }
+      }).catch(err => {
+        console.warn("Client script initialization:", err);
+      });
     }
   }, []);
 

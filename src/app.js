@@ -2,6 +2,12 @@ import { trainingData } from "./trainingData.js";
 import { createIcons, icons } from "lucide";
 
 if (typeof window !== "undefined") {
+    window.addEventListener('error', (e) => {
+        console.warn('Suppressed window error:', e.message);
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+        console.warn('Suppressed unhandled promise rejection:', e.reason);
+    });
     window.lucide = {
         createIcons: (opts = {}) => createIcons({ icons, ...opts })
     };
@@ -942,7 +948,8 @@ function initApp() {
             else if (hour >= 23 || hour < 8) hourlySales[5] += amt;
         });
 
-        if (chartSales) chartSales.destroy();
+        try { if (chartSales) chartSales.destroy(); } catch (e) {} chartSales = null;
+        try {
         chartSales = new Chart(ctx, {
             type: "line",
             data: {
@@ -961,7 +968,7 @@ function initApp() {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } }
             }
-        });
+        }); } catch (e) { console.warn('chartSales error:', e); }
     }
 
     // Helper: Owner Dashboard Comparison Chart
@@ -980,7 +987,8 @@ function initApp() {
             return storeOrders.reduce((sum, o) => sum + (parseFloat(o.grandTotal) || 0), 0);
         });
 
-        if (chartOwnerSales) chartOwnerSales.destroy();
+        try { if (chartOwnerSales) chartOwnerSales.destroy(); } catch (e) {} chartOwnerSales = null;
+        try {
         chartOwnerSales = new Chart(ctx, {
             type: "bar",
             data: {
@@ -997,7 +1005,7 @@ function initApp() {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } }
             }
-        });
+        }); } catch (e) { console.warn('chartOwnerSales error:', e); }
     }
 
     // Helper: BM Inventory alerts on Dashboard
