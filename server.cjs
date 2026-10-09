@@ -29,7 +29,7 @@ app.use(compression());
 // Security: In-Memory Request Rate Limiter (Firewall)
 const ipRequestCounts = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_REQUESTS = 300; // Limit each IP to 300 requests per minute
+const MAX_REQUESTS = 10000; // Raised limit per minute
 
 // Security: Failed Login Trackers (Lockout disabled)
 const failedLogins = new Map();
@@ -53,7 +53,10 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Rate-limiting Firewall Middleware
 app.use((req, res, next) => {
-  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+  if (ip.includes('127.0.0.1') || ip.includes('::1') || ip.includes('localhost')) {
+    return next();
+  }
   const now = Date.now();
   if (!ipRequestCounts.has(ip)) {
     ipRequestCounts.set(ip, []);
