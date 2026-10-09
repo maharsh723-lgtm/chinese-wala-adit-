@@ -9693,10 +9693,10 @@ function initApp() {
             }
         }
 
-        // Dynamic branch pill update
+        // Remove branch pill element if present
         const branchPill = document.querySelector(".pos-top-command-bar .branch-pill");
         if (branchPill) {
-            branchPill.textContent = `${getPOSStore()} Branch`;
+            branchPill.remove();
         }
 
         renderCustomerDropdown();

@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
     <script defer src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-  <script type="module" crossorigin src="./assets/index-DKa75F7a.js"></script>
+  <script type="module" crossorigin src="./assets/index-g9yyPISu.js"></script>
   <link rel="stylesheet" crossorigin href="./assets/index-CDwygjyz.css">
 </head>
 <body>
@@ -45,10 +45,10 @@
             <div class="login-form-group" id="login-branch-group" style="display: none;">
                 <label class="login-label" for="login-branch">Select Outlet</label>
                 <select id="login-branch" class="login-select">
-                    <option value="bm-vesu">VESU Outlet</option>
-                    <option value="bm-lpsavani">LP SAVANI Outlet</option>
-                    <option value="bm-gauravpath">GAURAV PATH Outlet</option>
-                    <option value="bm-sudamachowk">SUDAMA CHOWK Outlet</option>
+                    <option value="bm-adit">ADIT Campus Outlet</option>
+                    
+                    
+                    
                 </select>
             </div>
             
@@ -78,12 +78,20 @@
                 <div class="role-select-box" id="roleSelectBtn">
                     <div class="role-select-box-info">
                         <i data-lucide="shield"></i>
-                        <span id="currentRoleText">Head Office Operations</span>
+                        <span id="currentRoleText">Franchise Owner</span>
                     </div>
                     <i data-lucide="chevron-down" style="width: 14px; height: 14px;"></i>
                 </div>
                 <div class="role-options-panel" id="roleDropdownPanel">
-                    <div class="role-option" id="btn-logout" style="color: var(--pos-accent-red); font-weight:800; display:flex; align-items:center; gap:8px;">
+                    <div class="role-option" data-role="owner" style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="crown" style="width:14px; height:14px;"></i>
+                        <span>Franchise Owner</span>
+                    </div>
+                    <div class="role-option" data-role="bm-adit" style="padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="store" style="width:14px; height:14px;"></i>
+                        <span>Branch Manager (ADIT CAMPUS)</span>
+                    </div>
+                    <div class="role-option" id="btn-logout" style="color: var(--pos-accent-red); font-weight:800; display:flex; align-items:center; gap:8px; padding: 10px 14px;">
                         <i data-lucide="log-out" style="width:14px; height:14px;"></i>
                         <span>Exit / Logout</span>
                     </div>
@@ -307,8 +315,8 @@
                 <div class="app-screen active" id="screen-dashboard">
                     <div class="screen-header-layout">
                         <div class="screen-title-desc">
-                            <h1 id="dashboardWelcomeTitle">Welcome Back, National Ops Lead</h1>
-                            <p>Here is your franchise operational summary for today across India.</p>
+                            <h1 id="dashboardWelcomeTitle">Welcome Back, Operations Lead</h1>
+                            <p>Chinese Wala ADIT Campus Outlet Operations Summary.</p>
                         </div>
                         <div class="screen-actions">
                             <button class="saas-btn saas-btn-secondary" id="dashGenReportBtn">
@@ -342,48 +350,48 @@
                                 <span>Today's Sales</span>
                                 <i data-lucide="indian-rupee"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-sales">₹2,84,500</div>
-                            <div class="kpi-meta"><span class="trend-up">▲ +6.4%</span> vs last week</div>
+                            <div class="kpi-value" id="kpi-sales">₹0.00</div>
+                            <div class="kpi-meta"><span class="trend-up">▲ Live</span> ADIT Campus</div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span>Food Cost %</span>
                                 <i data-lucide="percent"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-foodcost">28.4%</div>
-                            <div class="kpi-meta"><span class="trend-up" style="color: var(--success);">▼ -0.8%</span> target: 29.0%</div>
+                            <div class="kpi-value" id="kpi-foodcost">0.0%</div>
+                            <div class="kpi-meta"><span class="trend-up" style="color: var(--success);">Target: 32.0%</span></div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span>Inventory Value</span>
                                 <i data-lucide="package"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-invhealth">₹14,50,000</div>
-                            <div class="kpi-meta">512 SKU types</div>
+                            <div class="kpi-value" id="kpi-invhealth">₹0.00</div>
+                            <div class="kpi-meta">Live Stock</div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span>Wastage Cost</span>
                                 <i data-lucide="trash-2" style="color: var(--danger);"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-waste" style="color: var(--danger);">₹12,450</div>
-                            <div class="kpi-meta"><span class="trend-down">▲ +4.2%</span> check Mumbai</div>
+                            <div class="kpi-value" id="kpi-waste" style="color: var(--danger);">₹0.00</div>
+                            <div class="kpi-meta"><span class="trend-down">ADIT CAMPUS</span></div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span>Staff Attendance</span>
                                 <i data-lucide="users"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-attendance">95.4%</div>
-                            <div class="kpi-meta">420 / 440 checked in</div>
+                            <div class="kpi-value" id="kpi-attendance">100%</div>
+                            <div class="kpi-meta">Active Staff</div>
                         </div>
                         <div class="kpi-card">
                             <div class="kpi-header">
                                 <span>SOP Compliance</span>
                                 <i data-lucide="shield-check"></i>
                             </div>
-                            <div class="kpi-value" id="kpi-sop">94.2%</div>
-                            <div class="kpi-meta"><span class="trend-up">▲ +1.5%</span> top standard</div>
+                            <div class="kpi-value" id="kpi-sop">100%</div>
+                            <div class="kpi-meta"><span class="trend-up">▲ Standard</span> Verified</div>
                         </div>
                     </div>
 
@@ -427,16 +435,16 @@
                             </div>
                             <div class="widget-body" style="display: flex; flex-direction: column; gap: 12px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; font-size:0.85rem;">
-                                    <span style="font-weight: 700;">1. Whopper® Veg Burger</span>
-                                    <span style="color: var(--text-secondary);">1,420 units sold</span>
+                                    <span style="font-weight: 700;">1. Hakka Noodles</span>
+                                    <span style="color: var(--text-secondary);">Live Sales</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; font-size:0.85rem;">
-                                    <span style="font-weight: 700;">2. Paneer King Royale</span>
-                                    <span style="color: var(--text-secondary);">980 units sold</span>
+                                    <span style="font-weight: 700;">2. Dry Manchurian</span>
+                                    <span style="color: var(--text-secondary);">Live Sales</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; font-size:0.85rem;">
-                                    <span style="font-weight: 700;">3. BK Golden Fries</span>
-                                    <span style="color: var(--text-secondary);">840 units sold</span>
+                                    <span style="font-weight: 700;">3. Veg Fried Rice</span>
+                                    <span style="color: var(--text-secondary);">Live Sales</span>
                                 </div>
                             </div>
                         </div>
@@ -445,19 +453,13 @@
                         <div class="widget-card">
                             <div class="widget-title">
                                 <span>Low Stock Alerts</span>
-                                <span class="pill-badge pill-badge-warning">3 Alerts</span>
+                                <span class="pill-badge pill-badge-warning">0 Alerts</span>
                             </div>
                             <div class="widget-body" style="display: flex; flex-direction: column; gap: 10px;" id="widgetInventoryAlerts">
                                 <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover); padding: 8px 12px; border-radius: 6px; border-left: 4px solid var(--orange-primary);">
                                     <div style="font-size:0.75rem;">
-                                        <div style="font-weight:700;">Whopper Sesame Buns</div>
-                                        <div style="color:var(--text-tertiary);">VESU • 45 pieces left</div>
-                                    </div>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-hover); padding: 8px 12px; border-radius: 6px; border-left: 4px solid var(--danger);">
-                                    <div style="font-size:0.75rem;">
-                                        <div style="font-weight:700;">Paneer Blocks (5kg pack)</div>
-                                        <div style="color:var(--text-tertiary);">Delhi Connaught Pl • 2 packets left</div>
+                                        <div style="font-weight:700;">Refined Sunflower Oil</div>
+                                        <div style="color:var(--text-tertiary);">ADIT CAMPUS • Normal stock</div>
                                     </div>
                                 </div>
                             </div>
@@ -471,7 +473,7 @@
                             </div>
                             <div class="widget-body" style="display: flex; flex-direction: column; gap: 10px; font-size:0.8rem;">
                                  <div style="display: flex; justify-content: space-between;">
-                                     <span>VESU Broiler Calibration</span>
+                                     <span>ADIT CAMPUS Broiler Calibration</span>
                                      <span style="color: var(--danger); font-weight:700;">OVERDUE</span>
                                  </div>
                                  <div style="display: flex; justify-content: space-between;">
@@ -511,7 +513,7 @@
                             </div>
                             <div class="widget-body" style="display: flex; flex-direction: column; gap: 10px; font-size:0.8rem;">
                                 <div style="display: flex; justify-content: space-between;">
-                                    <span>1. VESU West</span>
+                                    <span>1. ADIT CAMPUS West</span>
                                     <span style="font-weight:700; color:var(--success);">98.4%</span>
                                 </div>
                                 <div style="display: flex; justify-content: space-between;">
@@ -638,7 +640,7 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td style="font-weight: 700;">BK VESU West</td>
+                                    <td style="font-weight: 700;">ADIT Campus</td>
                                     <td>₹2,84,500</td>
                                     <td style="font-weight:600; color:var(--success);">28.4%</td>
                                     <td>₹12,450</td>
@@ -714,7 +716,7 @@
                                 <tr data-recurrence="daily">
                                     <td style="font-weight: 700;">Whopper Broiler Calibration</td>
                                     <td>Kitchen Supervisor</td>
-                                    <td>VESU</td>
+                                    <td>ADIT CAMPUS</td>
                                     <td><span class="pill-badge pill-badge-danger">OVERDUE</span></td>
                                     <td><span style="font-weight:700;">40%</span></td>
                                     <td>11:00 AM</td>
@@ -1420,11 +1422,11 @@
                             </div>
                             <div class="kpi-card">
                                 <div class="kpi-header">
-                                    <span>VESU Wastage</span>
+                                    <span>ADIT CAMPUS Wastage</span>
                                     <i data-lucide="map-pin" style="color: var(--orange-primary); width:16px; height:16px;"></i>
                                 </div>
                                 <div class="kpi-value" id="kpi-owner-vesu-waste">₹0</div>
-                                <div class="kpi-meta">VESU Branch</div>
+                                <div class="kpi-meta">ADIT Campus</div>
                             </div>
                             <div class="kpi-card">
                                 <div class="kpi-header">
@@ -1486,7 +1488,7 @@
                                     <thead>
                                         <tr>
                                             <th style="width: 120px;">Date</th>
-                                            <th>BK VESU</th>
+                                            <th>ADIT Campus</th>
                                             <th>BK LP SAVANI</th>
                                             <th>BK GAURAV PATH</th>
                                             <th>BK SUDAMA CHOWK</th>
@@ -1508,10 +1510,10 @@
                                 <div class="saas-form-group">
                                     <label class="saas-form-label" for="wasteStoreSelect">Store Name</label>
                                     <select class="saas-form-select" id="wasteStoreSelect">
-                                        <option value="VESU">BK VESU</option>
-                                        <option value="LP SAVANI">BK LP SAVANI</option>
-                                        <option value="GAURAV PATH">BK GAURAV PATH</option>
-                                        <option value="SUDAMA CHOWK">BK SUDAMA CHOWK</option>
+                                        <option value="ADIT CAMPUS">ADIT Campus</option>
+                                        
+                                        
+                                        
                                     </select>
                                 </div>
                                 <div class="saas-form-group">
@@ -1642,10 +1644,10 @@
                                 <label style="display:block; font-size:0.75rem; font-weight:700; margin-bottom:6px; color:var(--text-secondary);">FILTER OUTLET</label>
                                 <select class="saas-form-select" id="reconOutletSelect" style="width:100%;">
                                     <option value="ALL">All Outlets</option>
-                                    <option value="VESU">VESU Store</option>
-                                    <option value="LP SAVANI">LP SAVANI Store</option>
-                                    <option value="GAURAV PATH">GAURAV PATH Store</option>
-                                    <option value="SUDAMA CHOWK">SUDAMA CHOWK Store</option>
+                                    <option value="ADIT CAMPUS">ADIT Campus</option>
+                                    
+                                    
+                                    
                                 </select>
                             </div>
                             <div style="flex: 1; min-width: 200px;">
@@ -1972,10 +1974,10 @@
                                     <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-tertiary);">OUTLET</span>
                                     <select id="reportsFilterOutlet" style="padding: 6px 12px; background: var(--bg-sidebar); border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff; font-size: 0.8rem; outline: none;">
                                         <option value="All">All Outlets</option>
-                                        <option value="VESU">VESU</option>
-                                        <option value="LP SAVANI">LP SAVANI</option>
-                                        <option value="GAURAV PATH">GAURAV PATH</option>
-                                        <option value="SUDAMA CHOWK">SUDAMA CHOWK</option>
+                                        <option value="ADIT CAMPUS">ADIT CAMPUS</option>
+                                        
+                                        
+                                        
                                     </select>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -2180,10 +2182,10 @@
                             <span style="font-weight: 700; font-size: 0.85rem; color: var(--text-secondary);">Outlet Branch:</span>
                             <select class="saas-form-select" id="productSalesStoreSelect" style="width: 200px;">
                                 <option value="All">All Branches</option>
-                                <option value="VESU">VESU</option>
-                                <option value="LP SAVANI">LP SAVANI</option>
-                                <option value="GAURAV PATH">GAURAV PATH</option>
-                                <option value="SUDAMA CHOWK">SUDAMA CHOWK</option>
+                                <option value="ADIT CAMPUS">ADIT CAMPUS</option>
+                                
+                                
+                                
                             </select>
                         </div>
                         <div style="display: flex; gap: 12px; align-items: center; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 16px;">
@@ -2397,10 +2399,10 @@
                                 <label>Outlet</label>
                                 <select id="reconFilterOutletSelect" class="recon-form-select">
                                     <option value="all">All Outlets</option>
-                                    <option value="VESU">VESU</option>
-                                    <option value="LP SAVANI">LP SAVANI</option>
-                                    <option value="GAURAV PATH">GAURAV PATH</option>
-                                    <option value="SUDAMA CHOWK">SUDAMA CHOWK</option>
+                                    <option value="ADIT CAMPUS">ADIT CAMPUS</option>
+                                    
+                                    
+                                    
                                 </select>
                             </div>
                             <div class="filter-input-group">
@@ -2564,7 +2566,7 @@
                             <!-- Status Badges inside Drawer -->
                             <div class="drawer-badges-row">
                                 <span class="status-badge-recon" id="drawerStatusBadge">Matched</span>
-                                <span class="status-badge-recon secondary" id="drawerOutletBadge">VESU Branch</span>
+                                <span class="status-badge-recon secondary" id="drawerOutletBadge">ADIT Campus</span>
                             </div>
 
                             <!-- Complete Sales Breakdown Section -->
@@ -5134,10 +5136,10 @@
 
                             <select id="plBranchSelect" class="saas-select" style="width:150px;">
                                 <option value="All">All Branches</option>
-                                <option value="VESU">VESU Branch</option>
-                                <option value="LP SAVANI">LP SAVANI Branch</option>
-                                <option value="GAURAV PATH">GAURAV PATH Branch</option>
-                                <option value="SUDAMA CHOWK">SUDAMA CHOWK Branch</option>
+                                <option value="ADIT CAMPUS">ADIT Campus</option>
+                                
+                                
+                                
                             </select>
 
                             <!-- Exports dropdown -->
@@ -5257,9 +5259,9 @@
 
                     <!-- Layout: Tables & Particulars -->
                     <div id="plBranchComparisonCards" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:20px; margin-bottom:24px;">
-                        <!-- Vesu Branch Card -->
+                        <!-- ADIT Campus Card -->
                         <div class="widget-card" style="padding:16px;">
-                            <h4 style="margin:0 0 10px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">VESU Branch</h4>
+                            <h4 style="margin:0 0 10px; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">ADIT Campus</h4>
                             <div style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem;">
                                 <div style="display:flex; justify-content:space-between;"><span>Today's Sales:</span><strong id="pl-card-vesu-today-sales">₹0.00</strong></div>
                                 <div style="display:flex; justify-content:space-between;"><span>Today's Profit:</span><strong id="pl-card-vesu-today-profit">₹0.00</strong></div>
@@ -5478,7 +5480,6 @@
                             <div class="pos-brand-logo-container" style="width: 140px; height: auto; display: flex; align-items: center; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); margin-right: 8px;">
                                 <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NDAgMTYwIiB3aWR0aD0iNDQwIiBoZWlnaHQ9IjE2MCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwZDUyYmYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDUzMTdiIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJ5ZWxsb3dHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmYyMDAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZmZhYTAwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGZpbHRlciBpZD0ic2hhZG93IiB4PSItMTAlIiB5PSItMTAlIiB3aWR0aD0iMTIwJSIgaGVpZ2h0PSIxMjAlIj4KICAgICAgPGZlRHJvcFNoYWRvdyBkeD0iMCIgZHk9IjMiIHN0ZERldmlhdGlvbj0iMyIgZmxvb2QtY29sb3I9IiMwMDAiIGZsb29kLW9wYWNpdHk9IjAuMyIvPgogICAgPC9maWx0ZXI+CiAgPC9kZWZzPgoKICA8IS0tIEJhY2tncm91bmQgQ2FyZCAtLT4KICA8cmVjdCB3aWR0aD0iNDQwIiBoZWlnaHQ9IjE2MCIgcng9IjE2IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9IiNlMmU4ZjAiIHN0cm9rZS13aWR0aD0iMiIvPgogIAogIDwhLS0gQmx1ZSBCYW5uZXIgUGlsbCAtLT4KICA8cmVjdCB4PSIxOCIgeT0iMTgiIHdpZHRoPSI0MDQiIGhlaWdodD0iODAiIHJ4PSIxNCIgZmlsbD0idXJsKCNiZ0dyYWQpIiBmaWx0ZXI9InVybCgjc2hhZG93KSIvPgogIAogIDwhLS0gQ2hvcHN0aWNrcyBHcmFwaGljIE92ZXJsYXkgLS0+CiAgPHBhdGggZD0iTSAzOCA0MiBMIDY4IDcwIE0gNDIgMzYgTCA3MiA2NCIgc3Ryb2tlPSIjZmZmMjAwIiBzdHJva2Utd2lkdGg9IjQuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgCiAgPCEtLSBDSElORVNFIFRleHQgLS0+CiAgPHRleHQgeD0iNDUiIHk9IjczIiBmb250LWZhbWlseT0iJ0ltcGFjdCcsICdBcmlhbCBCbGFjaycsICdUcmVidWNoZXQgTVMnLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjQ2IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjZmZmZmZmIiBsZXR0ZXItc3BhY2luZz0iMi41Ij5DSElORVNFPC90ZXh0PgogIAogIDwhLS0gSGluZGkg2YjYp9mE2KcgVGV4dCAtLT4KICA8dGV4dCB4PSIzMDAiIHk9Ijc0IiBmb250LWZhbWlseT0iJ1NlZ29lIFVJJywgJ011a3RhJywgJ0FyaWFsJywgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI0NCIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0idXJsKCN5ZWxsb3dHcmFkKSI+4KS14KS+4KSy4KS+PC90ZXh0PgogIAogIDwhLS0gUmVkIEFjY2VudCBTcGxhc2ggTGluZSB1bmRlciBiYW5uZXIgLS0+CiAgPHBhdGggZD0iTSAzMCAxMDYgQyAxNDAgMTAxLCAzMDAgMTEwLCA0MTAgMTA1IiBzdHJva2U9IiNlNjM5NDYiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIi8+CiAgCiAgPCEtLSBBRElUIENBTVBVUyBTdWJ0aXRsZSAtLT4KICA8dGV4dCB4PSIyMjAiIHk9IjE0MiIgZm9udC1mYW1pbHk9IidUcmVidWNoZXQgTVMnLCAnQXJpYWwgQmxhY2snLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI1IiBmb250LXdlaWdodD0iOTAwIiBmaWxsPSIjMDUzMTdiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iNCI+QURJVCBDQU1QVVM8L3RleHQ+Cjwvc3ZnPgo=" alt="Chinese Wala ADIT Campus Logo" style="width: 100%; height: auto; display: block; border-radius: 12px;"/>
                             </div>
-                            <span class="branch-pill">VESU Branch</span>
                         </div>
 
                         <!-- Center Block: Search & Utilities -->
@@ -5873,7 +5874,7 @@
                     <span style="font-weight:500; font-size:0.7rem; color:var(--text-tertiary);">Just Now</span>
                 </div>
                 <div class="alert-item-body">
-                    <strong>Whopper Sesame Buns</strong> count dropped below threshold at VESU. Current: 45 pieces.
+                    <strong>Whopper Sesame Buns</strong> count dropped below threshold at ADIT CAMPUS. Current: 45 pieces.
                 </div>
                 <div class="alert-actions">
                     <button class="alert-action-btn resolve" onclick="resolveNotification('notif-1')">Resolve</button>
@@ -5933,7 +5934,7 @@
                     <span style="font-weight:500; font-size:0.7rem; color:var(--text-tertiary);">2 hrs ago</span>
                 </div>
                 <div class="alert-item-body">
-                    BK VESU recorded wastage value above threshold parameters (₹12,450).
+                    ADIT Campus recorded wastage value above threshold parameters (₹12,450).
                 </div>
                 <div class="alert-actions">
                     <button class="alert-action-btn resolve" onclick="resolveNotification('notif-5')">Resolve</button>
@@ -6442,7 +6443,7 @@
             <div style="background: var(--bg-sidebar); border: 1px solid var(--border); padding: 14px; border-radius: 6px; font-family: monospace; font-size: 0.75rem; text-align: left; max-height: 180px; overflow-y: auto; margin-bottom: 20px; line-height: 1.4;">
                 *BK OPERATIONS INDIA - EOD REPORT*<br>
                 Date: 2026-06-11<br>
-                Store: BK VESU West<br>
+                Store: ADIT Campus<br>
                 -----------------------------<br>
                 * Gross Sales: ₹2,84,500<br>
                 * Net Sales: ₹2,41,820<br>
@@ -6495,10 +6496,10 @@
                     <div>
                         <label style="display:block; font-size:0.8rem; font-weight:700; margin-bottom:6px; color: #c29f68;">Store Assignment</label>
                         <select id="empStoreSelect" style="width:100%; box-sizing: border-box; background: rgba(21, 19, 18, 0.95); border: 1px solid rgba(194, 159, 104, 0.3); color: #fff; border-radius: 8px; padding: 10px; outline: none; font-weight: 600;">
-                            <option value="VESU" style="background:#151312; color:#fff;">BK VESU</option>
-                            <option value="LP SAVANI" style="background:#151312; color:#fff;">BK LP SAVANI</option>
-                            <option value="GAURAV PATH" style="background:#151312; color:#fff;">BK GAURAV PATH</option>
-                            <option value="SUDAMA CHOWK" style="background:#151312; color:#fff;">BK SUDAMA CHOWK</option>
+                            <option value="ADIT CAMPUS" style="background:#151312; color:#fff;">ADIT Campus</option>
+                            
+                            
+                            
                         </select>
                     </div>
                 </div>
