@@ -13,6 +13,9 @@ if (typeof window !== "undefined") {
     };
 }
 function initApp() {
+    if (window._appInitialized) return;
+    window._appInitialized = true;
+
     // Absolute base URL if opened via file:// protocol or dev ports
     let API_BASE = '';
     if (window.location.protocol.startsWith('file')) {
@@ -3032,12 +3035,12 @@ function initApp() {
                     }
                 });
                 
-                document.getElementById("kpi-owner-total-waste").textContent = `₹${totalFranchiseCost.toLocaleString()}`;
-                document.getElementById("kpi-owner-vesu-waste").textContent = `₹${vesuCost.toLocaleString()}`;
-                if (document.getElementById("kpi-owner-lpsavani-waste")) {
-                    document.getElementById("kpi-owner-lpsavani-waste").textContent = `₹${lpsavaniCost.toLocaleString()}`;
+                if (document.getElementById("kpi-owner-total-waste")) {
+                    document.getElementById("kpi-owner-total-waste").textContent = `₹${totalFranchiseCost.toLocaleString()}`;
                 }
-                if (document.getElementById("kpi-owner-gauravpath-waste")) {
+                if (document.getElementById("kpi-owner-vesu-waste")) {
+                    document.getElementById("kpi-owner-vesu-waste").textContent = `₹${aditCost.toLocaleString()}`;
+                }
                 // Render Branch Cost Bar Chart
                 const branchCtx = document.getElementById("ownerWasteBranchChart");
                 if (branchCtx) {
@@ -15589,12 +15592,9 @@ function initApp() {
         syncStateFromServer: syncStateFromServer,
         getCurrentPoState: () => currentPoState
     };
-}
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initApp);
-} else {
-    initApp();
+    const initialRole = localStorage.getItem("bk_current_role_key") || "owner";
+    setRole(initialRole);
 }
 
 
@@ -15867,11 +15867,7 @@ setInterval(() => {
     }
 }, 5000);
 
-    const initialRole = localStorage.getItem("bk_current_role_key") || "owner";
-    setRole(initialRole);
 
-
-}
 if (typeof window !== 'undefined') {
     window.initApp = initApp;
     if (document.readyState === 'loading') {
