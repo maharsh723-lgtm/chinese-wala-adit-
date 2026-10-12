@@ -16,9 +16,13 @@ function initApp() {
     if (window._appInitialized) return;
     window._appInitialized = true;
 
-    // Absolute base URL if opened via file:// protocol or dev ports
+    // Absolute base URL if opened via file:// protocol or dev ports, or custom backend URL
     let API_BASE = '';
-    if (window.location.protocol.startsWith('file')) {
+    if (typeof window !== 'undefined' && window.NEXT_PUBLIC_API_URL) {
+        API_BASE = window.NEXT_PUBLIC_API_URL;
+    } else if (typeof window !== 'undefined' && localStorage.getItem('bk_custom_backend_url')) {
+        API_BASE = localStorage.getItem('bk_custom_backend_url');
+    } else if (window.location.protocol.startsWith('file')) {
         API_BASE = 'http://localhost:3000';
     } else if (window.location.port && window.location.port !== '3000' && window.location.port !== '80' && window.location.port !== '443') {
         API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;

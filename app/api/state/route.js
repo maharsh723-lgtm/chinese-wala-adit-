@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import {
+  defaultPosProducts,
+  defaultPosModifiers,
+  defaultPosCustomers,
+  defaultPosTables
+} from '@/lib/defaultMenu';
 
 let cachedStateResponse = null;
 let cachedStateTime = 0;
 const CACHE_TTL_MS = 5000; // 5 seconds high-performance in-memory cache
 
 function safeQuery(sql, fallback = []) {
+  if (!db) return fallback;
   try {
     return db.prepare(sql).all();
   } catch (e) {
@@ -79,16 +86,31 @@ export async function GET(req) {
     const productSales = safeQuery('SELECT * FROM product_sales');
 
     const productRows = safeQuery('SELECT * FROM pos_products');
-    const posProducts = productRows.map(row => ({
+    let posProducts = productRows.map(row => ({
       ...row,
       isVeg: Boolean(row.isVeg),
       isPopular: Boolean(row.isPopular),
       isFavorite: Boolean(row.isFavorite),
       ingredients: safeJsonParse(row.ingredients, [])
     }));
+    if (!posProducts || posProducts.length === 0) {
+      posProducts = defaultPosProducts;
+    }
 
-    const posModifiers = safeQuery('SELECT * FROM pos_modifiers');
-    const posCustomers = safeQuery('SELECT * FROM pos_customers');
+    let posModifiers = safeQuery('SELECT * FROM pos_modifiers');
+    if (!posModifiers || posModifiers.length === 0) {
+      posModifiers = defaultPosModifiers;
+    }
+
+    let posCustomers = safeQuery('SELECT * FROM pos_customers');
+    if (!posCustomers || posCustomers.length === 0) {
+      posCustomers = defaultPosCustomers;
+    }
+
+    let posTables = safeQuery('SELECT * FROM pos_tables');
+    if (!posTables || posTables.length === 0) {
+      posTables = defaultPosTables;
+    }
 
     const orderRows = safeQuery('SELECT * FROM pos_orders');
     const itemRows = safeQuery('SELECT * FROM pos_order_items');
@@ -131,6 +153,7 @@ export async function GET(req) {
       posProducts,
       posModifiers,
       posCustomers,
+      posTables,
       posOrders,
       suppliers,
       itemSuppliers
