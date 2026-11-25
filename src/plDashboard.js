@@ -80,13 +80,13 @@ function _initThisModule() {
         if (role === 'bm') {
             plBranchSelect.value = store;
             plBranchSelect.disabled = true;
-            document.getElementById("plOwnerKPIsGrid").style.display = 'none';
+            if (document.getElementById("plOwnerKPIsGrid")) document.getElementById("plOwnerKPIsGrid").style.display = 'none';
             document.getElementById("plBranchComparisonCards").style.display = 'none';
             document.getElementById("plBranchComparisonTableContainer").style.display = 'none';
             document.getElementById("chartPLBranchComparisonContainer").style.display = 'none';
         } else {
             plBranchSelect.disabled = false;
-            document.getElementById("plOwnerKPIsGrid").style.display = 'grid';
+            if (document.getElementById("plOwnerKPIsGrid")) document.getElementById("plOwnerKPIsGrid").style.display = 'grid';
             document.getElementById("plBranchComparisonCards").style.display = 'grid';
             document.getElementById("plBranchComparisonTableContainer").style.display = 'block';
             document.getElementById("chartPLBranchComparisonContainer").style.display = 'block';
@@ -141,12 +141,12 @@ function _initThisModule() {
         document.getElementById("pl-kpi-monthly-expense").textContent = formatCurrency(s.monthlyExpense || 0);
 
         // Balance sheet KPIs
-        document.getElementById("pl-kpi-gst-collected").textContent = formatCurrency(s.totalGstCollected);
-        document.getElementById("pl-kpi-gst-paid").textContent = formatCurrency(s.totalGstPaid);
-        document.getElementById("pl-kpi-cash-in-hand").textContent = formatCurrency(s.cashInHand);
-        document.getElementById("pl-kpi-bank-balance").textContent = formatCurrency(s.bankBalance);
-        document.getElementById("pl-kpi-customer-outstanding").textContent = formatCurrency(s.outstandingCustomer);
-        document.getElementById("pl-kpi-supplier-outstanding").textContent = formatCurrency(s.outstandingSupplier);
+        if (document.getElementById("pl-kpi-gst-collected")) document.getElementById("pl-kpi-gst-collected").textContent = formatCurrency(s.totalGstCollected);
+        if (document.getElementById("pl-kpi-gst-paid")) document.getElementById("pl-kpi-gst-paid").textContent = formatCurrency(s.totalGstPaid);
+        if (document.getElementById("pl-kpi-cash-in-hand")) document.getElementById("pl-kpi-cash-in-hand").textContent = formatCurrency(s.cashInHand);
+        if (document.getElementById("pl-kpi-bank-balance")) document.getElementById("pl-kpi-bank-balance").textContent = formatCurrency(s.bankBalance);
+        if (document.getElementById("pl-kpi-customer-outstanding")) document.getElementById("pl-kpi-customer-outstanding").textContent = formatCurrency(s.outstandingCustomer);
+        if (document.getElementById("pl-kpi-supplier-outstanding")) document.getElementById("pl-kpi-supplier-outstanding").textContent = formatCurrency(s.outstandingSupplier);
 
         // Styling the profit card wrapper
         const pCard = document.getElementById("plNetProfitKpiCard");
