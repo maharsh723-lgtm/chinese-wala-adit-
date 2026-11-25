@@ -1,36 +1,54 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 160" width="440" height="160">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 160" width="500" height="160">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0d52bf"/>
-      <stop offset="100%" stop-color="#05317b"/>
+    <linearGradient id="cwBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a4db3"/>
+      <stop offset="100%" stop-color="#052c70"/>
     </linearGradient>
-    <linearGradient id="yellowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#fff200"/>
-      <stop offset="100%" stop-color="#ffaa00"/>
+    <linearGradient id="cwGoldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff033"/>
+      <stop offset="100%" stop-color="#f5a623"/>
     </linearGradient>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.3"/>
+    <filter id="cwShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.25"/>
     </filter>
   </defs>
 
-  <!-- Background Card -->
-  <rect width="440" height="160" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
-  
-  <!-- Blue Banner Pill -->
-  <rect x="18" y="18" width="404" height="80" rx="14" fill="url(#bgGrad)" filter="url(#shadow)"/>
-  
-  <!-- Chopsticks Graphic Overlay -->
-  <path d="M 38 42 L 68 70 M 42 36 L 72 64" stroke="#fff200" stroke-width="4.5" stroke-linecap="round"/>
-  
-  <!-- CHINESE Text -->
-  <text x="45" y="73" font-family="'Impact', 'Arial Black', 'Trebuchet MS', sans-serif" font-size="46" font-weight="900" fill="#ffffff" letter-spacing="2.5">CHINESE</text>
-  
-  <!-- Hindi والا Text -->
-  <text x="300" y="74" font-family="'Segoe UI', 'Mukta', 'Arial', sans-serif" font-size="44" font-weight="900" fill="url(#yellowGrad)">वाला</text>
-  
-  <!-- Red Accent Splash Line under banner -->
-  <path d="M 30 106 C 140 101, 300 110, 410 105" stroke="#e63946" stroke-width="6" stroke-linecap="round" fill="none"/>
-  
-  <!-- ADIT CAMPUS Subtitle -->
-  <text x="220" y="142" font-family="'Trebuchet MS', 'Arial Black', sans-serif" font-size="25" font-weight="900" fill="#05317b" text-anchor="middle" letter-spacing="4">ADIT CAMPUS</text>
+  <!-- Clean Container Background -->
+  <rect width="500" height="160" rx="14" fill="#ffffff"/>
+
+  <!-- Phone Header -->
+  <text x="24" y="24" font-family="'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="12" font-weight="700" fill="#1e293b">Call : 70462 69068</text>
+
+  <!-- Main Royal Blue Pill Banner -->
+  <rect x="20" y="32" width="370" height="72" rx="14" fill="url(#cwBlueGrad)" filter="url(#cwShadow)"/>
+
+  <!-- Chopsticks crossed over the C -->
+  <line x1="36" y1="44" x2="68" y2="82" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <line x1="44" y1="40" x2="74" y2="76" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- "CHINESE" Text -->
+  <text x="56" y="82" font-family="'Arial Black', 'Impact', 'Trebuchet MS', sans-serif" font-size="40" font-weight="900" fill="#ffffff" letter-spacing="2">CHINESE</text>
+
+  <!-- "वाला" Hindi Text in Golden Yellow -->
+  <text x="282" y="82" font-family="'Mukta', 'Noto Sans Devanagari', 'Mangal', 'Segoe UI', Arial, sans-serif" font-size="40" font-weight="900" fill="url(#cwGoldGrad)">&#2357;&#2366;&#2354;&#2366;</text>
+
+  <!-- Food Plate Illustration on Right -->
+  <g transform="translate(405, 34)">
+    <ellipse cx="40" cy="36" rx="40" ry="34" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+    <ellipse cx="40" cy="36" rx="34" ry="28" fill="#e53935"/>
+    <!-- Veggies & Paneer chunks in plate -->
+    <rect x="24" y="24" width="12" height="12" rx="2" fill="#fff7ed"/>
+    <rect x="42" y="20" width="14" height="13" rx="2" fill="#fff7ed"/>
+    <rect x="34" y="38" width="13" height="13" rx="2" fill="#fff7ed"/>
+    <circle cx="28" cy="42" r="5" fill="#22c55e"/>
+    <circle cx="50" cy="38" r="4.5" fill="#22c55e"/>
+    <circle cx="38" cy="22" r="4" fill="#fbbf24"/>
+  </g>
+
+  <!-- Sub-banner: Red CHINESE Pill -->
+  <rect x="22" y="114" width="108" height="32" rx="8" fill="#e53935"/>
+  <text x="76" y="136" font-family="'Arial Black', 'Trebuchet MS', sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1">CHINESE</text>
+
+  <!-- Sub-banner: ADIT CAMPUS -->
+  <text x="146" y="137" font-family="'Arial Black', 'Trebuchet MS', sans-serif" font-size="20" font-weight="900" fill="#052c70" letter-spacing="2">ADIT CAMPUS</text>
 </svg>

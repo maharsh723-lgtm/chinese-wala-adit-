@@ -28,39 +28,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div dangerouslySetInnerHTML={{ __html: `<!-- 0. Glassmorphic Authentication Overlay (Disabled) -->
-    <div id="login-overlay" style="display: none !important;">
-        <div class="login-card">
-            <div class="login-logo-container" style="width: 280px; margin: 0 auto 16px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));">
-                <img src="chinese_wala_logo.svg" alt="Chinese Wala ADIT Campus Logo" style="width: 100%; height: auto; display: block; border-radius: 12px;"/>
-            </div>
-            <p class="login-subtitle" style="margin-top: 0; margin-bottom: 24px;">Enterprise Operations Login</p>
-            
-            <div class="login-form-group">
-                <label class="login-label" for="login-username">User ID</label>
-                <input type="text" id="login-username" class="login-input" placeholder="e.g. bk2022" autocomplete="username">
-            </div>
-            
-            <div class="login-form-group">
-                <label class="login-label" for="login-password">Password</label>
-                <input type="password" id="login-password" class="login-input" placeholder="••••••••" autocomplete="current-password">
-            </div>
-            
-            <div class="login-form-group" id="login-branch-group" style="display: none;">
-                <label class="login-label" for="login-branch">Select Outlet</label>
-                <select id="login-branch" class="login-select">
-                    <option value="bm-adit">ADIT Campus Outlet</option>
-                    
-                    
-                    
-                </select>
-            </div>
-            
-            <div id="login-error-msg" class="login-error"></div>
-            
-            <button type="button" id="login-submit-btn" class="login-btn">Log In</button>
-        </div>
-    </div>
+    <div dangerouslySetInnerHTML={{ __html: `
+
 
     <!-- MAIN PLATFORM STRUCTURE -->
     <div class="app-layout">
@@ -3523,13 +3492,13 @@ export default function Home() {
                     </div>
 
                     <!-- Interactive Excel Spreadsheet style P&L Card -->
-                    <div class="widget-card" style="background:#FAF8F5; border:1px solid #EAE3D5;">
-                        <h2 style="font-family:'Playfair Display', serif; text-align:center; margin-bottom: 24px; color:#5C4033;" id="plTitleText">Profit & Loss Statement - June 2026</h2>
+                    <div class="widget-card" style="background:#F4F6FB; border:1px solid #E2E8F0;">
+                        <h2 style="font-family:'Playfair Display', serif; text-align:center; margin-bottom: 24px; color:#05317B;" id="plTitleText">Profit & Loss Statement - June 2026</h2>
                         
                         <div style="overflow-x:auto;">
                             <table class="saas-table" style="background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.04);" id="plSheetTable">
                                 <thead>
-                                    <tr style="background:#F0EAE1; font-weight:800;">
+                                    <tr style="background:#EEF4FF; font-weight:800;">
                                         <th style="width:60%;">Line Item Description</th>
                                         <th style="width:20%; text-align:right;">Source / Ref</th>
                                         <th style="width:20%; text-align:right;">Amount (₹)</th>
@@ -6886,11 +6855,11 @@ export default function Home() {
             </div>
             <div class="invoice-modal-actions" style="padding:16px; display:flex; flex-direction:column; gap:8px; background:#faf6f0; border-top:1px solid #ddd; font-family:var(--font-sans);">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-                    <button type="button" class="saas-btn saas-btn-primary" id="btnPrintReceiptBtn" style="background:#2e231f; color:#fff; border:none; display:flex; align-items:center; justify-content:center; gap:6px; height: 38px;"><i data-lucide="printer" style="width:14px; height:14px;"></i> Print Bill</button>
+                    <button type="button" class="saas-btn saas-btn-primary" id="btnPrintReceiptBtn" style="background:#0D52BF; color:#fff; border:none; display:flex; align-items:center; justify-content:center; gap:6px; height: 38px;"><i data-lucide="printer" style="width:14px; height:14px;"></i> Print Bill</button>
                     <button type="button" class="saas-btn saas-btn-primary" id="btnPrintKOTBtn" style="background:#d97706; color:#fff; border:none; display:flex; align-items:center; justify-content:center; gap:6px; height: 38px;"><i data-lucide="chef-hat" style="width:14px; height:14px;"></i> Print KOT</button>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-                    <button type="button" class="saas-btn saas-btn-secondary" id="btnDownloadPDFBtn" style="border:1px solid #2e231f; display:flex; align-items:center; justify-content:center; gap:6px; height: 38px; background:#fff; color:#2e231f;"><i data-lucide="file-text" style="width:14px; height:14px;"></i> Save PDF</button>
+                    <button type="button" class="saas-btn saas-btn-secondary" id="btnDownloadPDFBtn" style="border:1px solid #0D52BF; display:flex; align-items:center; justify-content:center; gap:6px; height: 38px; background:#fff; color:#0D52BF;"><i data-lucide="file-text" style="width:14px; height:14px;"></i> Save PDF</button>
                     <button type="button" class="saas-btn saas-btn-secondary" onclick="document.getElementById('modalPOSInvoice').style.display='none'" style="border:1px solid #28a745; display:flex; align-items:center; justify-content:center; gap:6px; height: 38px; background:#28a745; color:#fff; font-weight: bold;"><i data-lucide="save" style="width:14px; height:14px;"></i> Save Data & Close</button>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
