@@ -189,7 +189,7 @@ function initApp() {
     let posAuditLogs = [];
     let posStockMovement = [];
     let posNextToken = parseInt(localStorage.getItem("pos_next_token") || "109");
-    if (isNaN(posNextToken) || posNextToken < 109) posNextToken = 109;
+    if (isNaN(posNextToken) || posNextToken < 1) posNextToken = 109;
     let topSellingByStore = {};
     
     // POS Cart State
@@ -11160,6 +11160,66 @@ function initApp() {
         // Sync Next Token and bind Queue control buttons
         syncTokenUI();
 
+        // Dropdown toggle button for last 10 tokens
+        const tokenDropdownBtn = document.getElementById("btnTokenDropdown");
+        if (tokenDropdownBtn && !tokenDropdownBtn.dataset.listenerBound) {
+            tokenDropdownBtn.dataset.listenerBound = "true";
+            tokenDropdownBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const menu = document.getElementById("tokenDropdownMenu");
+                const chevron = document.getElementById("tokenDropdownChevron");
+                if (menu) {
+                    const isOpen = menu.style.display === "block";
+                    menu.style.display = isOpen ? "none" : "block";
+                    if (chevron) {
+                        chevron.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+                    }
+                    if (!isOpen) {
+                        renderTokenDropdownItems();
+                    }
+                }
+            });
+        }
+
+        // Custom Token Prompt Button
+        const customPromptBtn = document.getElementById("btnCustomTokenPrompt");
+        if (customPromptBtn && !customPromptBtn.dataset.listenerBound) {
+            customPromptBtn.dataset.listenerBound = "true";
+            customPromptBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const menu = document.getElementById("tokenDropdownMenu");
+                if (menu) menu.style.display = "none";
+                const chevron = document.getElementById("tokenDropdownChevron");
+                if (chevron) chevron.style.transform = "rotate(0deg)";
+                const inputVal = prompt("Enter token number to jump to:", posNextToken.toString());
+                if (inputVal !== null) {
+                    const parsed = parseInt(inputVal.trim());
+                    if (!isNaN(parsed) && parsed >= 1) {
+                        posNextToken = parsed;
+                        localStorage.setItem("pos_next_token", posNextToken.toString());
+                        syncTokenUI();
+                        if (typeof showToast === "function") showToast(`Token set to #${posNextToken}`);
+                    } else {
+                        alert("Please enter a valid positive token number.");
+                    }
+                }
+            });
+        }
+
+        // Close dropdown when clicking outside
+        if (!window._tokenDropdownOutsideBound) {
+            window._tokenDropdownOutsideBound = true;
+            document.addEventListener("click", (e) => {
+                const container = document.getElementById("tokenDropdownContainer");
+                const menu = document.getElementById("tokenDropdownMenu");
+                if (menu && menu.style.display === "block" && container && !container.contains(e.target)) {
+                    menu.style.display = "none";
+                    const chevron = document.getElementById("tokenDropdownChevron");
+                    if (chevron) chevron.style.transform = "rotate(0deg)";
+                }
+            });
+        }
+
         const prevTokenBtn = document.getElementById("btnPrevToken");
         if (prevTokenBtn && !prevTokenBtn.dataset.listenerBound) {
             prevTokenBtn.dataset.listenerBound = "true";
@@ -11174,9 +11234,16 @@ function initApp() {
         if (resetTokenBtn && !resetTokenBtn.dataset.listenerBound) {
             resetTokenBtn.dataset.listenerBound = "true";
             resetTokenBtn.addEventListener("click", () => {
-                posNextToken = 109;
+                try {
+                    const todayDateStr = new Date().toISOString().split('T')[0];
+                    const storeOrders = (posOrders || []).filter(o => o.store === getPOSStore() && (o.date === todayDateStr || (o.timestamp && o.timestamp.startsWith(todayDateStr))));
+                    posNextToken = 109 + storeOrders.length;
+                } catch(e) {
+                    posNextToken = 109;
+                }
                 localStorage.setItem("pos_next_token", posNextToken.toString());
                 syncTokenUI();
+                if (typeof showToast === "function") showToast(`Token reset to #${posNextToken}`);
             });
         }
 
@@ -11444,9 +11511,9 @@ function initApp() {
     }
 
     function syncTokenUI() {
-        if (!posNextToken || isNaN(posNextToken) || posNextToken < 109) {
+        if (!posNextToken || isNaN(posNextToken) || posNextToken < 1) {
             const saved = parseInt(localStorage.getItem("pos_next_token") || "109");
-            posNextToken = (saved && !isNaN(saved) && saved >= 109) ? saved : 109;
+            posNextToken = (saved && !isNaN(saved) && saved >= 1) ? saved : 109;
             localStorage.setItem("pos_next_token", posNextToken.toString());
         }
         const tokenStr = '#' + String(posNextToken);
@@ -11458,6 +11525,100 @@ function initApp() {
         if (billingTokenVal) {
             billingTokenVal.textContent = tokenStr;
         }
+        renderTokenDropdownItems();
+    }
+
+    function renderTokenDropdownItems() {
+        const listContainer = document.getElementById("tokenDropdownItems");
+        if (!listContainer) return;
+
+        const seenTokens = new Set();
+        const recentList = [];
+
+        // 1. Check completed orders (from posOrders) for today / current store
+        const reversedOrders = (posOrders || []).slice().reverse();
+        for (const ord of reversedOrders) {
+            const tNum = parseInt(ord.tokenNumber || (ord.orderNumber ? String(ord.orderNumber).replace('#', '') : ''));
+            if (tNum && !isNaN(tNum) && !seenTokens.has(tNum)) {
+                seenTokens.add(tNum);
+                recentList.push({
+                    token: tNum,
+                    amount: ord.grandTotal ? `₹${parseFloat(ord.grandTotal).toFixed(0)}` : '',
+                    time: ord.time || '',
+                    itemCount: (ord.items || []).length,
+                    isCurrent: tNum === posNextToken
+                });
+                if (recentList.length >= 10) break;
+            }
+        }
+
+        // 2. If current token not in list yet, add it
+        if (!seenTokens.has(posNextToken)) {
+            seenTokens.add(posNextToken);
+            recentList.push({
+                token: posNextToken,
+                amount: '',
+                time: 'Current / Next',
+                itemCount: 0,
+                isCurrent: true
+            });
+        }
+
+        // 3. Fill sequential previous tokens down from posNextToken - 1
+        let candidate = posNextToken - 1;
+        while (recentList.length < 10 && candidate >= 1) {
+            if (!seenTokens.has(candidate)) {
+                seenTokens.add(candidate);
+                recentList.push({
+                    token: candidate,
+                    amount: '',
+                    time: 'Previous Token',
+                    itemCount: 0,
+                    isCurrent: false
+                });
+            }
+            candidate--;
+        }
+
+        // Sort descending (highest token number first)
+        recentList.sort((a, b) => b.token - a.token);
+        const itemsToShow = recentList.slice(0, 10);
+
+        listContainer.innerHTML = itemsToShow.map(item => `
+            <div class="token-dropdown-row" data-token="${item.token}" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; cursor: pointer; border-bottom: 1px solid #f9fafb; background: ${item.token === posNextToken ? 'rgba(13, 82, 191, 0.08)' : 'transparent'}; transition: background 0.15s ease;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <strong style="font-family: monospace; font-size: 0.92rem; color: #0D52BF; background: rgba(13, 82, 191, 0.1); padding: 2px 7px; border-radius: 4px; font-weight: 800;">#${item.token}</strong>
+                    ${item.token === posNextToken ? '<span style="font-size: 0.65rem; font-weight: 800; color: #059669; background: #d1fae5; padding: 1px 6px; border-radius: 9999px;">Current</span>' : ''}
+                </div>
+                <div style="text-align: right; font-size: 0.72rem; color: #6b7280;">
+                    ${item.amount ? `<div style="font-weight: 700; color: #111827;">${item.amount}</div>` : ''}
+                    <div style="font-size: 0.65rem; color: #9ca3af;">${item.time}</div>
+                </div>
+            </div>
+        `).join('');
+
+        listContainer.querySelectorAll(".token-dropdown-row").forEach(row => {
+            row.addEventListener("mouseenter", () => {
+                if (parseInt(row.dataset.token) !== posNextToken) row.style.background = '#f3f4f6';
+            });
+            row.addEventListener("mouseleave", () => {
+                if (parseInt(row.dataset.token) !== posNextToken) row.style.background = 'transparent';
+            });
+            row.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const sel = parseInt(row.dataset.token);
+                if (sel && !isNaN(sel)) {
+                    posNextToken = sel;
+                    localStorage.setItem("pos_next_token", posNextToken.toString());
+                    syncTokenUI();
+                    const menu = document.getElementById("tokenDropdownMenu");
+                    if (menu) menu.style.display = "none";
+                    const chevron = document.getElementById("tokenDropdownChevron");
+                    if (chevron) chevron.style.transform = "rotate(0deg)";
+                    if (typeof showToast === "function") showToast(`Switched to Token #${posNextToken}`);
+                }
+            });
+        });
     }
 
     function deductLocalInventory(cartItems) {
