@@ -3899,6 +3899,132 @@ function initApp() {
     // SCREEN 14: PRODUCT SALES MANAGEMENT & LIVE SALES STREAM
     let selectedLiveSalesFilterDate = getTodayDateStr(); // defaults to today, or specific date string, or 'ALL'
 
+    window.getOrderTokenKey = function(order) {
+        if (!order) return null;
+        let t = order.tokenNumber;
+        if (!t && order.orderNumber && String(order.orderNumber).startsWith('#')) {
+            t = order.orderNumber.replace('#', '');
+        }
+        if (!t) return null;
+        const num = parseInt(String(t).replace(/[^0-9]/g, ''));
+        return isNaN(num) ? null : num;
+    };
+
+    window.aggregateOrderItems = function(itemsList) {
+        const combined = [];
+        const itemMap = new Map();
+
+        (itemsList || []).forEach(item => {
+            const name = (item.productName || item.name || 'Item').trim();
+            const price = parseFloat(item.price || 0);
+            const qty = parseInt(item.quantity || item.qty || 1);
+            const mods = Array.isArray(item.modifiers) 
+                ? item.modifiers 
+                : (typeof item.modifiers === 'string' ? JSON.parse(item.modifiers || '[]') : []);
+            const modsKey = mods.slice().sort().join('|');
+            const key = `${name.toLowerCase()}__${price}__${modsKey}`;
+
+            if (itemMap.has(key)) {
+                const existing = itemMap.get(key);
+                existing.quantity += qty;
+            } else {
+                const newItem = {
+                    ...item,
+                    productName: name,
+                    price: price,
+                    quantity: qty,
+                    modifiers: mods
+                };
+                itemMap.set(key, newItem);
+                combined.push(newItem);
+            }
+        });
+
+        return combined;
+    };
+
+    window.getCombinedOrderByToken = function(tokenKey, storeName, dateStr) {
+        if (!tokenKey) return null;
+        const allOrders = typeof posOrders !== 'undefined' ? posOrders : [];
+        const allItems = typeof posOrderItems !== 'undefined' ? posOrderItems : [];
+
+        const matching = (allOrders || []).filter(o => {
+            if (o.status === 'Deleted' || o.status === 'Cancelled' || o.status === 'Refunded') return false;
+            if (window.getOrderTokenKey(o) !== tokenKey) return false;
+            
+            if (dateStr && dateStr !== 'ALL') {
+                const oDate = o.date || (o.timestamp ? o.timestamp.split('T')[0] : '');
+                if (oDate && oDate !== dateStr) return false;
+            }
+            
+            if (storeName && storeName !== 'All') {
+                const s1 = (o.store || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const s2 = (storeName || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (s1 && s2 && !s1.includes(s2) && !s2.includes(s1)) return false;
+            }
+            
+            return true;
+        });
+
+        if (matching.length === 0) return null;
+        if (matching.length === 1) {
+            const single = { ...matching[0] };
+            if (!single.items || !Array.isArray(single.items) || single.items.length === 0) {
+                single.items = (allItems || []).filter(i => i.orderId === single.id);
+            }
+            return single;
+        }
+
+        const latestOrder = matching[matching.length - 1];
+        let allRawItems = [];
+        let totalSubtotal = 0;
+        let totalTax = 0;
+        let totalDiscount = 0;
+        let totalServiceCharge = 0;
+        let totalGrandTotal = 0;
+        const paymentMethods = new Set();
+        const orderIds = [];
+
+        matching.forEach(ord => {
+            orderIds.push(ord.id);
+            if (ord.paymentMethod) paymentMethods.add(ord.paymentMethod);
+            totalSubtotal += parseFloat(ord.subtotal || 0);
+            totalTax += parseFloat(ord.tax || 0);
+            totalDiscount += parseFloat(ord.discount || 0);
+            totalServiceCharge += parseFloat(ord.serviceCharge || 0);
+            totalGrandTotal += parseFloat(ord.grandTotal || ord.total || 0);
+
+            let ordItems = ord.items;
+            if (!ordItems || !Array.isArray(ordItems) || ordItems.length === 0) {
+                ordItems = (allItems || []).filter(i => i.orderId === ord.id);
+            }
+            allRawItems = allRawItems.concat(ordItems || []);
+        });
+
+        const aggregatedItems = window.aggregateOrderItems(allRawItems);
+
+        return {
+            ...latestOrder,
+            id: latestOrder.id,
+            combinedOrderIds: orderIds,
+            isCombined: true,
+            combinedCount: matching.length,
+            tokenNumber: tokenKey,
+            customerName: latestOrder.customerName || 'Walk-in Guest',
+            customerPhone: latestOrder.customerPhone || '',
+            orderType: latestOrder.orderType || 'Dine In',
+            tableName: latestOrder.tableName || null,
+            paymentMethod: Array.from(paymentMethods).join(' / ') || 'Cash',
+            subtotal: totalSubtotal,
+            tax: totalTax,
+            discount: totalDiscount,
+            serviceCharge: totalServiceCharge,
+            grandTotal: totalGrandTotal,
+            items: aggregatedItems,
+            matchingOrders: matching
+        };
+    };
+
     window.renderLiveSalesStream = renderLiveSalesStream;
     function renderLiveSalesStream() {
         const tbody = document.getElementById("liveSalesFeedBody");
@@ -4069,15 +4195,89 @@ function initApp() {
 
         const baseStartingToken = 109;
 
+        // Group orders by token number so multiple bills for the same token number are combined!
+        const tokenGroups = new Map();
+        const nonTokenGroup = [];
+
         filteredStoreOrders.forEach((item, idx) => {
             const ord = item.order;
-            const consecutiveNum = ord.tokenNumber ? ord.tokenNumber : (baseStartingToken + idx);
-            const finalTokenStr = `#${consecutiveNum}`;
+            const tokenKey = window.getOrderTokenKey ? window.getOrderTokenKey(ord) : null;
+            if (tokenKey) {
+                if (!tokenGroups.has(tokenKey)) {
+                    tokenGroups.set(tokenKey, []);
+                }
+                tokenGroups.get(tokenKey).push(item);
+            } else {
+                nonTokenGroup.push({ item, idx });
+            }
+        });
 
+        // Add grouped token bills
+        tokenGroups.forEach((groupItems, tokenKey) => {
+            if (groupItems.length === 1) {
+                const single = groupItems[0];
+                const ord = single.order;
+                liveBills.push({
+                    id: ord.id,
+                    allOrderIds: [ord.id],
+                    isCombined: false,
+                    billCount: 1,
+                    tokenNumber: `#${tokenKey}`,
+                    orderTime: ord.timestamp || (ord.date + (ord.time ? `T${ord.time}` : '')),
+                    store: ord.store || 'ADIT CAMPUS',
+                    orderType: ord.orderType || 'Dine In',
+                    tableName: ord.tableName,
+                    customerName: ord.customerName || 'Walk-in Guest',
+                    paymentMethod: ord.paymentMethod || 'Cash',
+                    grandTotal: single.billAmount,
+                    items: single.items
+                });
+            } else {
+                // Combine multiple bills for the same token
+                const latestOrd = groupItems[groupItems.length - 1].order;
+                let combinedTotal = 0;
+                let allRawItems = [];
+                const pMethods = new Set();
+                const ids = [];
+
+                groupItems.forEach(g => {
+                    ids.push(g.order.id);
+                    combinedTotal += g.billAmount;
+                    if (g.order.paymentMethod) pMethods.add(g.order.paymentMethod);
+                    allRawItems = allRawItems.concat(g.items || []);
+                });
+
+                const aggregatedItems = window.aggregateOrderItems ? window.aggregateOrderItems(allRawItems) : allRawItems;
+
+                liveBills.push({
+                    id: latestOrd.id,
+                    allOrderIds: ids,
+                    isCombined: true,
+                    billCount: groupItems.length,
+                    tokenNumber: `#${tokenKey}`,
+                    orderTime: latestOrd.timestamp || (latestOrd.date + (latestOrd.time ? `T${latestOrd.time}` : '')),
+                    store: latestOrd.store || 'ADIT CAMPUS',
+                    orderType: latestOrd.orderType || 'Dine In',
+                    tableName: latestOrd.tableName,
+                    customerName: latestOrd.customerName || 'Walk-in Guest',
+                    paymentMethod: Array.from(pMethods).join(' / ') || 'Cash',
+                    grandTotal: combinedTotal,
+                    items: aggregatedItems
+                });
+            }
+        });
+
+        // Add non-token orders
+        nonTokenGroup.forEach(({ item, idx }) => {
+            const ord = item.order;
+            const finalTokenStr = `#${baseStartingToken + idx}`;
             liveBills.push({
                 id: ord.id,
-                orderTime: ord.timestamp || (ord.date + (ord.time ? `T${ord.time}` : '')),
+                allOrderIds: [ord.id],
+                isCombined: false,
+                billCount: 1,
                 tokenNumber: finalTokenStr,
+                orderTime: ord.timestamp || (ord.date + (ord.time ? `T${ord.time}` : '')),
                 store: ord.store || 'ADIT CAMPUS',
                 orderType: ord.orderType || 'Dine In',
                 tableName: ord.tableName,
@@ -4136,7 +4336,10 @@ function initApp() {
             row.innerHTML = `
                 <td style="white-space: nowrap;"><span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">${timeStr}</span></td>
                 <td><span class="pill-badge" style="background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border); font-size:0.75rem;">${bill.store || 'Unknown'}</span></td>
-                <td style="font-weight: 800; color: var(--orange-primary); font-size: 1rem; white-space:nowrap;">${bill.tokenNumber}</td>
+                <td style="font-weight: 800; color: var(--orange-primary); font-size: 1rem; white-space:nowrap;">
+                    ${bill.tokenNumber}
+                    ${bill.isCombined ? `<span class="pill-badge" style="background: rgba(59, 130, 246, 0.15); color: #2563eb; border: 1px solid #3b82f6; font-size: 0.7rem; font-weight: 700; margin-left: 6px; padding: 2px 6px; border-radius: 4px;">${bill.billCount} Bills Combined</span>` : ''}
+                </td>
                 <td style="min-width: 140px;">
                     <div style="font-weight: 700; font-size:0.88rem; color: var(--text-primary);">${bill.customerName}</div>
                     <div style="font-size: 0.72rem; color: var(--text-tertiary); margin-top:2px;">${tableOrType}</div>
@@ -4151,7 +4354,7 @@ function initApp() {
                         <button type="button" class="saas-btn" style="padding:4px 8px; font-size:0.75rem; background:#3b82f6; color:#fff; border:none; border-radius:4px; font-weight:700; cursor:pointer;" onclick="window.showBill('${bill.id}')">View</button>
                         <button type="button" class="saas-btn" style="padding:4px 8px; font-size:0.75rem; background:#10b981; color:#fff; border:none; border-radius:4px; font-weight:700; cursor:pointer;" onclick="window.reprintBill('${bill.id}')">Print</button>
                         <button type="button" class="saas-btn" style="padding:4px 8px; font-size:0.75rem; background:#f59e0b; color:#fff; border:none; border-radius:4px; font-weight:700; cursor:pointer;" onclick="window.reprintKOT('${bill.id}')">KOT</button>
-                        <button type="button" class="saas-btn saas-btn-danger" style="padding:4px 8px; font-size:0.75rem; background:#ef4444; color:#fff; border:none; border-radius:4px; font-weight:700; cursor:pointer;" onclick="window.deletePOSOrder('${bill.id}')">Delete</button>
+                        <button type="button" class="saas-btn saas-btn-danger" style="padding:4px 8px; font-size:0.75rem; background:#ef4444; color:#fff; border:none; border-radius:4px; font-weight:700; cursor:pointer;" onclick="window.deletePOSOrder('${bill.id}', false, '${(bill.allOrderIds || [bill.id]).join(',')}')">Delete</button>
                     </div>
                 </td>
             `;
@@ -4459,15 +4662,25 @@ function initApp() {
     };
 
     window.showBill = function(orderId) {
-        const order = posOrders.find(o => o.id === orderId);
+        let order = (typeof posOrders !== 'undefined' ? posOrders : []).find(o => o.id === orderId);
         if (!order) return alert("Order not found!");
+        
+        const tokenKey = window.getOrderTokenKey ? window.getOrderTokenKey(order) : null;
+        if (tokenKey && window.getCombinedOrderByToken) {
+            const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
+            const combined = window.getCombinedOrderByToken(tokenKey, order.store, orderDate);
+            if (combined && combined.isCombined) {
+                order = combined;
+            }
+        }
+
         if (!order.items) {
-            order.items = posOrderItems.filter(i => i.orderId === orderId).map(i => ({
+            order.items = (typeof posOrderItems !== 'undefined' ? posOrderItems : []).filter(i => i.orderId === orderId).map(i => ({
                 ...i,
                 modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
             }));
         }
-        const kot = posKitchenOrders.find(k => k.orderId === orderId);
+        const kot = (typeof posKitchenOrders !== 'undefined' ? posKitchenOrders : []).find(k => k.orderId === orderId);
         if (kot) order.kotNumber = kot.kotNumber;
         
         renderGSTInvoice(order);
@@ -4476,17 +4689,27 @@ function initApp() {
     };
 
     window.reprintBill = function(orderId) {
-        const order = posOrders.find(o => o.id === orderId) || (window.activeReceiptOrder && window.activeReceiptOrder.id === orderId ? window.activeReceiptOrder : null);
+        let order = (typeof posOrders !== 'undefined' ? posOrders : []).find(o => o.id === orderId) || (window.activeReceiptOrder && window.activeReceiptOrder.id === orderId ? window.activeReceiptOrder : null);
         if (!order) return alert("Order not found!");
+        
+        const tokenKey = window.getOrderTokenKey ? window.getOrderTokenKey(order) : null;
+        if (tokenKey && window.getCombinedOrderByToken) {
+            const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
+            const combined = window.getCombinedOrderByToken(tokenKey, order.store, orderDate);
+            if (combined && combined.isCombined) {
+                order = combined;
+            }
+        }
+
         if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
-            order.items = posOrderItems.filter(i => i.orderId === orderId).map(i => ({
+            order.items = (typeof posOrderItems !== 'undefined' ? posOrderItems : []).filter(i => i.orderId === orderId).map(i => ({
                 ...i,
                 productName: i.productName || i.name || 'Item',
                 quantity: i.quantity || i.qty || 1,
                 modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
             }));
         }
-        const kot = posKitchenOrders.find(k => k.orderId === orderId);
+        const kot = (typeof posKitchenOrders !== 'undefined' ? posKitchenOrders : []).find(k => k.orderId === orderId);
         if (kot) order.kotNumber = kot.kotNumber;
         
         renderGSTInvoice(order);
@@ -4504,17 +4727,27 @@ function initApp() {
     };
 
     window.reprintKOT = function(orderId) {
-        const order = posOrders.find(o => o.id === orderId) || (window.activeReceiptOrder && window.activeReceiptOrder.id === orderId ? window.activeReceiptOrder : null);
+        let order = (typeof posOrders !== 'undefined' ? posOrders : []).find(o => o.id === orderId) || (window.activeReceiptOrder && window.activeReceiptOrder.id === orderId ? window.activeReceiptOrder : null);
         if (!order) return alert("Order not found!");
+        
+        const tokenKey = window.getOrderTokenKey ? window.getOrderTokenKey(order) : null;
+        if (tokenKey && window.getCombinedOrderByToken) {
+            const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
+            const combined = window.getCombinedOrderByToken(tokenKey, order.store, orderDate);
+            if (combined && combined.isCombined) {
+                order = combined;
+            }
+        }
+
         if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
-            order.items = posOrderItems.filter(i => i.orderId === orderId).map(i => ({
+            order.items = (typeof posOrderItems !== 'undefined' ? posOrderItems : []).filter(i => i.orderId === orderId).map(i => ({
                 ...i,
                 productName: i.productName || i.name || 'Item',
                 quantity: i.quantity || i.qty || 1,
                 modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
             }));
         }
-        const kot = posKitchenOrders.find(k => k.orderId === orderId);
+        const kot = (typeof posKitchenOrders !== 'undefined' ? posKitchenOrders : []).find(k => k.orderId === orderId);
         if (kot) order.kotNumber = kot.kotNumber;
 
         renderGSTInvoice(order);
@@ -4531,34 +4764,39 @@ function initApp() {
         }, 100);
     };
 
-    window.deletePOSOrder = async function(orderId, skipConfirm = false) {
-        if (!skipConfirm && !confirm("Are you sure you want to delete this bill? This will remove the entire order.")) return;
+    window.deletePOSOrder = async function(orderId, skipConfirm = false, allOrderIdsStr = '') {
+        const idsToDelete = allOrderIdsStr ? allOrderIdsStr.split(',').filter(Boolean) : [orderId];
+        const isMulti = idsToDelete.length > 1;
+        const confirmMsg = isMulti 
+            ? `Are you sure you want to delete this combined bill (${idsToDelete.length} orders)? This will remove all associated orders for this token.`
+            : "Are you sure you want to delete this bill? This will remove the entire order.";
+        if (!skipConfirm && !confirm(confirmMsg)) return;
         try {
-            const res = await fetch(`/api/pos/orders/${orderId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}` }
-            });
-            if (res.ok) {
-                const targetOrd = (posOrders || []).find(o => o.id === orderId);
-                if (targetOrd) {
-                    targetOrd.status = 'Deleted';
+            for (const id of idsToDelete) {
+                const res = await fetch(`/api/pos/orders/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}` }
+                });
+                if (res.ok) {
+                    const targetOrd = (posOrders || []).find(o => o.id === id);
+                    if (targetOrd) {
+                        targetOrd.status = 'Deleted';
+                    }
                 }
-                initReconciliationState();
-                if (typeof window.renderLiveSalesStream === "function") {
-                    window.renderLiveSalesStream();
-                }
-                if (typeof window.fetchAndRenderPnL === "function") {
-                    window.fetchAndRenderPnL();
-                }
-                renderAllLists();
-                // Background sync state from server
-                syncStateFromServer();
-            } else {
-                alert("Failed to delete bill");
             }
+            initReconciliationState();
+            if (typeof window.renderLiveSalesStream === "function") {
+                window.renderLiveSalesStream();
+            }
+            if (typeof window.fetchAndRenderPnL === "function") {
+                window.fetchAndRenderPnL();
+            }
+            renderAllLists();
+            // Background sync state from server
+            syncStateFromServer();
         } catch (err) {
-            console.error(err);
-            alert("Error deleting bill");
+            console.error("Error deleting order:", err);
+            alert("Error deleting order. Check network/console.");
         }
     };
 
@@ -11804,6 +12042,17 @@ function initApp() {
         const printArea = document.getElementById("invoicePrintArea");
         if (!printArea || !order) return;
 
+        if (!order.isCombined && window.getOrderTokenKey && window.getCombinedOrderByToken) {
+            const tokenKey = window.getOrderTokenKey(order);
+            if (tokenKey) {
+                const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
+                const combined = window.getCombinedOrderByToken(tokenKey, order.store, orderDate);
+                if (combined && combined.isCombined) {
+                    order = combined;
+                }
+            }
+        }
+
         if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
             if (order.id && typeof posOrderItems !== 'undefined') {
                 order.items = posOrderItems.filter(i => i.orderId === order.id).map(i => ({
@@ -11859,6 +12108,10 @@ function initApp() {
                     <div style="margin-top: 10px; padding: 6px; border: 2px dashed #000; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 1.15rem; font-family: monospace; background: #fcfcfc;">
                         TOKEN: #${order.tokenNumber}
                     </div>
+                    ${order.isCombined ? `
+                    <div style="margin-top: 6px; padding: 4px 8px; background: #000; color: #fff; font-weight: 800; font-size: 0.85rem; border-radius: 4px; letter-spacing: 0.5px; text-align: center;">
+                        *** COMBINED BILL (${order.combinedCount} ORDERS) ***
+                    </div>` : ''}
                     ` : ''}
                 </div>
                 
@@ -11867,7 +12120,7 @@ function initApp() {
                     <span>Time: ${order.time || '12:00:00'}</span>
                 </div>
                 <div class="receipt-row">
-                    <span>Order: ${order.id}</span>
+                    <span>Order: ${order.isCombined ? `#${order.tokenNumber} (Combined)` : order.id}</span>
                     <span>Type: ${order.orderType}</span>
                 </div>
                 <div class="receipt-row">
