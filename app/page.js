@@ -15,8 +15,7 @@ export default function Home() {
         import('../src/guestIntelligence.js'),
         import('../src/system.js'),
         import('../src/plDashboard.js'),
-        import('../src/procurement.js'),
-        import('../src/training.js')
+        import('../src/procurement.js')
       ]).then(() => {
         if (window.initApp) {
           window.initApp();
@@ -219,19 +218,6 @@ export default function Home() {
                     <div class="nav-item" data-target="guest-intelligence">
                         <i data-lucide="brain"></i>
                         <span>🧠 Guest Intelligence</span>
-                    </div>
-                </div>
-
-                <!-- Group 7.5: Training -->
-                <div class="nav-group" id="trainingNavGroup">
-                    <div class="nav-group-title">Training</div>
-                    <div class="nav-item" data-target="training">
-                        <i data-lucide="book-open"></i>
-                        <span>Training Handbook</span>
-                    </div>
-                    <div class="nav-item" data-target="staff-training">
-                        <i data-lucide="graduation-cap"></i>
-                        <span>Staff Training & Quizzes</span>
                     </div>
                 </div>
 
@@ -2616,198 +2602,6 @@ export default function Home() {
                 </div>
 
                 <!-- SCREEN 13: SETTINGS -->
-                <div class="app-screen" id="screen-staff-training" style="padding: 24px; color: #f3f4f6; background: radial-gradient(circle at top, #1e1b15 0%, #0c0a07 100%); min-height: 100vh;">
-                        
-                        <!-- Training Header Area -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid rgba(159, 124, 70, 0.2); padding-bottom: 16px; margin-bottom: 24px;">
-                            <div style="display: flex; align-items: center; gap: 14px;">
-                                <div style="background: linear-gradient(135deg, #d4af37, #9f7c46); padding: 12px; border-radius: 12px; color: #000; box-shadow: 0 4px 15px rgba(159,124,70,0.3);">
-                                    <i data-lucide="graduation-cap" style="width: 28px; height: 28px;"></i>
-                                </div>
-                                <div>
-                                    <h2 style="font-size: 1.75rem; font-weight: 800; color: #d4af37; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Badi Katori Staff Training</h2>
-                                    <span style="font-size: 0.85rem; color: #a1a1aa;">Develop culinary skills, service excellence & compliance</span>
-                                </div>
-                            </div>
-                            <!-- Owner actions -->
-                            <div id="trainingAdminActions" style="display: none; gap: 12px;">
-                                <button type="button" class="saas-btn" style="background: linear-gradient(to right, #9f7c46, #d4af37); color: #000; font-weight: 700; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="window.openUploadHandbookModal()">
-                                    <i data-lucide="upload-cloud" style="width:16px; height:16px;"></i> Upload Handbook
-                                </button>
-                                <button type="button" class="saas-btn" style="background: rgba(255,255,255,0.05); color: #d4af37; border: 1px solid rgba(159,124,70,0.3); padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="window.openUploadVideoModal()">
-                                    <i data-lucide="video" style="width:16px; height:16px;"></i> Upload Video
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Tab Select Navigation -->
-                        <div style="display: flex; gap: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px; padding-bottom: 2px;">
-                            <button type="button" class="training-tab-btn active" id="tabBtnHandbook" style="background: none; border: none; padding: 10px 20px; font-weight: 700; color: #d4af37; border-bottom: 3px solid #d4af37; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onclick="window.switchTrainingTab('handbook')">
-                                <i data-lucide="book-open" style="width:16px; height:16px;"></i> Handbook
-                            </button>
-                            <button type="button" class="training-tab-btn" id="tabBtnPractice" style="background: none; border: none; padding: 10px 20px; font-weight: 700; color: #a1a1aa; border-bottom: 3px solid transparent; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onclick="window.switchTrainingTab('practice')">
-                                <i data-lucide="video" style="width:16px; height:16px;"></i> Practice & Videos
-                            </button>
-                            <button type="button" class="training-tab-btn" id="tabBtnTrainees" style="background: none; border: none; padding: 10px 20px; font-weight: 700; color: #a1a1aa; border-bottom: 3px solid transparent; cursor: pointer; display: none; align-items: center; gap: 8px; transition: all 0.2s;" onclick="window.switchTrainingTab('trainees')">
-                                <i data-lucide="users" style="width:16px; height:16px;"></i> Trainee Records
-                            </button>
-                        </div>
-
-                        <!-- TAB CONTENT: HANDBOOK -->
-                        <div id="trainingTabHandbookContent" class="training-tab-panel" style="display: block;">
-                            <div style="display: grid; grid-template-columns: 280px 1fr; gap: 20px; min-height: 500px; align-items: stretch;">
-                                
-                                <!-- Table of Contents (Left) -->
-                                <div style="background: rgba(15,15,15,0.7); border: 1px solid rgba(159,124,70,0.15); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-                                    <h4 style="font-size: 0.9rem; font-weight: 800; color: #d4af37; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Table of Contents</h4>
-                                    <div id="handbookChaptersList" style="flex: 1; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 450px; padding-right: 4px;">
-                                        <!-- Chapters list populated dynamically -->
-                                    </div>
-                                </div>
-
-                                <!-- Handbook Viewer Panel (Right) -->
-                                <div style="background: rgba(20,20,20,0.85); border: 1px solid rgba(159,124,70,0.25); border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.8); overflow: hidden; position: relative;">
-                                    
-                                    <!-- Reader Header Bar -->
-                                    <div style="background: rgba(0,0,0,0.5); padding: 12px 18px; border-bottom: 1px solid rgba(159,124,70,0.15); display: flex; justify-content: space-between; align-items: center;">
-                                        <div style="display: flex; align-items: center; gap: 12px;">
-                                            <span style="font-size: 0.75rem; background: rgba(212,175,55,0.1); color: #d4af37; border: 1px solid rgba(212,175,55,0.25); padding: 2px 8px; border-radius: 4px; font-weight: 700;" id="lblHandbookVersion">Ver 1.0</span>
-                                            <span style="font-size: 0.8rem; color: #a1a1aa; font-family: monospace; display: flex; align-items: center; gap: 4px;">
-                                                <i data-lucide="shield-alert" style="width: 14px; height: 14px;"></i> Secure Reader
-                                            </span>
-                                        </div>
-                                        
-                                        <!-- Controls -->
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <div style="position: relative; max-width: 180px;">
-                                                <input type="text" id="handbookSearchInput" placeholder="Search pages..." style="width: 100%; font-size: 0.75rem; background: rgba(0,0,0,0.4); border: 1px solid rgba(159,124,70,0.2); border-radius: 6px; padding: 6px 12px 6px 28px; color: #fff; box-sizing: border-box;">
-                                                <i data-lucide="search" style="position: absolute; left: 8px; top: 7px; width: 14px; height: 14px; color: #a1a1aa;"></i>
-                                            </div>
-                                            <button type="button" class="saas-btn" style="background: rgba(255,255,255,0.05); color: #d4af37; border: 1px solid rgba(159,124,70,0.2); border-radius: 6px; padding: 6px; cursor: pointer;" onclick="window.zoomHandbookText(-0.1)" title="Zoom Out">
-                                                <i data-lucide="zoom-out" style="width: 14px; height: 14px;"></i>
-                                            </button>
-                                            <button type="button" class="saas-btn" style="background: rgba(255,255,255,0.05); color: #d4af37; border: 1px solid rgba(159,124,70,0.2); border-radius: 6px; padding: 6px; cursor: pointer;" onclick="window.zoomHandbookText(0.1)" title="Zoom In">
-                                                <i data-lucide="zoom-in" style="width: 14px; height: 14px;"></i>
-                                            </button>
-                                            <button type="button" class="saas-btn" style="background: rgba(255,255,255,0.05); color: #d4af37; border: 1px solid rgba(159,124,70,0.2); border-radius: 6px; padding: 6px; cursor: pointer;" onclick="window.toggleHandbookFullScreen()" title="Full Screen">
-                                                <i data-lucide="maximize" style="width: 14px; height: 14px;"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- Loading Spinner Container -->
-                                    <div id="handbookLoadingSpinner" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 10; align-items: center; justify-content: center; flex-direction: column; gap: 12px;">
-                                        <div style="border: 4px solid rgba(159,124,70,0.1); border-top: 4px solid #d4af37; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
-                                        <span style="font-size: 0.8rem; color: #a1a1aa;">Opening handbook securely...</span>
-                                    </div>
-
-                                    <!-- Handbook Document Body -->
-                                    <div id="handbookPagesReaderBody" style="flex: 1; padding: 36px; overflow-y: auto; max-height: 400px; line-height: 1.7; font-size: 1rem; color: #e4e4e7; font-family: 'Georgia', serif; user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none;" oncontextmenu="return false;" oncopy="return false;" oncut="return false;">
-                                        <!-- Content page text populated dynamically -->
-                                    </div>
-
-                                    <!-- Reader Footer Navigation Bar -->
-                                    <div style="background: rgba(0,0,0,0.6); padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
-                                        <button type="button" class="saas-btn" id="btnPrevHandbookPage" style="background: rgba(159,124,70,0.1); color: #d4af37; border: 1px solid rgba(159,124,70,0.25); padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700;" onclick="window.navigateHandbookPage(-1)">
-                                            <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i> Previous
-                                        </button>
-                                        
-                                        <span style="font-size: 0.85rem; color: #a1a1aa;" id="lblHandbookCurrentPage">Page 0 of 0</span>
-                                        
-                                        <button type="button" class="saas-btn" id="btnNextHandbookPage" style="background: linear-gradient(to right, #9f7c46, #d4af37); color: #000; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700;" onclick="window.navigateHandbookPage(1)">
-                                            Next <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
-                                        </button>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TAB CONTENT: PRACTICE (VIDEOS) -->
-                        <div id="trainingTabPracticeContent" class="training-tab-panel" style="display: none;">
-                            
-                            <!-- Categories & Video layouts grid -->
-                            <div style="display: grid; grid-template-columns: 240px 1fr; gap: 20px; min-height: 500px;">
-                                
-                                <!-- Categories filter panel (Left) -->
-                                <div style="background: rgba(15,15,15,0.7); border: 1px solid rgba(159,124,70,0.15); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; height: fit-content;">
-                                    <h4 style="font-size: 0.9rem; font-weight: 800; color: #d4af37; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin: 0; text-transform: uppercase;">Categories</h4>
-                                    <div id="videoCategoryFilters" style="display: flex; flex-direction: column; gap: 6px;">
-                                        <!-- Categories buttons populated dynamically -->
-                                    </div>
-                                </div>
-
-                                <!-- Videos Display Panel (Right) -->
-                                <div style="display: flex; flex-direction: column; gap: 20px;">
-                                    
-                                    <!-- Video player panel (Shown when watching a video) -->
-                                    <div id="trainingVideoPlayerCard" style="display: none; background: rgba(20,20,20,0.85); border: 1px solid rgba(159,124,70,0.25); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.6);">
-                                        
-                                        <!-- Modern Video Container -->
-                                        <div style="width: 100%; background: #000; aspect-ratio: 16/9; position: relative; display: flex; align-items: center; justify-content: center;">
-                                            <video id="trainingActiveVideo" style="width:100%; height:100%; display:block;" controls controlsList="nodownload" disablePictureInPicture>
-                                                <!-- Video Source -->
-                                            </video>
-                                            
-                                            <!-- Video overlay for quiz popup prompt -->
-                                            <div id="videoQuizPromptOverlay" style="display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 5; flex-direction: column; align-items: center; justify-content: center; gap: 14px;">
-                                                <i data-lucide="help-circle" style="width: 48px; height: 48px; color: #d4af37; animation: bounce 1s infinite;"></i>
-                                                <h4 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0;">Video Completed! Take the Skill Quiz</h4>
-                                                <span style="font-size: 0.8rem; color: #a1a1aa; text-align: center; max-width: 320px;">Test your understanding of standard operating procedures to earn your skill certificate.</span>
-                                                <button type="button" class="saas-btn" style="background: linear-gradient(to right, #9f7c46, #d4af37); color: #000; font-weight: 800; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem;" onclick="window.startVideoQuiz()">
-                                                    <i data-lucide="play-circle" style="width: 18px; height: 18px;"></i> Start Quiz Now
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <!-- Active video meta info -->
-                                        <div style="padding: 16px 20px; border-top: 1px solid rgba(159,124,70,0.15); display: flex; justify-content: space-between; align-items: flex-start;">
-                                            <div>
-                                                <h3 style="font-size: 1.15rem; font-weight: 800; color: #d4af37; margin: 0 0 4px;" id="lblActiveVideoTitle">Video Title</h3>
-                                                <p style="font-size: 0.85rem; color: #a1a1aa; margin: 0;" id="lblActiveVideoDescription">Video Description</p>
-                                            </div>
-                                            <button type="button" class="saas-btn saas-btn-secondary" style="font-size: 0.75rem; padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color:#fff; cursor:pointer;" onclick="window.closeActiveVideoPlayer()">
-                                                Close Player
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- Video Cards Grid -->
-                                    <div id="trainingVideosGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
-                                        <!-- Video cards populated dynamically -->
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TAB CONTENT: TRAINEE RECORDS (ADMIN ONLY) -->
-                        <div id="trainingTabTraineesContent" class="training-tab-panel" style="display: none;">
-                            <div style="background: rgba(15,15,15,0.7); border: 1px solid rgba(159,124,70,0.2); border-radius: 12px; padding: 20px;">
-                                <h3 style="font-size: 1.1rem; font-weight: 800; color: #d4af37; margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">Overall Trainee Progress Ledger</h3>
-                                <div class="saas-table-container" style="box-shadow: none; border: 1px solid rgba(159,124,70,0.15); margin-bottom: 0;">
-                                    <table class="saas-table" style="font-size: 0.85rem; width: 100%; border-collapse: collapse; color: #fff;">
-                                        <thead>
-                                            <tr style="border-bottom: 1px solid rgba(159,124,70,0.25);">
-                                                <th style="color: #d4af37; padding: 12px; text-align: left;">Employee</th>
-                                                <th style="color: #d4af37; padding: 12px; text-align: left;">Role</th>
-                                                <th style="color: #d4af37; padding: 12px; text-align: center;">Handbook Pct</th>
-                                                <th style="color: #d4af37; padding: 12px; text-align: center;">Videos Watched</th>
-                                                <th style="color: #d4af37; padding: 12px; text-align: center;">Avg Score</th>
-                                                <th style="color: #d4af37; padding: 12px; text-align: left;">Last Active</th>
-                                                <th style="color: #d4af37; padding: 12px; text-align: center;">Certificates</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="tblTraineeRecordsBody">
-                                            <!-- Dynamically populated rows -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
                 <div class="app-screen" id="screen-settings-panel">
                     <div class="screen-header-layout">
                         <div class="screen-title-desc">
@@ -2841,29 +2635,6 @@ export default function Home() {
                             <div class="saas-form-group">
                                 <label class="saas-form-label">Notification Defrost Temp Warning</label>
                                 <input type="text" class="saas-form-input" value="-12°C">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                
-                <!-- SCREEN: TRAINING -->
-                <div class="app-screen" id="screen-training">
-                    <div class="screen-header-layout" style="margin-bottom:24px;">
-                        <div class="screen-title-desc">
-                            <h1>BK Training & SOPs</h1>
-                            <p>Interactive Badi Katori Operational Handbook and Franchise Guidelines</p>
-                        </div>
-                    </div>
-                    <div class="training-layout-split">
-                        <div class="training-sidebar" id="trainingSidebar">
-                            <!-- Modules injected via JS -->
-                        </div>
-                        <div class="training-content-viewer" id="trainingContentViewer">
-                            <div class="training-empty-state">
-                                <i data-lucide="book-open" style="width:48px;height:48px;color:#94a3b8;margin-bottom:16px;"></i>
-                                <h2>Select a Module</h2>
-                                <p>Choose a training topic from the left to view the standard operating procedures.</p>
                             </div>
                         </div>
                     </div>
@@ -6942,7 +6713,6 @@ export default function Home() {
     <script type="module" src="./src/guestIntelligence.js"></script>
     <script type="module" src="./src/system.js"></script>
     <script type="module" src="./src/plDashboard.js"></script>
-    <script type="module" src="./src/procurement.js"></script>
-    <script type="module" src="./src/training.js"></script>` }} />
+    <script type="module" src="./src/procurement.js"></script>` }} />
   );
 }
