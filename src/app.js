@@ -1197,62 +1197,10 @@ function initApp() {
 
 
     // SCREEN 2 & 3: CHECKLISTS (OPENING & CLOSING)
-    const OPENING_TASKS = [
-        { title: "Staff Grooming & Uniform", desc: "All staff clocked in on time, in clean uniform, apron, and cap/hairnet." },
-        { title: "Nails & Jewellery Check", desc: "Nails trimmed, no jewellery on hands; hand wash station stocked with soap and paper towels." },
-        { title: "Daily Morning Briefing", desc: "Briefing done - specials, low-stock items, and previous day's customer feedback." },
-        { title: "Dining Cleanliness", desc: "Dining area tables, chairs, and floor wiped and clean." },
-        { title: "Counter & POS Cleanliness", desc: "Counter, POS area, and menu boards clean and dust-free." },
-        { title: "Sanitize Prep Areas", desc: "Kitchen counters, cutting boards, and prep surfaces sanitized." },
-        { title: "Trash Bins Set", desc: "Trash bins emptied, clean liners placed, lids functional." },
-        { title: "Washroom Audit", desc: "Washroom checked - stocked, clean, functioning." },
-        { title: "Refrigeration Logs", desc: "Refrigerator and freezer temperatures checked and logged (below 5°C / -18°C)." },
-        { title: "Burners & Fryers Check", desc: "Induction/gas burners, tawa, and fryers tested and working." },
-        { title: "Water Purifier (RO)", desc: "Water purifier / RO unit checked and running." },
-        { title: "POS & Printers Power On", desc: "POS machine, printer, and card/UPI machine powered on and tested." },
-        { title: "Ventilation Check", desc: "Exhaust fans and chimney switched on and working." },
-        { title: "Perishables Expiry Check", desc: "Check expiry dates on dahi, chutneys, sev, papdi, and other perishables." },
-        { title: "Fried Items Freshness", desc: "Puri, sev, papdi, and other fried items freshly prepped or checked for freshness." },
-        { title: "Chutney Tasting & Top-Up", desc: "Chutneys (meethi, hari, imli) tasted, topped up, and refrigerated properly." },
-        { title: "Vegetable Chopping Prep", desc: "Vegetables washed, chopped, and stored as per prep list." },
-        { title: "Garnish Setup", desc: "Garnish items (sev, boondi, pomegranate, coriander) prepped and ready." },
-        { title: "Water & Ice Top-Up", desc: "Water and ice supply checked and topped up." },
-        { title: "Raw vs Cooked Segregation", desc: "Raw and cooked/ready-to-eat items stored separately in refrigeration." },
-        { title: "Label Prepared Food", desc: "All prepped food items labelled with prep date and time." },
-        { title: "Hygiene Consumables", desc: "Hand sanitizer and gloves available at every station." },
-        { title: "Pest Audit", desc: "Pest control check - no signs of pests in storage or kitchen areas." },
-        { title: "Count Opening Float", desc: "Opening cash float counted and matches register log." },
-        { title: "POS Menu & Pricing", desc: "POS system logged in, menu and pricing updated for the day." },
-        { title: "Aggregator Platforms Open", desc: "Online order platforms (Zomato/Swiggy) marked 'open' and menu availability updated." },
-        { title: "Fire Safety Access", desc: "Fire extinguisher in place and accessible." },
-        { title: "First-Aid Stock", desc: "First-aid box stocked and accessible." },
-        { title: "FSSAI License Display", desc: "FSSAI license and other compliance displays visible at the counter." }
-    ];
+    // Checklists emptied by user choice
+    const OPENING_TASKS = [];
 
-    const CLOSING_TASKS = [
-        { title: "Tally Register Cash", desc: "Closing cash counted, tallied against POS sales report, and logged." },
-        { title: "Close Aggregators", desc: "Online order platforms (Zomato/Swiggy) marked 'closed'." },
-        { title: "Print Day-End POS Report", desc: "POS system logged out; day-end report printed/saved." },
-        { title: "Report Cash Variance", desc: "Any cash discrepancies noted and reported to manager." },
-        { title: "Store Perishables", desc: "Leftover perishables covered, labelled, and stored or discarded as per policy." },
-        { title: "Refrigerate Sauces & Dahi", desc: "Chutneys, dahi, and cut vegetables refrigerated properly." },
-        { title: "Next-Day Prep Checklist", desc: "Next day's prep list noted based on today's stock levels." },
-        { title: "Note Low-Stock SKUs", desc: "Low-stock or out-of-stock items noted for reordering." },
-        { title: "Shut Down Kitchen Heaters", desc: "Fryers, tawa, and burners switched off and cooled." },
-        { title: "Seal Refrigeration Doors", desc: "Refrigerator and freezer doors closed properly and temperatures logged." },
-        { title: "POS & Terminals Power Off", desc: "POS machine, card/UPI machine, and printer switched off." },
-        { title: "Turn Off Kitchen Exhaust", desc: "Exhaust fans and chimney switched off after kitchen cools down." },
-        { title: "Wash Kitchen Surfaces", desc: "All kitchen equipment, counters, and cutting boards washed and sanitized." },
-        { title: "Filter Fryer Oil", desc: "Fryer oil filtered or discarded as per schedule." },
-        { title: "Sweep & Mop Floors", desc: "Floors swept and mopped in kitchen and dining area." },
-        { title: "Clear Waste Bins", desc: "Trash bins emptied and taken to designated disposal area." },
-        { title: "Wash Dishes & Trays", desc: "Dishes, utensils, and serving trays washed and stored." },
-        { title: "Turn Off Lighting", desc: "All lights except security lighting switched off." },
-        { title: "Shut Off Main Gas Valve", desc: "Gas cylinders/mains valve turned off." },
-        { title: "Lock Windows & Back Doors", desc: "Windows and back doors locked." },
-        { title: "Lock Front Shutter & Alarm", desc: "Main entrance shutter locked and alarm (if any) activated." },
-        { title: "Write Shift Handover Notes", desc: "Handover notes written for opening staff (issues, pending tasks, low stock)." }
-    ];
+    const CLOSING_TASKS = [];
 
     function renderChecklistScreen(type) {
         const container = document.getElementById(`screen-${type}-checklist`);
@@ -1261,10 +1209,11 @@ function initApp() {
         const todayStr = getTodayDateStr();
 
         if (currentRole === "bm") {
+            const tasks = type === "opening" ? OPENING_TASKS : CLOSING_TASKS;
             const branchCl = checklists.find(c => c.store === currentStore && c.type === type && c.date === todayStr);
-            const checkedIndices = branchCl ? branchCl.items : [];
-            const progress      = branchCl ? branchCl.progress : 0;
-            const isCompleted   = branchCl && branchCl.completed === 1;
+            const checkedIndices = (branchCl && tasks.length > 0) ? branchCl.items : [];
+            const progress      = (branchCl && tasks.length > 0) ? branchCl.progress : 0;
+            const isCompleted   = branchCl && branchCl.completed === 1 && tasks.length > 0;
             const existingPhoto = branchCl ? branchCl.photo : null;
 
             let itemPhotos = {};
@@ -1284,10 +1233,16 @@ function initApp() {
             // Store globally to avoid massive base64 strings in inline HTML onclick handlers
             window.currentChecklistPhotos = itemPhotos;
 
-            const tasks = type === "opening" ? OPENING_TASKS : CLOSING_TASKS;
-
             // Build task list HTML
             let tasksHTML = "";
+            if (tasks.length === 0) {
+                tasksHTML = `
+                    <div style="text-align:center; padding: 36px 20px; border: 1px dashed var(--border); border-radius: var(--radius-md); color: var(--text-tertiary);">
+                        <div style="font-size: 1rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">No ${type} checklist items configured</div>
+                        <div style="font-size: 0.85rem;">The ${type} checklist is currently empty.</div>
+                    </div>
+                `;
+            }
             tasks.forEach((task, idx) => {
                 const isChecked = checkedIndices.includes(idx);
                 const itemStyle = isCompleted ? "opacity:0.85; cursor:not-allowed;" : "";
@@ -1394,7 +1349,7 @@ function initApp() {
                     <div class="screen-actions">
                         ${isCompleted
                             ? `<button class="saas-btn saas-btn-secondary" style="background:var(--success); border:none; color:#fff; cursor:default;" disabled>&#10003; Checklist Completed</button>`
-                            : `<button class="saas-btn saas-btn-primary" id="btnSubmitChecklist" style="background:var(--success); border:none;" ${checkedIndices.length < tasks.length ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>Submit Checklist</button>`
+                            : `<button class="saas-btn saas-btn-primary" id="btnSubmitChecklist" style="background:var(--success); border:none; ${(tasks.length === 0 || checkedIndices.length < tasks.length) ? 'opacity:0.5; cursor:not-allowed;' : ''}" ${(tasks.length === 0 || checkedIndices.length < tasks.length) ? 'disabled' : ''}>Submit Checklist</button>`
                         }
                     </div>
                 </div>
@@ -1420,13 +1375,13 @@ function initApp() {
                         ${galleryWidgetHTML}
                     </div>
                 </div>
-                </div>
             `;
 
             if (window.lucide) window.lucide.createIcons();
 
             // ── Event bindings and Camera logic ──────────────────────────────
             async function saveChecklistTaskPhoto(taskIdx, photoDataUrl) {
+                if (tasks.length === 0) return;
                 let newPhotos = { ...itemPhotos };
                 newPhotos[taskIdx] = photoDataUrl;
 
@@ -1435,7 +1390,7 @@ function initApp() {
                     newItems.push(taskIdx);
                 }
 
-                const newProgress = Math.round((newItems.length / tasks.length) * 100);
+                const newProgress = tasks.length > 0 ? Math.round((newItems.length / tasks.length) * 100) : 0;
                 const completed   = newProgress === 100 ? 1 : 0;
 
                 try {
@@ -1465,7 +1420,7 @@ function initApp() {
                 delete newPhotos[taskIdx];
 
                 let newItems = checkedIndices.filter(i => i !== taskIdx);
-                const newProgress = Math.round((newItems.length / tasks.length) * 100);
+                const newProgress = tasks.length > 0 ? Math.round((newItems.length / tasks.length) * 100) : 0;
 
                 try {
                     await fetch(`${API_BASE}/api/checklists`, {
@@ -1647,6 +1602,10 @@ function initApp() {
                 const btnSubmit = document.getElementById('btnSubmitChecklist');
                 if (btnSubmit) {
                     btnSubmit.addEventListener('click', async () => {
+                        if (tasks.length === 0) {
+                            alert('Checklist is currently empty.');
+                            return;
+                        }
                         if (checkedIndices.length < tasks.length) {
                             alert('Please complete all tasks before submitting.');
                             return;
@@ -1675,12 +1634,15 @@ function initApp() {
         } else {
             // Owner View
             const branches = ["ADIT CAMPUS", ];
+            const totalTasksCount = type === 'opening' ? OPENING_TASKS.length : CLOSING_TASKS.length;
             let branchRowsHTML = "";
 
             branches.forEach(branch => {
                 const branchCl = checklists.find(c => c.store === branch && c.type === type && c.date === todayStr);
-                const progress = branchCl ? branchCl.progress : 0;
-                const completedCount = branchCl ? branchCl.items.length : 0;
+                const progress = (branchCl && totalTasksCount > 0) ? branchCl.progress : 0;
+                const completedCount = (branchCl && totalTasksCount > 0) ? branchCl.items.length : 0;
+                const statusBadgeClass = totalTasksCount === 0 ? 'pill-badge-secondary' : (progress === 100 ? 'pill-badge-success' : 'pill-badge-warning');
+                const statusBadgeText = totalTasksCount === 0 ? 'EMPTY' : (progress === 100 ? 'COMPLETED' : 'IN PROGRESS');
 
                 branchRowsHTML += `
                     <tr>
@@ -1694,10 +1656,10 @@ function initApp() {
                                 <strong>${progress}%</strong>
                             </div>
                         </td>
-                        <td>${completedCount} / ${type === 'opening' ? OPENING_TASKS.length : CLOSING_TASKS.length} tasks</td>
+                        <td>${completedCount} / ${totalTasksCount} tasks</td>
                         <td>
-                            <span class="pill-badge ${progress === 100 ? 'pill-badge-success' : 'pill-badge-warning'}">
-                                ${progress === 100 ? 'COMPLETED' : 'IN PROGRESS'}
+                            <span class="pill-badge ${statusBadgeClass}">
+                                ${statusBadgeText}
                             </span>
                         </td>
                         <td>
@@ -1733,6 +1695,13 @@ function initApp() {
                 const tasks = type === "opening" ? OPENING_TASKS.map(t => t.title) : CLOSING_TASKS.map(t => t.title);
 
                 let detailItemsHTML = "";
+                if (tasks.length === 0) {
+                    detailItemsHTML = `
+                        <div style="text-align:center; padding: 28px 16px; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text-tertiary); font-size: 0.85rem;">
+                            No ${type} checklist items configured. The ${type} checklist is currently empty.
+                        </div>
+                    `;
+                }
                 tasks.forEach((task, idx) => {
                     const isChecked = checkedIndices.includes(idx);
                     const itemPhoto = itemPhotos[idx] || null;

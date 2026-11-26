@@ -731,51 +731,16 @@
                             <p>Check off crucial kitchen safety, clean standards, and staff counts before operating.</p>
                         </div>
                         <div class="screen-actions">
-                            <button class="saas-btn saas-btn-secondary" onclick="alert('Evidence photos uploaded successfully!')">
-                                <i data-lucide="camera"></i> Upload Photos
-                            </button>
-                            <button class="saas-btn saas-btn-secondary" onclick="alert('Checklist draft saved.')">Save Draft</button>
-                            <button class="saas-btn saas-btn-primary" style="background: var(--success); box-shadow:none;" id="btnCompleteOpeningChecklist">Mark Completed</button>
+                            <button class="saas-btn saas-btn-primary" style="background: var(--success); box-shadow:none; opacity:0.5; cursor:not-allowed;" id="btnCompleteOpeningChecklist" disabled>Mark Completed</button>
                         </div>
                     </div>
 
                     <div class="checklist-grid">
                         <div class="checklist-tasks-panel">
                             <h3 style="font-weight: 800; margin-bottom: 20px;">Store Opening Audits</h3>
-                            <div class="checklist-item checked" data-type="opening" data-index="0">
-                                <div class="checklist-checkbox-box">✓</div>
-                                <div>
-                                    <div class="checklist-item-title">Kitchen Cleaning Done</div>
-                                    <div class="checklist-item-meta">All food surfaces wiped and floor scrubbed.</div>
-                                </div>
-                            </div>
-                            <div class="checklist-item" data-type="opening" data-index="1">
-                                <div class="checklist-checkbox-box"></div>
-                                <div>
-                                    <div class="checklist-item-title">Gas & Equipment Checked</div>
-                                    <div class="checklist-item-meta">Verify broiler valves and fryer elements are active.</div>
-                                </div>
-                            </div>
-                            <div class="checklist-item" data-type="opening" data-index="2">
-                                <div class="checklist-checkbox-box"></div>
-                                <div>
-                                    <div class="checklist-item-title">Refrigeration Temperature Logged</div>
-                                    <div class="checklist-item-meta">Chiller temperature must read between 1°C and 4°C.</div>
-                                </div>
-                            </div>
-                            <div class="checklist-item" data-type="opening" data-index="3">
-                                <div class="checklist-checkbox-box"></div>
-                                <div>
-                                    <div class="checklist-item-title">Raw Material Verified</div>
-                                    <div class="checklist-item-meta">Check starting levels of vegetables, buns, and chicken items.</div>
-                                </div>
-                            </div>
-                            <div class="checklist-item" data-type="opening" data-index="4">
-                                <div class="checklist-checkbox-box"></div>
-                                <div>
-                                    <div class="checklist-item-title">Staff Attendance Completed</div>
-                                    <div class="checklist-item-meta">Verify all AM shift personnel are clocked in on time.</div>
-                                </div>
+                            <div style="text-align:center; padding: 36px 20px; border: 1px dashed var(--border); border-radius: var(--radius-md); color: var(--text-tertiary);">
+                                <div style="font-size: 1rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">No opening checklist items configured</div>
+                                <div style="font-size: 0.85rem;">The opening checklist is currently empty.</div>
                             </div>
                         </div>
 
@@ -783,8 +748,8 @@
                             <div class="widget-card">
                                 <div class="widget-title">Checklist Progress</div>
                                 <div style="text-align: center; padding: 20px 0;">
-                                    <div style="font-size: 3.5rem; font-weight: 800; color: var(--orange-primary);" id="openingProgressPct">20%</div>
-                                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">1 out of 5 Tasks Completed</div>
+                                    <div style="font-size: 3.5rem; font-weight: 800; color: var(--orange-primary);" id="openingProgressPct">0%</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">0 out of 0 Tasks Completed</div>
                                 </div>
                             </div>
                         </div>
@@ -799,49 +764,16 @@
                             <p>Secure registers, verify ending inventory, and deep clean kitchen zones.</p>
                         </div>
                         <div class="screen-actions">
-                            <button class="saas-btn saas-btn-secondary" onclick="alert('Closing report PDF downloaded.')">Download Report</button>
-                            <button class="saas-btn saas-btn-secondary" id="btnSaveClosing">Save Progress</button>
-                            <button class="saas-btn saas-btn-primary" style="background: var(--success); box-shadow:none;" id="btnSubmitClosing">Submit for Approval</button>
+                            <button class="saas-btn saas-btn-primary" style="background: var(--success); box-shadow:none; opacity:0.5; cursor:not-allowed;" id="btnSubmitClosing" disabled>Submit for Approval</button>
                         </div>
                     </div>
 
                     <div class="checklist-grid">
                         <div class="checklist-tasks-panel">
                             <h3 style="font-weight: 800; margin-bottom: 20px;">Store Closing Audits</h3>
-                            <div class="checklist-item" data-type="closing" data-index="0">
-                                <div class="checklist-checkbox-box"></div>
-                                <div>
-                                    <div class="checklist-item-title">Cash Reconciliation Done</div>
-                                    <div class="checklist-item-meta">Verify counted register vault amounts match expected POS values.</div>
-                                </div>
-                            </div>
-                            <div class="checklist-item" data-type="closing" data-index="1">
-                                <div class="checklist-checkbox-box"></div>
-                                <div>
-                                    <div class="checklist-item-title">Inventory Count Completed</div>
-                                    <div class="checklist-item-meta">Enter closing stock volumes of critical ingredients.</div>
-                                </div>
-                            </div>
-                            <div class="checklist-item" data-type="closing" data-index="2">
-                                <div class="checklist-checkbox-box"></div>
-                                <div>
-                                    <div class="checklist-item-title">Wastage Entry Submitted</div>
-                                    <div class="checklist-item-meta">Log all dropped or expired batch counts into waste manager.</div>
-                                </div>
-                            </div>
-                            <div class="checklist-item" data-type="closing" data-index="3">
-                                <div class="checklist-checkbox-box"></div>
-                                <div>
-                                    <div class="checklist-item-title">Deep Cleaning Completed</div>
-                                    <div class="checklist-item-meta">Scrape broiler components and filter fryer oils.</div>
-                                </div>
-                            </div>
-                            <div class="checklist-item" data-type="closing" data-index="4">
-                                <div class="checklist-checkbox-box"></div>
-                                <div>
-                                    <div class="checklist-item-title">Store Closed & Locked</div>
-                                    <div class="checklist-item-meta">Disarm gas valves, shut power switches, lock final exits.</div>
-                                </div>
+                            <div style="text-align:center; padding: 36px 20px; border: 1px dashed var(--border); border-radius: var(--radius-md); color: var(--text-tertiary);">
+                                <div style="font-size: 1rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">No closing checklist items configured</div>
+                                <div style="font-size: 0.85rem;">The closing checklist is currently empty.</div>
                             </div>
                         </div>
 
@@ -850,7 +782,7 @@
                                 <div class="widget-title">Checklist Progress</div>
                                 <div style="text-align: center; padding: 20px 0;">
                                     <div style="font-size: 3.5rem; font-weight: 800; color: var(--orange-primary);" id="closingProgressPct">0%</div>
-                                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">0 out of 5 Tasks Completed</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">0 out of 0 Tasks Completed</div>
                                 </div>
                             </div>
                         </div>

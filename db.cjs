@@ -1022,17 +1022,17 @@ insertWastage.run('w-10', 'Chicken chunks', 1500, 'gm', 'Spoiled', getOffsetDate
 insertWastage.run('w-11', 'Raw Chicken Patties (Whopper)', 3, 'Box', 'Expired', getOffsetDateStr(0), 1350.00, '🍔', 'Manager SUDAMA CHOWK');
 insertWastage.run('w-12', 'Whopper Sesame Buns', 20, 'Piece', 'Burnt', getOffsetDateStr(0), 310.00, '🍞', 'Manager SUDAMA CHOWK');
 
-// Seed Checklists for today for all 3 branches
-console.log('Seeding checklists for all 3 branches...');
-const insertChecklist = db.prepare(`
-  INSERT INTO checklists (id, type, store, date, progress, completed, items, photo)
-  VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
-`);
-const todayStr = getOffsetDateStr(0);
-for (const branch of branches) {
-  insertChecklist.run(`opening-${branch}-${todayStr}`, 'opening', branch, todayStr, 0, 0, JSON.stringify([]));
-  insertChecklist.run(`closing-${branch}-${todayStr}`, 'closing', branch, todayStr, 0, 0, JSON.stringify([]));
-}
+// Seed Checklists (Disabled - Checklists emptied by user choice)
+// console.log('Seeding checklists for all 3 branches...');
+// const insertChecklist = db.prepare(`
+//   INSERT INTO checklists (id, type, store, date, progress, completed, items, photo)
+//   VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+// `);
+// const todayStr = getOffsetDateStr(0);
+// for (const branch of branches) {
+//   insertChecklist.run(`opening-${branch}-${todayStr}`, 'opening', branch, todayStr, 0, 0, JSON.stringify([]));
+//   insertChecklist.run(`closing-${branch}-${todayStr}`, 'closing', branch, todayStr, 0, 0, JSON.stringify([]));
+// }
 
 // Seed historical EOD report for testing
 console.log('Seeding EOD Reports...');
