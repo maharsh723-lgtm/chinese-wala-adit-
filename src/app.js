@@ -4333,7 +4333,7 @@ function initApp() {
                 const ordStore = (ord.store || 'ADIT CAMPUS').toUpperCase().trim();
                 const ordDate = ord.date || (ord.timestamp ? ord.timestamp.split('T')[0] : '') || 'NODATE';
                 const groupKey = ord.settlementId
-                    ? `${ordStore}__${ordDate}__SETTLE__${ord.settlementId}`
+                    ? `${ordStore}__${ordDate}__${tableKey.toLowerCase()}__SETTLE__${ord.settlementId}`
                     : `${ordStore}__${ordDate}__${tableKey.toLowerCase()}`;
                 if (!tableGroups.has(groupKey)) {
                     tableGroups.set(groupKey, []);
@@ -10675,7 +10675,193 @@ function initApp() {
         }
     }
 
+    function bindGlobalPOSAndTableListeners() {
+        const goToTablesBtn = document.getElementById("btnGoToTablesScreen");
+        if (goToTablesBtn && !goToTablesBtn.dataset.listenerBound) {
+            goToTablesBtn.dataset.listenerBound = "true";
+            goToTablesBtn.addEventListener("click", () => {
+                navigateToScreen("tables");
+            });
+        }
+
+        const tablesGoBillingBtn = document.getElementById("btnTablesGoToBilling");
+        if (tablesGoBillingBtn && !tablesGoBillingBtn.dataset.listenerBound) {
+            tablesGoBillingBtn.dataset.listenerBound = "true";
+            tablesGoBillingBtn.addEventListener("click", () => {
+                navigateToScreen("billing");
+            });
+        }
+
+        document.querySelectorAll(".tables-filter-btn").forEach(btn => {
+            if (!btn.dataset.listenerBound) {
+                btn.dataset.listenerBound = "true";
+                btn.addEventListener("click", () => {
+                    tablesScreenFilter = btn.getAttribute("data-table-filter") || 'all';
+                    document.querySelectorAll(".tables-filter-btn").forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+                    renderTablesScreen();
+                });
+            }
+        });
+
+        document.querySelectorAll("#modalPOSSelectPayment .modal-close, #modalPOSSelectPayment .saas-btn-secondary").forEach(btn => {
+            if (!btn.dataset.finalizeResetBound) {
+                btn.dataset.finalizeResetBound = "true";
+                btn.addEventListener("click", () => {
+                    window._pendingFinalizeContext = null;
+                });
+            }
+        });
+
+        const qrModalEl = document.getElementById("modalPOSQRPayment");
+        if (qrModalEl) {
+            qrModalEl.querySelectorAll(".saas-btn-secondary").forEach(cancelBtn => {
+                if (!cancelBtn.dataset.finalizeResetBound) {
+                    cancelBtn.dataset.finalizeResetBound = "true";
+                    cancelBtn.addEventListener("click", () => {
+                        window._pendingFinalizeContext = null;
+                    });
+                }
+            });
+        }
+
+        document.querySelectorAll(".payment-select-option").forEach(opt => {
+            if (!opt.dataset.listenerBound) {
+                opt.dataset.listenerBound = "true";
+                opt.addEventListener("click", () => {
+                    const method = opt.getAttribute("data-method");
+                    const modal = document.getElementById("modalPOSSelectPayment");
+                    if (modal) modal.style.display = "none";
+
+                    const finalizeCtx = window._pendingFinalizeContext;
+                    if (finalizeCtx) {
+                        const grandTotal = parseFloat(finalizeCtx.totalAmount || 0);
+                        if (method === 'Split') {
+                            const cashAmountStr = prompt(`Total Final Bill is ₹${grandTotal.toFixed(2)}. How much was paid in Cash?`);
+                            if (cashAmountStr === null) {
+                                window._pendingFinalizeContext = null;
+                                return;
+                            }
+                            const cashAmount = parseFloat(cashAmountStr);
+                            if (isNaN(cashAmount) || cashAmount < 0 || cashAmount > grandTotal) {
+                                alert("Invalid cash amount entered.");
+                                window._pendingFinalizeContext = null;
+                                return;
+                            }
+                            const upiAmount = Math.round((grandTotal - cashAmount) * 100) / 100;
+                            finalizeTableOrders(finalizeCtx, "Split", cashAmount, upiAmount);
+                        } else if (method === 'UPI') {
+                            openQrModalForAmount(grandTotal, () => finalizeTableOrders(finalizeCtx, "UPI"));
+                        } else {
+                            finalizeTableOrders(finalizeCtx, method);
+                        }
+                        return;
+                    }
+
+                    if (!posCart || posCart.length === 0) {
+                        if (typeof showToast === 'function') showToast("No active table or cart selected to settle.");
+                        return;
+                    }
+
+                    if (method === 'Split') {
+                        const { totalSubtotal: subtotal, discountableSubtotal } = calculateCartSubtotals();
+                        let discount = 0;
+                        if (posAppliedCoupon) {
+                            if (posAppliedCoupon.discountType === 'percent') discount = Math.round(discountableSubtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
+                            else discount = posAppliedCoupon.discountValue;
+                        }
+                        const grandTotal = Math.max(0, subtotal - discount);
+
+                        const cashAmountStr = prompt(`Total is ₹${grandTotal.toFixed(2)}. How much was paid in Cash?`);
+                        if (cashAmountStr === null) return;
+                        const cashAmount = parseFloat(cashAmountStr);
+                        if (isNaN(cashAmount) || cashAmount < 0 || cashAmount > grandTotal) {
+                            alert("Invalid cash amount entered.");
+                            return;
+                        }
+                        const upiAmount = grandTotal - cashAmount;
+                        processPayment("Split", cashAmount, upiAmount);
+                    } else if (method === 'UPI') {
+                        const amtEl = document.getElementById("posGrandTotal");
+                        let amt = 0;
+                        if (amtEl) amt = parseFloat(amtEl.textContent.replace(/[^0-9.]/g, '')) || 0;
+                        openQrModalForAmount(amt, () => processPayment('UPI'));
+                    } else {
+                        processPayment(method);
+                    }
+                });
+            }
+        });
+
+        const printBtn = document.getElementById("btnPrintReceiptBtn");
+        if (printBtn && !printBtn.dataset.listenerBound) {
+            printBtn.dataset.listenerBound = "true";
+            printBtn.addEventListener("click", () => {
+                if (typeof window._pendingOrderCommit === 'function') {
+                    window._pendingOrderCommit();
+                }
+                if (typeof window.triggerThermalPrint === 'function') {
+                    window.triggerThermalPrint('bill');
+                } else {
+                    document.body.classList.add('print-bill-only');
+                    window.print();
+                    setTimeout(() => document.body.classList.remove('print-bill-only'), 500);
+                }
+            });
+        }
+
+        const printKOTBtn = document.getElementById("btnPrintKOTBtn");
+        if (printKOTBtn && !printKOTBtn.dataset.listenerBound) {
+            printKOTBtn.dataset.listenerBound = "true";
+            printKOTBtn.addEventListener("click", () => {
+                if (typeof window._pendingOrderCommit === 'function') {
+                    window._pendingOrderCommit();
+                }
+                if (typeof window.triggerThermalPrint === 'function') {
+                    window.triggerThermalPrint('kot');
+                } else {
+                    document.body.classList.add('print-kot-only');
+                    window.print();
+                    setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
+                }
+            });
+        }
+
+        const pdfBtn = document.getElementById("btnDownloadPDFBtn");
+        if (pdfBtn && !pdfBtn.dataset.listenerBound) {
+            pdfBtn.dataset.listenerBound = "true";
+            pdfBtn.addEventListener("click", () => {
+                if (typeof window._pendingOrderCommit === 'function') {
+                    window._pendingOrderCommit();
+                }
+                downloadReceiptPDF();
+            });
+        }
+
+        const whatsappBtn = document.getElementById("btnWhatsAppReceiptBtn");
+        if (whatsappBtn && !whatsappBtn.dataset.listenerBound) {
+            whatsappBtn.dataset.listenerBound = "true";
+            whatsappBtn.addEventListener("click", () => {
+                const order = window.activeReceiptOrder;
+                if (!order) {
+                    showToast("No active order found to send!");
+                    return;
+                }
+                triggerDirectWhatsAppConfirmation(order);
+            });
+        }
+
+        const emailBtn = document.getElementById("btnEmailReceiptBtn");
+        if (emailBtn && !emailBtn.dataset.listenerBound) {
+            emailBtn.dataset.listenerBound = "true";
+            emailBtn.addEventListener("click", () => {
+                alert("Receipt sent to customer's registered email address successfully.");
+            });
+        }
+    }
+
     function bindBillingEvents() {
+        bindGlobalPOSAndTableListeners();
         // Sidebar collapse trigger
         const sidebarBtn = document.getElementById("sidebarCollapseToggle");
         if (sidebarBtn && !sidebarBtn.dataset.listenerBound) {
@@ -11115,34 +11301,6 @@ function initApp() {
             });
         }
 
-        const goToTablesBtn = document.getElementById("btnGoToTablesScreen");
-        if (goToTablesBtn && !goToTablesBtn.dataset.listenerBound) {
-            goToTablesBtn.dataset.listenerBound = "true";
-            goToTablesBtn.addEventListener("click", () => {
-                navigateToScreen("tables");
-            });
-        }
-
-        const tablesGoBillingBtn = document.getElementById("btnTablesGoToBilling");
-        if (tablesGoBillingBtn && !tablesGoBillingBtn.dataset.listenerBound) {
-            tablesGoBillingBtn.dataset.listenerBound = "true";
-            tablesGoBillingBtn.addEventListener("click", () => {
-                navigateToScreen("billing");
-            });
-        }
-
-        document.querySelectorAll(".tables-filter-btn").forEach(btn => {
-            if (!btn.dataset.listenerBound) {
-                btn.dataset.listenerBound = "true";
-                btn.addEventListener("click", () => {
-                    tablesScreenFilter = btn.getAttribute("data-table-filter") || 'all';
-                    document.querySelectorAll(".tables-filter-btn").forEach(b => b.classList.remove("active"));
-                    btn.classList.add("active");
-                    renderTablesScreen();
-                });
-            }
-        });
-
         const payButtons = document.querySelectorAll(".pay-btn");
         payButtons.forEach(btn => {
             if (!btn.dataset.listenerBound) {
@@ -11299,100 +11457,6 @@ function initApp() {
             });
         }
 
-        const printBtn = document.getElementById("btnPrintReceiptBtn");
-        if (printBtn && !printBtn.dataset.listenerBound) {
-            printBtn.dataset.listenerBound = "true";
-            printBtn.addEventListener("click", () => {
-                if (typeof window._pendingOrderCommit === 'function') {
-                    window._pendingOrderCommit();
-                }
-                if (typeof window.triggerThermalPrint === 'function') {
-                    window.triggerThermalPrint('bill');
-                } else {
-                    document.body.classList.add('print-bill-only');
-                    window.print();
-                    setTimeout(() => document.body.classList.remove('print-bill-only'), 500);
-                }
-            });
-        }
-
-        const printKOTBtn = document.getElementById("btnPrintKOTBtn");
-        if (printKOTBtn && !printKOTBtn.dataset.listenerBound) {
-            printKOTBtn.dataset.listenerBound = "true";
-            printKOTBtn.addEventListener("click", () => {
-                if (typeof window._pendingOrderCommit === 'function') {
-                    window._pendingOrderCommit();
-                }
-                if (typeof window.triggerThermalPrint === 'function') {
-                    window.triggerThermalPrint('kot');
-                } else {
-                    document.body.classList.add('print-kot-only');
-                    window.print();
-                    setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
-                }
-            });
-        }
-
-        const pdfBtn = document.getElementById("btnDownloadPDFBtn");
-        if (pdfBtn && !pdfBtn.dataset.listenerBound) {
-            pdfBtn.dataset.listenerBound = "true";
-            pdfBtn.addEventListener("click", () => {
-                if (typeof window._pendingOrderCommit === 'function') {
-                    window._pendingOrderCommit();
-                }
-                downloadReceiptPDF();
-            });
-        }
-
-
-        const whatsappBtn = document.getElementById("btnWhatsAppReceiptBtn");
-        if (whatsappBtn && !whatsappBtn.dataset.listenerBound) {
-            whatsappBtn.dataset.listenerBound = "true";
-            whatsappBtn.addEventListener("click", () => {
-                const order = window.activeReceiptOrder;
-                if (!order) {
-                    showToast("No active order found to send!");
-                    return;
-                }
-                const cleanPhone = "919978673137";
-                let text = `*CHINESE WALA - ORDER CONFIRMED*\n`;
-                text += `--------------------------------\n`;
-                text += `Order ID: ${order.id}\n`;
-                text += `Date: ${order.date} | Time: ${order.time || '12:00:00'}\n`;
-                text += `Type: ${order.orderType}\n`;
-                if (order.tableName) text += `Table: ${order.tableName}\n`;
-                text += `--------------------------------\n`;
-                text += `*Items:*\n`;
-                order.items.forEach(item => {
-                    let itemPrice = item.price;
-                    if (item.modifiers && item.modifiers.length > 0) {
-                        (item.modifiers || []).forEach(mName => {
-                            const modInfo = posModifiers.find(m => m.name === mName);
-                            if (modInfo) itemPrice += modInfo.price;
-                        });
-                    }
-                    text += `- ${item.productName} (x${item.quantity}) @ ₹${itemPrice.toFixed(2)} - Sub: ₹${(itemPrice * item.quantity).toFixed(2)}\n`;
-                });
-                text += `--------------------------------\n`;
-                if (order.discount > 0) text += `Discount: -₹${order.discount.toFixed(2)}\n`;
-                // Removed service charge
-                text += `*GRAND TOTAL:* ₹${order.grandTotal.toFixed(2)}\n`;
-                text += `Payment Method: ${order.paymentMethod}\n`;
-                text += `Status: PAID / CONFIRMED\n`;
-                
-                const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
-                window.open(url, '_blank');
-            });
-        }
-
-        const emailBtn = document.getElementById("btnEmailReceiptBtn");
-        if (emailBtn && !emailBtn.dataset.listenerBound) {
-            emailBtn.dataset.listenerBound = "true";
-            emailBtn.addEventListener("click", () => {
-                alert("Receipt sent to customer's registered email address successfully.");
-            });
-        }
-
         // --- NEW COMMAND DOCK EVENT LISTENERS ---
         const voidItemBtn = document.getElementById("btnVoidItem");
         if (voidItemBtn && !voidItemBtn.dataset.listenerBound) {
@@ -11483,79 +11547,6 @@ function initApp() {
                 savePOSOrder();
             });
         }
-
-        document.querySelectorAll("#modalPOSSelectPayment .modal-close, #modalPOSSelectPayment .saas-btn-secondary").forEach(btn => {
-            if (!btn.dataset.finalizeResetBound) {
-                btn.dataset.finalizeResetBound = "true";
-                btn.addEventListener("click", () => {
-                    window._pendingFinalizeContext = null;
-                });
-            }
-        });
-
-        const paymentOptions = document.querySelectorAll(".payment-select-option");
-        paymentOptions.forEach(opt => {
-            if (!opt.dataset.listenerBound) {
-                opt.dataset.listenerBound = "true";
-                opt.addEventListener("click", () => {
-                    const method = opt.getAttribute("data-method");
-                    const modal = document.getElementById("modalPOSSelectPayment");
-                    if (modal) modal.style.display = "none";
-
-                    const finalizeCtx = window._pendingFinalizeContext;
-                    if (finalizeCtx) {
-                        const grandTotal = parseFloat(finalizeCtx.totalAmount || 0);
-                        if (method === 'Split') {
-                            const cashAmountStr = prompt(`Total Final Bill is ₹${grandTotal.toFixed(2)}. How much was paid in Cash?`);
-                            if (cashAmountStr === null) {
-                                window._pendingFinalizeContext = null;
-                                return;
-                            }
-                            const cashAmount = parseFloat(cashAmountStr);
-                            if (isNaN(cashAmount) || cashAmount < 0 || cashAmount > grandTotal) {
-                                alert("Invalid cash amount entered.");
-                                window._pendingFinalizeContext = null;
-                                return;
-                            }
-                            const upiAmount = Math.round((grandTotal - cashAmount) * 100) / 100;
-                            finalizeTableOrders(finalizeCtx, "Split", cashAmount, upiAmount);
-                        } else if (method === 'UPI') {
-                            openQrModalForAmount(grandTotal, () => finalizeTableOrders(finalizeCtx, "UPI"));
-                        } else {
-                            finalizeTableOrders(finalizeCtx, method);
-                        }
-                        return;
-                    }
-
-                    if (method === 'Split') {
-                        const { totalSubtotal: subtotal, discountableSubtotal } = calculateCartSubtotals();
-                        let discount = 0;
-                        if (posAppliedCoupon) {
-                            if (posAppliedCoupon.discountType === 'percent') discount = Math.round(discountableSubtotal * (posAppliedCoupon.discountValue / 100) * 100) / 100;
-                            else discount = posAppliedCoupon.discountValue;
-                        }
-                        const grandTotal = Math.max(0, subtotal - discount);
-                        
-                        const cashAmountStr = prompt(`Total is ₹${grandTotal.toFixed(2)}. How much was paid in Cash?`);
-                        if (cashAmountStr === null) return; // Cancelled
-                        const cashAmount = parseFloat(cashAmountStr);
-                        if (isNaN(cashAmount) || cashAmount < 0 || cashAmount > grandTotal) {
-                            alert("Invalid cash amount entered.");
-                            return;
-                        }
-                        const upiAmount = grandTotal - cashAmount;
-                        processPayment("Split", cashAmount, upiAmount);
-                    } else if (method === 'UPI') {
-                        const amtEl = document.getElementById("posGrandTotal");
-                        let amt = 0;
-                        if (amtEl) amt = parseFloat(amtEl.textContent.replace(/[^0-9.]/g, '')) || 0;
-                        openQrModalForAmount(amt, () => processPayment('UPI'));
-                    } else {
-                        processPayment(method);
-                    }
-                });
-            }
-        });
 
         // Sync active Cashier Name
         const statusCashier = document.getElementById("statusCashierName");
@@ -12082,6 +12073,8 @@ function initApp() {
             orderIds: targetOrders.map(o => o.id),
             totalAmount
         };
+
+        bindGlobalPOSAndTableListeners();
 
         const modal = document.getElementById("modalPOSSelectPayment");
         if (modal) {
@@ -15496,6 +15489,18 @@ function initApp() {
 
     // Keyboard shortcuts
     window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            const mMod = document.getElementById("modalPOSModifiers"); if (mMod) mMod.style.display = "none";
+            const mCust = document.getElementById("modalPOSCreateCustomer"); if (mCust) mCust.style.display = "none";
+            const mInv = document.getElementById("modalPOSInvoice"); if (mInv) mInv.style.display = "none";
+            const mHeld = document.getElementById("modalPOSHeldOrders"); if (mHeld) mHeld.style.display = "none";
+            const selectPaymentModal = document.getElementById("modalPOSSelectPayment");
+            if (selectPaymentModal) selectPaymentModal.style.display = "none";
+            const qrModal = document.getElementById("modalPOSQRPayment");
+            if (qrModal) qrModal.style.display = "none";
+            window._pendingFinalizeContext = null;
+            return;
+        }
         if (currentActiveScreen !== 'billing') return;
         
         if (e.key === "F1") {
@@ -15531,13 +15536,6 @@ function initApp() {
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
             e.preventDefault();
             document.getElementById("btnPrintKOT")?.click();
-        } else if (e.key === "Escape") {
-            document.getElementById("modalPOSModifiers").style.display = "none";
-            document.getElementById("modalPOSCreateCustomer").style.display = "none";
-            document.getElementById("modalPOSInvoice").style.display = "none";
-            document.getElementById("modalPOSHeldOrders").style.display = "none";
-            const selectPaymentModal = document.getElementById("modalPOSSelectPayment");
-            if (selectPaymentModal) selectPaymentModal.style.display = "none";
         }
     });
 
@@ -16812,7 +16810,10 @@ function initApp() {
             const order = window.activeReceiptOrder;
             if (!order) return;
             if (typeof window.deletePOSOrder === 'function') {
-                window.deletePOSOrder(order.id, false); // false = ask for confirm
+                const allIds = (order.combinedOrderIds && order.combinedOrderIds.length > 0)
+                    ? order.combinedOrderIds.join(',')
+                    : '';
+                window.deletePOSOrder(order.id, false, allIds);
                 const modal = document.getElementById('modalPOSInvoice');
                 if (modal) modal.style.display = 'none';
             }
@@ -16828,6 +16829,7 @@ function initApp() {
         getCurrentPoState: () => currentPoState
     };
 
+    bindGlobalPOSAndTableListeners();
     const initialRole = localStorage.getItem("bk_current_role_key") || "owner";
     setRole(initialRole);
 }
