@@ -4349,8 +4349,10 @@ function syncOrderItemsToProductSales(store, dateStr, items) {
       const pQty = parseInt(item.quantity || 1);
       const pPrice = parseFloat(item.price || 0);
       const pRev = pQty * pPrice;
-      const prod = db.prepare('SELECT category, image FROM pos_products WHERE id = ? OR name = ?').get(item.productId, item.productName);
-      const existingPs = db.prepare('SELECT id, qty, revenue FROM product_sales WHERE store = ? AND date = ? AND itemName = ?').get(store, dateStr, item.productName);
+      const pName = item.productName || 'Item';
+      const pId = item.productId || '';
+      const prod = db.prepare('SELECT category, image FROM pos_products WHERE id = ? OR name = ?').get(pId, pName);
+      const existingPs = db.prepare('SELECT id, qty, revenue FROM product_sales WHERE store = ? AND date = ? AND itemName = ?').get(store, dateStr, pName);
       if (existingPs) {
         db.prepare('UPDATE product_sales SET qty = qty + ?, revenue = revenue + ? WHERE id = ?').run(pQty, pRev, existingPs.id);
       } else {
@@ -4361,12 +4363,12 @@ function syncOrderItemsToProductSales(store, dateStr, items) {
           `ps-${store}-${dateStr}-${Date.now()}-${idx}`,
           store,
           dateStr,
-          item.productId || 'rec-pos',
-          item.productName,
-          prod ? prod.category : 'General',
+          pId || 'rec-pos',
+          pName,
+          (prod && prod.category) || 'General',
           pQty,
           pRev,
-          prod ? prod.image : '🍽️'
+          (prod && prod.image) || '🍽️'
         );
       }
     } catch (psErr) {
@@ -4411,7 +4413,8 @@ app.post('/api/pos/tables/finalize', authenticateToken, (req, res) => {
     let remainingCash = totalSplitCash;
     let remainingUpi = totalSplitUpi;
 
-    const finalizeTx = db.transaction(() => {
+    db.exec('BEGIN');
+    try {
       activeOrders.forEach((ord, idx) => {
         const isLast = idx === activeOrders.length - 1;
         let ordCash = 0;
@@ -4429,6 +4432,9 @@ app.post('/api/pos/tables/finalize', authenticateToken, (req, res) => {
           }
         }
 
+        const ordStore = ord.store || store;
+        const ordDate = ord.date || new Date().toISOString().split('T')[0];
+
         db.prepare(`
           UPDATE pos_orders
           SET status = 'Completed',
@@ -4438,15 +4444,15 @@ app.post('/api/pos/tables/finalize', authenticateToken, (req, res) => {
               splitUpiAmount = ?,
               settlementId = ?
           WHERE id = ?
-        `).run(paymentMethod, ordCash, ordUpi, settlementId, ord.id);
+        `).run(paymentMethod || 'Cash', ordCash, ordUpi, settlementId, ord.id);
 
         db.prepare(`
           INSERT OR IGNORE INTO transactions (id, branch_id, type, category, amount, date)
           VALUES (?, ?, 'income', ?, ?, ?)
-        `).run(`order-${ord.id}`, ord.store || store, ord.orderType || 'Dine In', ord.grandTotal || 0, ord.date);
+        `).run(`order-${ord.id}`, ordStore, ord.orderType || 'Dine In', parseFloat(ord.grandTotal) || 0, ordDate);
 
         const ordItems = db.prepare('SELECT * FROM pos_order_items WHERE orderId = ?').all(ord.id);
-        syncOrderItemsToProductSales(ord.store || store, ord.date, ordItems);
+        syncOrderItemsToProductSales(ordStore, ordDate, ordItems);
 
         db.prepare("UPDATE pos_kitchen_orders SET status = 'Served' WHERE orderId = ? AND status = 'Pending'").run(ord.id);
       });
@@ -4467,9 +4473,11 @@ app.post('/api/pos/tables/finalize', authenticateToken, (req, res) => {
         JSON.stringify({ settlementId, tableName: resolvedTable, orderIds: activeOrders.map(o => o.id), paymentMethod, totalGrand }),
         store
       );
-    });
-
-    finalizeTx();
+      db.exec('COMMIT');
+    } catch (txErr) {
+      try { db.exec('ROLLBACK'); } catch (rbErr) {}
+      throw txErr;
+    }
 
     const io = req.app.get('io');
     activeOrders.forEach(ord => processPosOrderInventoryConsumption(ord.id, ord.store || store, io));
