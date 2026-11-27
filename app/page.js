@@ -5328,7 +5328,7 @@ export default function Home() {
                                         <!-- Token Dropdown Wrapper -->
                                         <div style="position: relative;" id="tokenDropdownContainer">
                                             <button type="button" id="btnTokenDropdown" title="Click to view last 10 tokens" style="display: flex; align-items: center; gap: 6px; background: var(--pos-cream-bg); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(46, 35, 31, 0.12); cursor: pointer; outline: none; transition: all 0.15s ease;">
-                                                <strong id="billingNextTokenVal" style="font-size: 1.15rem; color: var(--pos-accent-green, #10b981); font-family: monospace; font-weight: 900;">#109</strong>
+                                                <strong id="billingNextTokenVal" style="font-size: 1.15rem; color: var(--pos-accent-green, #10b981); font-family: monospace; font-weight: 900;">#1</strong>
                                                 <i data-lucide="chevron-down" style="width: 13px; height: 13px; color: var(--pos-espresso); transition: transform 0.2s ease;" id="tokenDropdownChevron"></i>
                                             </button>
                                             

@@ -187,8 +187,8 @@ function initApp() {
     let posOrderItems = [];
     let posAuditLogs = [];
     let posStockMovement = [];
-    let posNextToken = parseInt(localStorage.getItem("pos_next_token") || "109");
-    if (isNaN(posNextToken) || posNextToken < 1) posNextToken = 109;
+    let posNextToken = parseInt(localStorage.getItem("pos_next_token") || "1");
+    if (isNaN(posNextToken) || posNextToken < 1) posNextToken = 1;
     let topSellingByStore = {};
     
     // POS Cart State
@@ -472,6 +472,28 @@ function initApp() {
         return (currentStore === 'All') ? 'ADIT CAMPUS' : currentStore;
     }
 
+    function getNextDailyToken() {
+        try {
+            const todayDateStr = getTodayDateStr();
+            const storeName = getPOSStore();
+            const storeOrders = (posOrders || []).filter(o =>
+                (o.store || 'ADIT CAMPUS') === storeName &&
+                o.status !== 'Deleted' &&
+                o.status !== 'Cancelled' &&
+                o.status !== 'Refunded' &&
+                (o.date === todayDateStr || (o.timestamp && o.timestamp.startsWith(todayDateStr)))
+            );
+            let maxTokenToday = 0;
+            storeOrders.forEach(o => {
+                const tk = window.getOrderTokenKey ? window.getOrderTokenKey(o) : parseInt(o.tokenNumber || 0);
+                if (tk && !isNaN(tk) && tk > maxTokenToday) maxTokenToday = tk;
+            });
+            return maxTokenToday > 0 ? (maxTokenToday + 1) : 1;
+        } catch (e) {
+            return 1;
+        }
+    }
+
     // === 2. STATE SYNCHRONIZATION FROM SERVER ===
     async function syncStateFromServer(isInitial = false) {
         try {
@@ -520,14 +542,16 @@ function initApp() {
                 posStockMovement = data.posStockMovement || [];
                 topSellingByStore = data.topSellingByStore || {};
 
-                // Restore/Sync Next Token from today's orders count starting at 109
+                // Restore/Sync Next Token from today's active orders starting at 1
                 try {
-                    const todayDateStr = new Date().toISOString().split('T')[0];
-                    const storeOrders = (posOrders || []).filter(o => o.store === getPOSStore() && (o.date === todayDateStr || (o.timestamp && o.timestamp.startsWith(todayDateStr))));
-                    
-                    posNextToken = 109 + storeOrders.length;
-                    localStorage.setItem("pos_next_token", posNextToken.toString());
-                    syncTokenUI();
+                    const todayDateStr = getTodayDateStr();
+                    const nextDaily = getNextDailyToken();
+                    if (isInitial || !window._manualTokenSelected || window._lastTokenSyncDate !== todayDateStr) {
+                        window._lastTokenSyncDate = todayDateStr;
+                        posNextToken = nextDaily;
+                        localStorage.setItem("pos_next_token", posNextToken.toString());
+                        syncTokenUI();
+                    }
                 } catch(e) {
                     console.error("Token sync error:", e);
                 }
@@ -4160,7 +4184,7 @@ function initApp() {
         // Sort chronologically ascending to calculate uninterrupted sequential bill numbers
         filteredStoreOrders.sort((a, b) => a.timeVal - b.timeVal);
 
-        const baseStartingToken = 109;
+        const baseStartingToken = 1;
 
         // Group orders by token number so multiple bills for the same token number are combined!
         const tokenGroups = new Map();
@@ -11359,6 +11383,7 @@ function initApp() {
                 if (inputVal !== null) {
                     const parsed = parseInt(inputVal.trim());
                     if (!isNaN(parsed) && parsed >= 1) {
+                        window._manualTokenSelected = true;
                         posNextToken = parsed;
                         localStorage.setItem("pos_next_token", posNextToken.toString());
                         syncTokenUI();
@@ -11388,6 +11413,7 @@ function initApp() {
         if (prevTokenBtn && !prevTokenBtn.dataset.listenerBound) {
             prevTokenBtn.dataset.listenerBound = "true";
             prevTokenBtn.addEventListener("click", () => {
+                window._manualTokenSelected = true;
                 posNextToken = posNextToken <= 1 ? 1 : posNextToken - 1;
                 localStorage.setItem("pos_next_token", posNextToken.toString());
                 syncTokenUI();
@@ -11398,13 +11424,8 @@ function initApp() {
         if (resetTokenBtn && !resetTokenBtn.dataset.listenerBound) {
             resetTokenBtn.dataset.listenerBound = "true";
             resetTokenBtn.addEventListener("click", () => {
-                try {
-                    const todayDateStr = new Date().toISOString().split('T')[0];
-                    const storeOrders = (posOrders || []).filter(o => o.store === getPOSStore() && (o.date === todayDateStr || (o.timestamp && o.timestamp.startsWith(todayDateStr))));
-                    posNextToken = 109 + storeOrders.length;
-                } catch(e) {
-                    posNextToken = 109;
-                }
+                window._manualTokenSelected = false;
+                posNextToken = getNextDailyToken();
                 localStorage.setItem("pos_next_token", posNextToken.toString());
                 syncTokenUI();
                 if (typeof showToast === "function") showToast(`Token reset to #${posNextToken}`);
@@ -11415,6 +11436,7 @@ function initApp() {
         if (nextTokenBtn && !nextTokenBtn.dataset.listenerBound) {
             nextTokenBtn.dataset.listenerBound = "true";
             nextTokenBtn.addEventListener("click", () => {
+                window._manualTokenSelected = true;
                 posNextToken = posNextToken + 1;
                 localStorage.setItem("pos_next_token", posNextToken.toString());
                 syncTokenUI();
@@ -11538,7 +11560,7 @@ function initApp() {
 
         // Construct order object for immediate invoice generation & continuous printing
         const now = new Date();
-        const dateStr = now.toISOString().split('T')[0];
+        const dateStr = getTodayDateStr();
         const timeStr = now.toTimeString().split(' ')[0];
         const currentTokenForBill = posNextToken;
 
@@ -11669,15 +11691,16 @@ function initApp() {
     }
 
     function incrementToken() {
-        posNextToken = posNextToken + 1;
+        window._manualTokenSelected = false;
+        posNextToken = getNextDailyToken();
         localStorage.setItem("pos_next_token", posNextToken.toString());
         syncTokenUI();
     }
 
     function syncTokenUI() {
         if (!posNextToken || isNaN(posNextToken) || posNextToken < 1) {
-            const saved = parseInt(localStorage.getItem("pos_next_token") || "109");
-            posNextToken = (saved && !isNaN(saved) && saved >= 1) ? saved : 109;
+            const saved = parseInt(localStorage.getItem("pos_next_token") || "1");
+            posNextToken = (saved && !isNaN(saved) && saved >= 1) ? saved : 1;
             localStorage.setItem("pos_next_token", posNextToken.toString());
         }
         const tokenStr = '#' + String(posNextToken);
@@ -11698,9 +11721,19 @@ function initApp() {
 
         const seenTokens = new Set();
         const recentList = [];
+        const todayDateStr = getTodayDateStr();
+        const storeName = getPOSStore();
 
         // 1. Check completed orders (from posOrders) for today / current store
-        const reversedOrders = (posOrders || []).slice().reverse();
+        const reversedOrders = (posOrders || [])
+            .filter(ord => {
+                if (ord.status === 'Deleted' || ord.status === 'Cancelled' || ord.status === 'Refunded') return false;
+                if ((ord.store || 'ADIT CAMPUS') !== storeName) return false;
+                const ordDate = ord.date || (ord.timestamp ? ord.timestamp.split('T')[0] : '');
+                return ordDate === todayDateStr;
+            })
+            .slice()
+            .reverse();
         for (const ord of reversedOrders) {
             const tNum = parseInt(ord.tokenNumber || (ord.orderNumber ? String(ord.orderNumber).replace('#', '') : ''));
             if (tNum && !isNaN(tNum) && !seenTokens.has(tNum)) {
@@ -11772,6 +11805,7 @@ function initApp() {
                 e.stopPropagation();
                 const sel = parseInt(row.dataset.token);
                 if (sel && !isNaN(sel)) {
+                    window._manualTokenSelected = true;
                     posNextToken = sel;
                     localStorage.setItem("pos_next_token", posNextToken.toString());
                     syncTokenUI();
