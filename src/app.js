@@ -587,6 +587,7 @@ function initApp() {
     // Render all screens dynamically based on the current role
     function renderAllLists() {
         configureSidebarForRoles();
+        if (typeof updateOccupiedTablesBadges === 'function') updateOccupiedTablesBadges();
         switch (currentActiveScreen) {
             case 'dashboard': renderDashboard(); break;
             case 'opening-checklist': renderChecklistScreen('opening'); break;
@@ -608,6 +609,7 @@ function initApp() {
             case 'recipe-management': renderRecipeScreen(); break;
             case 'material-reconciliation': renderMaterialReconciliationScreen(); break;
             case 'billing': renderBillingScreen(); break;
+            case 'tables': renderTablesScreen(); break;
             case 'cash-reconciliation': renderCashReconciliationScreen(); break;
             case 'excel-import': renderExcelImportScreen(); break;
             case 'reports-portal':
@@ -754,7 +756,7 @@ function initApp() {
 
         if (true) {
             // 1. Live Sales Today (Sum of active non-refunded/non-deleted grandTotal for today)
-            const storeOrdersToday = posOrders.filter(o => o.store === currentStore && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted');
+            const storeOrdersToday = posOrders.filter(o => o.store === currentStore && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted' && o.status !== 'Active');
             const liveSalesToday = storeOrdersToday.reduce((sum, o) => sum + (parseFloat(o.grandTotal) || 0), 0);
 
             // 2. Food Cost % (COGS % based on actual item recipes rawCost vs sales)
@@ -889,7 +891,7 @@ function initApp() {
             const totalEmployees = Object.values(employees).filter(e => e.roleKey !== "owner" && e.roleKey !== "sm").length;
             const totalActiveStaff = Object.values(employees).filter(e => e.activePunch).length;
 
-            const consolidatedSalesToday = posOrders.filter(o => (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted').reduce((sum, o) => sum + (parseFloat(o.grandTotal) || 0), 0);
+            const consolidatedSalesToday = posOrders.filter(o => (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted' && o.status !== 'Active').reduce((sum, o) => sum + (parseFloat(o.grandTotal) || 0), 0);
             const consolidatedExpensesToday = expenses.filter(e => e.date === todayStr).reduce((sum, e) => sum + e.amount, 0);
 
             container.innerHTML = `
@@ -967,7 +969,7 @@ function initApp() {
         if (!ctx) return;
 
         const todayStr = getTodayDateStr();
-        const storeOrdersToday = posOrders.filter(o => o.store === currentStore && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted');
+        const storeOrdersToday = posOrders.filter(o => o.store === currentStore && (o.date === todayStr || (o.timestamp && o.timestamp.startsWith(todayStr))) && o.status !== 'Refunded' && o.status !== 'Cancelled' && o.status !== 'Deleted' && o.status !== 'Active');
 
         const hourlySales = [0, 0, 0, 0, 0, 0];
         storeOrdersToday.forEach(order => {
@@ -3943,20 +3945,24 @@ function initApp() {
         return tbl;
     };
 
-    window.getCombinedOrderByTable = function(tableName, storeName, dateStr, extraOrder = null) {
+    window.getCombinedOrderByTable = function(tableName, storeName, dateStr, extraOrder = null, options = {}) {
         if (!tableName) return null;
         const targetTable = String(tableName).trim().toLowerCase();
         if (!targetTable) return null;
 
         const allOrders = typeof posOrders !== 'undefined' ? posOrders : [];
         const allItems = typeof posOrderItems !== 'undefined' ? posOrderItems : [];
+        const { statusFilter = null, settlementId = null, excludeActive = false } = options || {};
 
         const matching = (allOrders || []).filter(o => {
             if (o.status === 'Deleted' || o.status === 'Cancelled' || o.status === 'Refunded') return false;
+            if (statusFilter && o.status !== statusFilter) return false;
+            if (excludeActive && o.status === 'Active') return false;
+            if (settlementId && o.settlementId !== settlementId) return false;
             const ordTbl = window.getOrderTableKey(o);
             if (!ordTbl || ordTbl.toLowerCase() !== targetTable) return false;
 
-            if (dateStr && dateStr !== 'ALL') {
+            if (dateStr && dateStr !== 'ALL' && !statusFilter && !settlementId) {
                 const oDate = o.date || (o.timestamp ? o.timestamp.split('T')[0] : '');
                 if (oDate && oDate !== dateStr) return false;
             }
@@ -4253,6 +4259,9 @@ function initApp() {
                 deletedBillCount++;
                 return;
             }
+            if (order.status === 'Active' || order.status === 'Hold') {
+                return;
+            }
 
             billCount++;
             const billAmount = parseFloat(order.grandTotal) || parseFloat(order.total) || 0;
@@ -4323,7 +4332,9 @@ function initApp() {
             if (tableKey) {
                 const ordStore = (ord.store || 'ADIT CAMPUS').toUpperCase().trim();
                 const ordDate = ord.date || (ord.timestamp ? ord.timestamp.split('T')[0] : '') || 'NODATE';
-                const groupKey = `${ordStore}__${ordDate}__${tableKey.toLowerCase()}`;
+                const groupKey = ord.settlementId
+                    ? `${ordStore}__${ordDate}__SETTLE__${ord.settlementId}`
+                    : `${ordStore}__${ordDate}__${tableKey.toLowerCase()}`;
                 if (!tableGroups.has(groupKey)) {
                     tableGroups.set(groupKey, []);
                 }
@@ -4811,7 +4822,10 @@ function initApp() {
         const tableKey = window.getOrderTableKey ? window.getOrderTableKey(order) : null;
         if (tableKey && window.getCombinedOrderByTable) {
             const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
-            const combined = window.getCombinedOrderByTable(tableKey, order.store, orderDate);
+            const combineOpts = order.status === 'Active'
+                ? { statusFilter: 'Active' }
+                : (order.settlementId ? { settlementId: order.settlementId, excludeActive: true } : { excludeActive: true });
+            const combined = window.getCombinedOrderByTable(tableKey, order.store, orderDate, null, combineOpts);
             if (combined && combined.isCombined) {
                 order = combined;
             }
@@ -4904,7 +4918,7 @@ function initApp() {
             if (typeof posTables !== 'undefined' && Array.isArray(posTables) && affectedTables.length > 0) {
                 affectedTables.forEach(({ tableName, store }) => {
                     const stillHasActive = (posOrders || []).some(o =>
-                        o.status !== 'Deleted' && o.status !== 'Cancelled' && o.status !== 'Refunded' &&
+                        o.status === 'Active' &&
                         o.tableName && String(o.tableName).toLowerCase() === String(tableName).toLowerCase() &&
                         (!store || !o.store || o.store === store)
                     );
@@ -4918,6 +4932,8 @@ function initApp() {
                 });
                 if (typeof renderTableDropdown === 'function') renderTableDropdown();
                 if (typeof renderTableFloorPlan === 'function') renderTableFloorPlan();
+                if (typeof renderTablesScreen === 'function') renderTablesScreen();
+                if (typeof updateOccupiedTablesBadges === 'function') updateOccupiedTablesBadges();
             }
             initReconciliationState();
             if (typeof window.renderLiveSalesStream === "function") {
@@ -8318,7 +8334,7 @@ function initApp() {
                 const activeOrders = (posOrders || []).filter(o => {
                     const oDate = o.date || (o.timestamp ? o.timestamp.split('T')[0] : '');
                     const oStore = o.store || 'ADIT CAMPUS';
-                    return oStore === store && oDate === dateStr && o.status !== 'Deleted' && o.status !== 'Cancelled' && o.status !== 'Refunded';
+                    return oStore === store && oDate === dateStr && o.status !== 'Deleted' && o.status !== 'Cancelled' && o.status !== 'Refunded' && o.status !== 'Active';
                 });
 
                 let totalSales = 0;
@@ -10164,6 +10180,17 @@ function initApp() {
         }
     }
 
+    function isTableCurrentlyOccupied(tbl) {
+        if (!tbl) return false;
+        if (tbl.status === 'Occupied') return true;
+        return (posOrders || []).some(o =>
+            o.status === 'Active' &&
+            o.tableName &&
+            String(o.tableName).toLowerCase() === String(tbl.name).toLowerCase() &&
+            (!tbl.store || !o.store || o.store === tbl.store)
+        );
+    }
+
     function renderTableDropdown() {
         const select = document.getElementById("posTableSelect");
         if (!select) return;
@@ -10171,7 +10198,8 @@ function initApp() {
         const storeTables = posTables.filter(t => t.store === getPOSStore());
         let optionsHtml = '<option value="">-- Choose Table --</option>';
         storeTables.forEach(tbl => {
-            const label = tbl.status === 'Occupied' ? `${tbl.name} (OCCUPIED)` : tbl.name;
+            const occupied = isTableCurrentlyOccupied(tbl);
+            const label = occupied ? `${tbl.name} (OCCUPIED)` : tbl.name;
             const selectedAttr = tbl.name === posSelectedTable ? 'selected' : '';
             optionsHtml += `<option value="${tbl.name}" ${selectedAttr}>${label}</option>`;
         });
@@ -10192,8 +10220,9 @@ function initApp() {
         storeTables.forEach(tbl => {
             const isSelected = tbl.name === posSelectedTable;
             const activeClass = isSelected ? 'active' : '';
-            const statusClass = tbl.status.toLowerCase(); // 'available' or 'occupied'
-            const icon = tbl.status === 'Occupied' ? 'users' : 'circle-check';
+            const occupied = isTableCurrentlyOccupied(tbl);
+            const statusClass = occupied ? 'occupied' : 'available';
+            const icon = occupied ? 'users' : 'circle-check';
             
             const capacity = tbl.capacity || 4;
             gridHtml += `
@@ -11078,6 +11107,42 @@ function initApp() {
             });
         }
 
+        const savePosOrderBtn = document.getElementById("btnSavePOSOrder");
+        if (savePosOrderBtn && !savePosOrderBtn.dataset.listenerBound) {
+            savePosOrderBtn.dataset.listenerBound = "true";
+            savePosOrderBtn.addEventListener("click", () => {
+                savePOSOrder();
+            });
+        }
+
+        const goToTablesBtn = document.getElementById("btnGoToTablesScreen");
+        if (goToTablesBtn && !goToTablesBtn.dataset.listenerBound) {
+            goToTablesBtn.dataset.listenerBound = "true";
+            goToTablesBtn.addEventListener("click", () => {
+                navigateToScreen("tables");
+            });
+        }
+
+        const tablesGoBillingBtn = document.getElementById("btnTablesGoToBilling");
+        if (tablesGoBillingBtn && !tablesGoBillingBtn.dataset.listenerBound) {
+            tablesGoBillingBtn.dataset.listenerBound = "true";
+            tablesGoBillingBtn.addEventListener("click", () => {
+                navigateToScreen("billing");
+            });
+        }
+
+        document.querySelectorAll(".tables-filter-btn").forEach(btn => {
+            if (!btn.dataset.listenerBound) {
+                btn.dataset.listenerBound = "true";
+                btn.addEventListener("click", () => {
+                    tablesScreenFilter = btn.getAttribute("data-table-filter") || 'all';
+                    document.querySelectorAll(".tables-filter-btn").forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+                    renderTablesScreen();
+                });
+            }
+        });
+
         const payButtons = document.querySelectorAll(".pay-btn");
         payButtons.forEach(btn => {
             if (!btn.dataset.listenerBound) {
@@ -11089,22 +11154,10 @@ function initApp() {
                             alert("No items in the cart to settle!");
                             return;
                         }
-                        
                         const amtEl = document.getElementById("posGrandTotal");
                         let amt = 0;
                         if (amtEl) amt = parseFloat(amtEl.textContent.replace(/[^0-9.]/g, '')) || 0;
-                        
-                        const qrModal = document.getElementById("modalPOSQRPayment");
-                        if (qrModal) {
-                            document.getElementById("posQRAmountDue").textContent = "₹" + amt.toFixed(2);
-                            qrModal.style.display = "flex";
-                            document.getElementById("btnConfirmPOSUpiPayment").onclick = () => {
-                                qrModal.style.display = "none";
-                                processPayment('UPI');
-                            };
-                        } else {
-                            processPayment('UPI');
-                        }
+                        openQrModalForAmount(amt, () => processPayment('UPI'));
                     } else {
                         processPayment(method);
                     }
@@ -11427,18 +11480,18 @@ function initApp() {
         if (dockPaymentBtn && !dockPaymentBtn.dataset.listenerBound) {
             dockPaymentBtn.dataset.listenerBound = "true";
             dockPaymentBtn.addEventListener("click", () => {
-                if (posCart.length === 0) {
-                    alert("No items in cart to settle!");
-                    return;
-                }
-                const modal = document.getElementById("modalPOSSelectPayment");
-                if (modal) {
-                    modal.style.display = "flex";
-                } else {
-                    processPayment("Cash");
-                }
+                savePOSOrder();
             });
         }
+
+        document.querySelectorAll("#modalPOSSelectPayment .modal-close, #modalPOSSelectPayment .saas-btn-secondary").forEach(btn => {
+            if (!btn.dataset.finalizeResetBound) {
+                btn.dataset.finalizeResetBound = "true";
+                btn.addEventListener("click", () => {
+                    window._pendingFinalizeContext = null;
+                });
+            }
+        });
 
         const paymentOptions = document.querySelectorAll(".payment-select-option");
         paymentOptions.forEach(opt => {
@@ -11448,7 +11501,32 @@ function initApp() {
                     const method = opt.getAttribute("data-method");
                     const modal = document.getElementById("modalPOSSelectPayment");
                     if (modal) modal.style.display = "none";
-                    
+
+                    const finalizeCtx = window._pendingFinalizeContext;
+                    if (finalizeCtx) {
+                        const grandTotal = parseFloat(finalizeCtx.totalAmount || 0);
+                        if (method === 'Split') {
+                            const cashAmountStr = prompt(`Total Final Bill is ₹${grandTotal.toFixed(2)}. How much was paid in Cash?`);
+                            if (cashAmountStr === null) {
+                                window._pendingFinalizeContext = null;
+                                return;
+                            }
+                            const cashAmount = parseFloat(cashAmountStr);
+                            if (isNaN(cashAmount) || cashAmount < 0 || cashAmount > grandTotal) {
+                                alert("Invalid cash amount entered.");
+                                window._pendingFinalizeContext = null;
+                                return;
+                            }
+                            const upiAmount = Math.round((grandTotal - cashAmount) * 100) / 100;
+                            finalizeTableOrders(finalizeCtx, "Split", cashAmount, upiAmount);
+                        } else if (method === 'UPI') {
+                            openQrModalForAmount(grandTotal, () => finalizeTableOrders(finalizeCtx, "UPI"));
+                        } else {
+                            finalizeTableOrders(finalizeCtx, method);
+                        }
+                        return;
+                    }
+
                     if (method === 'Split') {
                         const { totalSubtotal: subtotal, discountableSubtotal } = calculateCartSubtotals();
                         let discount = 0;
@@ -11468,13 +11546,10 @@ function initApp() {
                         const upiAmount = grandTotal - cashAmount;
                         processPayment("Split", cashAmount, upiAmount);
                     } else if (method === 'UPI') {
-                        // Instead of immediately processing, trigger the sidebar UPI QR flow
-                        const sidebarUpiBtn = document.querySelector(".pay-btn.upi");
-                        if (sidebarUpiBtn) {
-                            sidebarUpiBtn.click();
-                        } else {
-                            processPayment(method);
-                        }
+                        const amtEl = document.getElementById("posGrandTotal");
+                        let amt = 0;
+                        if (amtEl) amt = parseFloat(amtEl.textContent.replace(/[^0-9.]/g, '')) || 0;
+                        openQrModalForAmount(amt, () => processPayment('UPI'));
                     } else {
                         processPayment(method);
                     }
@@ -11650,24 +11725,46 @@ function initApp() {
         document.getElementById("modalPOSModifiers").style.display = "flex";
     }
 
-    async function processPayment(paymentMethod, splitCashAmount = 0, splitUpiAmount = 0) {
-        if (posCart.length === 0) {
-            alert("No items in the cart to settle!");
-            return;
+    let tablesScreenFilter = 'all';
+    window._pendingFinalizeContext = null;
+
+    function openQrModalForAmount(amount, onConfirmCallback) {
+        const qrModal = document.getElementById("modalPOSQRPayment");
+        if (qrModal) {
+            const amtEl = document.getElementById("posQRAmountDue");
+            if (amtEl) amtEl.textContent = "₹" + (parseFloat(amount) || 0).toFixed(2);
+            qrModal.style.display = "flex";
+            const confirmBtn = document.getElementById("btnConfirmPOSUpiPayment");
+            if (confirmBtn) {
+                confirmBtn.onclick = () => {
+                    qrModal.style.display = "none";
+                    if (typeof onConfirmCallback === 'function') onConfirmCallback();
+                };
+            }
+            qrModal.querySelectorAll(".saas-btn-secondary").forEach(cancelBtn => {
+                if (!cancelBtn.dataset.finalizeResetBound) {
+                    cancelBtn.dataset.finalizeResetBound = "true";
+                    cancelBtn.addEventListener("click", () => {
+                        window._pendingFinalizeContext = null;
+                    });
+                }
+            });
+        } else if (typeof onConfirmCallback === 'function') {
+            onConfirmCallback();
         }
+    }
 
+    function createPOSOrderDraft({ paymentMethod = 'Cash', status = 'Completed', splitCashAmount = 0, splitUpiAmount = 0 }) {
         const enteredPhone = document.getElementById("posCustomerPhoneInput")?.value.trim() || '';
-
         const activeCust = posCustomers.find(c => c.id === posSelectedCustomer);
         if (activeCust) {
             activeCust.phone = enteredPhone;
         }
-        
+
         const { totalSubtotal: subtotal, discountableSubtotal } = calculateCartSubtotals();
-        
         const tax = 0;
         const serviceCharge = 0;
-        
+
         let discount = 0;
         if (posAppliedCoupon) {
             if (posAppliedCoupon.discountType === 'percent') {
@@ -11676,18 +11773,21 @@ function initApp() {
                 discount = posAppliedCoupon.discountValue;
             }
         }
-        
+
         const grandTotal = Math.max(0, subtotal + tax + serviceCharge - discount);
         const orderId = posEditingOrder ? posEditingOrder.id : 'order-' + Date.now();
-        
+        const tableName = (posSelectedOrderType === 'Dine In' && posSelectedTable) ? posSelectedTable : null;
+        const deliveryEl = document.getElementById("posDeliveryAddress");
+        const instrEl = document.getElementById("posOrderInstructions");
+
         const orderPayload = {
             id: orderId,
             customerId: posSelectedCustomer,
             customerName: activeCust?.name || (posEditingOrder?.customerName) || 'Walk-in Guest',
             customerPhone: enteredPhone || (activeCust?.phone) || (posEditingOrder?.customerPhone) || '',
             orderType: posSelectedOrderType,
-            tableName: posSelectedOrderType === 'Dine In' ? posSelectedTable : null,
-            address: posSelectedOrderType === 'Delivery' ? document.getElementById("posDeliveryAddress").value : null,
+            tableName: tableName,
+            address: posSelectedOrderType === 'Delivery' ? (deliveryEl ? deliveryEl.value : '') : null,
             subtotal: subtotal,
             tax: tax,
             discount: discount,
@@ -11696,13 +11796,13 @@ function initApp() {
             paymentMethod: paymentMethod,
             splitCashAmount: splitCashAmount,
             splitUpiAmount: splitUpiAmount,
-            items: posCart,
+            status: status,
+            items: posCart.map(c => ({ ...c })),
             couponCode: posAppliedCoupon ? posAppliedCoupon.code : null,
-            specialInstructions: document.getElementById("posOrderInstructions").value
+            specialInstructions: instrEl ? instrEl.value : '',
+            tokenNumber: posNextToken
         };
-        orderPayload.tokenNumber = posNextToken;
 
-        // Construct order object for immediate invoice generation & continuous printing
         const now = new Date();
         const dateStr = getTodayDateStr();
         const timeStr = now.toTimeString().split(' ')[0];
@@ -11713,13 +11813,15 @@ function initApp() {
             date: posEditingOrder ? (posEditingOrder.date || dateStr) : dateStr,
             time: posEditingOrder ? (posEditingOrder.time || timeStr) : timeStr,
             timestamp: dateStr + 'T' + timeStr,
-            customerName: activeCust?.name || (posEditingOrder?.customerName) || 'Walk-in Guest',
-            customerPhone: enteredPhone || (activeCust?.phone) || (posEditingOrder?.customerPhone) || '',
+            customerName: orderPayload.customerName,
+            customerPhone: orderPayload.customerPhone,
             orderType: posSelectedOrderType,
             tableName: orderPayload.tableName,
             subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
             splitCashAmount, splitUpiAmount,
-            items: [...posCart],
+            status: status,
+            paymentStatus: status === 'Active' ? 'Pending' : 'Verified',
+            items: posCart.map(c => ({ ...c })),
             orderNumber: `#${currentTokenForBill}`,
             tokenNumber: currentTokenForBill,
             kotNumber: posEditingOrder ? posEditingOrder.kotNumber : ((function() {
@@ -11729,6 +11831,588 @@ function initApp() {
             })()),
             store: getPOSStore()
         };
+
+        return { orderId, orderPayload, orderObj };
+    }
+
+    function clearPOSBillingCartAndResetTable() {
+        posCart = [];
+        posEditingOrder = null;
+        posAppliedCoupon = null;
+        posSelectedTable = '';
+        const _pts = document.getElementById("posTableSelect"); if (_pts) _pts.value = "";
+        const _pci = document.getElementById("posCouponInput"); if (_pci) _pci.value = "";
+        const _poi = document.getElementById("posOrderInstructions"); if (_poi) _poi.value = "";
+        if (typeof renderTableDropdown === 'function') renderTableDropdown();
+        if (typeof renderTableFloorPlan === 'function') renderTableFloorPlan();
+        if (typeof updateOccupiedTablesBadges === 'function') updateOccupiedTablesBadges();
+        syncCartStateAndUI();
+    }
+
+    async function savePOSOrder() {
+        if (posCart.length === 0) {
+            alert("No items in cart to save!");
+            return;
+        }
+        if (posSelectedOrderType === 'Dine In' && !posSelectedTable) {
+            alert("Please select a table first before saving!");
+            return;
+        }
+
+        const { orderPayload, orderObj } = createPOSOrderDraft({
+            paymentMethod: 'Unpaid',
+            status: 'Active'
+        });
+
+        try {
+            if (posEditingOrder) {
+                try {
+                    await fetch(`${API_BASE}/api/pos/orders/${posEditingOrder.id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}` }
+                    });
+                } catch (e) {}
+            }
+
+            const response = await fetch(`${API_BASE}/api/pos/orders`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`,
+                    'x-store-name': getPOSStore(),
+                    'x-user-role': 'sm'
+                },
+                body: JSON.stringify(orderPayload)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.order) {
+                    orderObj.id = result.order.id;
+                    orderObj.kotNumber = result.order.kotNumber || orderObj.kotNumber;
+                }
+            } else {
+                const errText = await response.text().catch(() => response.status);
+                throw new Error(`Save failed (${response.status}): ${errText}`);
+            }
+        } catch (err) {
+            console.warn("Offline / network issue while saving order:", err);
+            const offlineQueue = JSON.parse(localStorage.getItem("pos_offline_orders") || "[]");
+            offlineQueue.push(orderPayload);
+            localStorage.setItem("pos_offline_orders", JSON.stringify(offlineQueue));
+        }
+
+        if (posEditingOrder) {
+            posOrders = posOrders.filter(o => o.id !== posEditingOrder.id);
+            posOrderItems = posOrderItems.filter(i => i.orderId !== posEditingOrder.id);
+        }
+
+        posOrders.push(orderObj);
+        (orderObj.items || []).forEach(item => {
+            posOrderItems.push({
+                orderId: orderObj.id,
+                productId: item.productId,
+                productName: item.productName || item.name,
+                quantity: item.quantity,
+                price: item.price,
+                modifiers: typeof item.modifiers === 'string' ? item.modifiers : JSON.stringify(item.modifiers || []),
+                instructions: item.instructions || ''
+            });
+        });
+
+        if (typeof posKitchenOrders !== 'undefined' && Array.isArray(posKitchenOrders)) {
+            posKitchenOrders.push({
+                id: 'kot-' + Date.now(),
+                orderId: orderObj.id,
+                kotNumber: orderObj.kotNumber,
+                status: 'Pending',
+                store: orderObj.store,
+                items: orderObj.items
+            });
+        }
+
+        if (orderObj.tableName && typeof posTables !== 'undefined' && Array.isArray(posTables)) {
+            const tbl = posTables.find(t =>
+                t.name && String(t.name).toLowerCase() === String(orderObj.tableName).toLowerCase() &&
+                (!orderObj.store || !t.store || t.store === orderObj.store)
+            );
+            if (tbl) tbl.status = 'Occupied';
+        }
+
+        clearPOSBillingCartAndResetTable();
+        incrementToken();
+        if (typeof renderTablesScreen === 'function') renderTablesScreen();
+
+        const targetLabel = orderObj.tableName || orderObj.orderType || 'Order';
+        showToast(`Order #${orderObj.tokenNumber} saved for ${targetLabel}.`);
+    }
+
+    function getActiveOrdersGrouped(storeName) {
+        const activeOrders = (posOrders || []).filter(o =>
+            o.status === 'Active' &&
+            (!storeName || (o.store || 'ADIT CAMPUS') === storeName)
+        ).map(o => {
+            const copy = { ...o };
+            if (!copy.items || !Array.isArray(copy.items) || copy.items.length === 0) {
+                copy.items = (posOrderItems || []).filter(i => i.orderId === copy.id).map(i => ({
+                    ...i,
+                    productName: i.productName || i.name || 'Item',
+                    quantity: i.quantity || i.qty || 1,
+                    modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
+                }));
+            }
+            return copy;
+        });
+
+        const tableMap = new Map();
+        const nonTableOrders = [];
+        let totalActiveAmount = 0;
+
+        activeOrders.forEach(ord => {
+            totalActiveAmount += parseFloat(ord.grandTotal || 0);
+            const tKey = window.getOrderTableKey ? window.getOrderTableKey(ord) : null;
+            if (tKey) {
+                const norm = tKey.toLowerCase();
+                if (!tableMap.has(norm)) tableMap.set(norm, []);
+                tableMap.get(norm).push(ord);
+            } else {
+                nonTableOrders.push(ord);
+            }
+        });
+
+        return { activeOrders, tableMap, nonTableOrders, totalActiveAmount };
+    }
+
+    function updateOccupiedTablesBadges() {
+        const storeName = getPOSStore();
+        const storeTables = (posTables || []).filter(t => t.store === storeName);
+        const { tableMap, nonTableOrders } = getActiveOrdersGrouped(storeName);
+
+        let occupiedCount = 0;
+        storeTables.forEach(tbl => {
+            const hasActive = tableMap.has(String(tbl.name).toLowerCase());
+            if (tbl.status === 'Occupied' || hasActive) occupiedCount++;
+        });
+        const badgeCount = occupiedCount + nonTableOrders.length;
+
+        const navBadge = document.getElementById("navOccupiedTablesBadge");
+        if (navBadge) {
+            navBadge.textContent = badgeCount;
+            navBadge.style.display = badgeCount > 0 ? "inline-block" : "none";
+        }
+        const billingBadge = document.getElementById("billingOccupiedTablesCount");
+        if (billingBadge) {
+            billingBadge.textContent = badgeCount;
+            billingBadge.style.display = badgeCount > 0 ? "inline-block" : "none";
+        }
+    }
+
+    window.openBillingForTable = function(tableName) {
+        navigateToScreen("billing");
+        document.querySelectorAll(".order-type-tab").forEach(tab => {
+            if (tab.getAttribute("data-type") === "Dine In") {
+                tab.click();
+            }
+        });
+        posSelectedTable = tableName || '';
+        const select = document.getElementById("posTableSelect");
+        if (select) select.value = posSelectedTable;
+        renderTableDropdown();
+        renderTableFloorPlan();
+    };
+
+    window.viewActiveTableBill = function(tableName) {
+        const storeName = getPOSStore();
+        const combined = window.getCombinedOrderByTable
+            ? window.getCombinedOrderByTable(tableName, storeName, null, null, { statusFilter: 'Active' })
+            : null;
+        if (!combined) return alert(`No active order found for ${tableName}`);
+        renderGSTInvoice(combined);
+        const modal = document.getElementById("modalPOSInvoice");
+        if (modal) modal.style.display = "flex";
+    };
+
+    window.releaseOccupiedTable = async function(tableName) {
+        const storeName = getPOSStore();
+        try {
+            const res = await fetch(`${API_BASE}/api/pos/tables/release`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`,
+                    'x-store-name': storeName
+                },
+                body: JSON.stringify({ tableName, store: storeName })
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        } catch (err) {
+            console.warn("Error releasing table:", err);
+        }
+        const tbl = (posTables || []).find(t =>
+            t.name && String(t.name).toLowerCase() === String(tableName).toLowerCase() &&
+            t.store === storeName
+        );
+        if (tbl) tbl.status = 'Available';
+        renderTableDropdown();
+        renderTableFloorPlan();
+        updateOccupiedTablesBadges();
+        renderTablesScreen();
+        showToast(`${tableName} is now Available.`);
+    };
+
+    window.openFinalBillForTable = function(tableName, orderIdsOverride = null) {
+        const storeName = getPOSStore();
+        let targetOrders = [];
+
+        if (Array.isArray(orderIdsOverride) && orderIdsOverride.length > 0) {
+            targetOrders = (posOrders || []).filter(o => orderIdsOverride.includes(o.id) && o.status === 'Active');
+        } else {
+            const { tableMap } = getActiveOrdersGrouped(storeName);
+            targetOrders = tableMap.get(String(tableName || '').toLowerCase()) || [];
+        }
+
+        if (targetOrders.length === 0) {
+            alert("No active saved orders found to finalize.");
+            return;
+        }
+
+        const totalAmount = targetOrders.reduce((s, o) => s + (parseFloat(o.grandTotal) || 0), 0);
+        window._pendingFinalizeContext = {
+            tableName: tableName || null,
+            orderIds: targetOrders.map(o => o.id),
+            totalAmount
+        };
+
+        const modal = document.getElementById("modalPOSSelectPayment");
+        if (modal) {
+            modal.style.display = "flex";
+        } else {
+            window.finalizeTableOrders(window._pendingFinalizeContext, 'Cash');
+        }
+    };
+
+    window.finalizeTableOrders = async function(ctx, paymentMethod = 'Cash', splitCashAmount = 0, splitUpiAmount = 0) {
+        if (!ctx || !Array.isArray(ctx.orderIds) || ctx.orderIds.length === 0) return;
+        const storeName = getPOSStore();
+        let settlementId = 'settle-' + Date.now();
+        let finalizedIds = [...ctx.orderIds];
+
+        try {
+            const res = await fetch(`${API_BASE}/api/pos/tables/finalize`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token") || ''}`,
+                    'x-store-name': storeName
+                },
+                body: JSON.stringify({
+                    tableName: ctx.tableName,
+                    orderIds: ctx.orderIds,
+                    store: storeName,
+                    paymentMethod,
+                    splitCashAmount,
+                    splitUpiAmount
+                })
+            });
+
+            if (!res.ok) {
+                const errText = await res.text().catch(() => res.status);
+                throw new Error(`Finalize failed (${res.status}): ${errText}`);
+            }
+
+            const result = await res.json();
+            if (result.settlementId) settlementId = result.settlementId;
+            if (Array.isArray(result.finalizedOrderIds) && result.finalizedOrderIds.length > 0) {
+                finalizedIds = result.finalizedOrderIds;
+            }
+        } catch (err) {
+            console.error("Failed to finalize table bill:", err);
+            alert("Failed to finalize bill: " + err.message);
+            window._pendingFinalizeContext = null;
+            return;
+        }
+
+        const finalizedOrders = (posOrders || []).filter(o => finalizedIds.includes(o.id));
+        const totalGrand = finalizedOrders.reduce((s, o) => s + (parseFloat(o.grandTotal) || 0), 0);
+        const totalSplitCash = parseFloat(splitCashAmount) || 0;
+        const totalSplitUpi = parseFloat(splitUpiAmount) || 0;
+        let remCash = totalSplitCash;
+        let remUpi = totalSplitUpi;
+
+        finalizedOrders.forEach((ord, idx) => {
+            ord.status = 'Completed';
+            ord.paymentMethod = paymentMethod;
+            ord.paymentStatus = 'Verified';
+            ord.settlementId = settlementId;
+            if (paymentMethod === 'Split') {
+                const isLast = idx === finalizedOrders.length - 1;
+                if (isLast || totalGrand <= 0) {
+                    ord.splitCashAmount = Math.round(remCash * 100) / 100;
+                    ord.splitUpiAmount = Math.round(remUpi * 100) / 100;
+                } else {
+                    const ratio = (parseFloat(ord.grandTotal) || 0) / totalGrand;
+                    ord.splitCashAmount = Math.round(totalSplitCash * ratio * 100) / 100;
+                    ord.splitUpiAmount = Math.round(totalSplitUpi * ratio * 100) / 100;
+                    remCash -= ord.splitCashAmount;
+                    remUpi -= ord.splitUpiAmount;
+                }
+            } else {
+                ord.splitCashAmount = 0;
+                ord.splitUpiAmount = 0;
+            }
+
+            const items = ord.items && ord.items.length > 0
+                ? ord.items
+                : (posOrderItems || []).filter(i => i.orderId === ord.id);
+            deductLocalInventory(items);
+        });
+
+        // Mark table unoccupied in local state and Billing UI immediately
+        if (ctx.tableName && typeof posTables !== 'undefined' && Array.isArray(posTables)) {
+            const tbl = posTables.find(t =>
+                t.name && String(t.name).toLowerCase() === String(ctx.tableName).toLowerCase() &&
+                t.store === storeName
+            );
+            if (tbl) tbl.status = 'Available';
+            if (posSelectedTable && String(posSelectedTable).toLowerCase() === String(ctx.tableName).toLowerCase()) {
+                posSelectedTable = '';
+                const _pts = document.getElementById("posTableSelect"); if (_pts) _pts.value = "";
+            }
+        }
+
+        if (typeof renderTableDropdown === 'function') renderTableDropdown();
+        if (typeof renderTableFloorPlan === 'function') renderTableFloorPlan();
+        updateOccupiedTablesBadges();
+        if (typeof renderTablesScreen === 'function') renderTablesScreen();
+        if (typeof window.renderLiveSalesStream === 'function') window.renderLiveSalesStream();
+        if (typeof initReconciliationState === 'function') initReconciliationState();
+
+        // Build final combined bill for receipt display & instant print
+        let finalReceiptOrder = null;
+        if (ctx.tableName && window.getCombinedOrderByTable) {
+            finalReceiptOrder = window.getCombinedOrderByTable(ctx.tableName, storeName, null, null, { settlementId });
+        }
+        if (!finalReceiptOrder) {
+            finalReceiptOrder = finalizedOrders[finalizedOrders.length - 1];
+        }
+
+        window._pendingFinalizeContext = null;
+
+        if (finalReceiptOrder) {
+            renderGSTInvoice(finalReceiptOrder);
+            const invoiceModal = document.getElementById("modalPOSInvoice");
+            if (invoiceModal) invoiceModal.style.display = "flex";
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    if (typeof window.triggerThermalPrint === 'function') {
+                        window.triggerThermalPrint('bill');
+                    } else {
+                        document.body.classList.add('print-bill-only');
+                        document.body.classList.remove('print-kot-only');
+                        window.print();
+                        setTimeout(() => document.body.classList.remove('print-bill-only'), 500);
+                    }
+                }, 50);
+            });
+        }
+
+        showToast(`Final Bill printed! ${ctx.tableName || 'Order'} is now unoccupied.`);
+    };
+
+    function renderTablesScreen() {
+        const grid = document.getElementById("tablesOverviewGrid");
+        if (!grid) return;
+
+        const storeName = getPOSStore();
+        const storeTables = (posTables || []).filter(t => t.store === storeName);
+        const { tableMap, nonTableOrders, totalActiveAmount } = getActiveOrdersGrouped(storeName);
+
+        let occupiedCount = 0;
+        let availableCount = 0;
+        storeTables.forEach(tbl => {
+            const hasActive = tableMap.has(String(tbl.name).toLowerCase());
+            if (tbl.status === 'Occupied' || hasActive) occupiedCount++;
+            else availableCount++;
+        });
+
+        const elTotal = document.getElementById("tablesTotalCount");
+        const elOcc = document.getElementById("tablesOccupiedCount");
+        const elAvail = document.getElementById("tablesAvailableCount");
+        const elAmt = document.getElementById("tablesActiveAmountTotal");
+        if (elTotal) elTotal.textContent = String(storeTables.length);
+        if (elOcc) elOcc.textContent = String(occupiedCount);
+        if (elAvail) elAvail.textContent = String(availableCount);
+        if (elAmt) elAmt.textContent = `₹${totalActiveAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        const visibleTables = storeTables.filter(tbl => {
+            const hasActive = tableMap.has(String(tbl.name).toLowerCase());
+            const isOccupied = tbl.status === 'Occupied' || hasActive;
+            if (tablesScreenFilter === 'occupied') return isOccupied;
+            if (tablesScreenFilter === 'available') return !isOccupied;
+            return true;
+        });
+
+        if (visibleTables.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding: 36px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: 12px; color: var(--text-tertiary);">No tables match this filter.</div>`;
+        } else {
+            grid.innerHTML = visibleTables.map(tbl => {
+                const tKey = String(tbl.name).toLowerCase();
+                const ordersForTable = tableMap.get(tKey) || [];
+                const isOccupied = ordersForTable.length > 0 || tbl.status === 'Occupied';
+                const statusClass = isOccupied ? 'occupied' : 'available';
+                const statusText = isOccupied ? 'Occupied' : 'Available';
+
+                if (!isOccupied) {
+                    return `
+                        <div class="table-mgmt-card available">
+                            <div class="table-mgmt-card-header">
+                                <div>
+                                    <div class="table-mgmt-title">${tbl.name}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px;">Ready for guests</div>
+                                </div>
+                                <span class="table-status-pill available">${statusText}</span>
+                            </div>
+                            <div class="table-mgmt-actions" style="margin-top: 8px;">
+                                <button type="button" class="saas-btn saas-btn-primary" style="width: 100%; font-weight: 700;" onclick="window.openBillingForTable('${tbl.name.replace(/'/g, "\\'")}')">
+                                    <i data-lucide="plus" style="width:14px; height:14px;"></i> Take Order
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (ordersForTable.length === 0) {
+                    return `
+                        <div class="table-mgmt-card occupied">
+                            <div class="table-mgmt-card-header">
+                                <div>
+                                    <div class="table-mgmt-title">${tbl.name}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px;">Marked Occupied (0 saved orders)</div>
+                                </div>
+                                <span class="table-status-pill occupied">${statusText}</span>
+                            </div>
+                            <div class="table-mgmt-actions" style="margin-top: 8px;">
+                                <button type="button" class="saas-btn saas-btn-primary" style="flex:1; font-weight:700;" onclick="window.openBillingForTable('${tbl.name.replace(/'/g, "\\'")}')">+ Add Order</button>
+                                <button type="button" class="saas-btn saas-btn-secondary" style="font-weight:700;" onclick="window.releaseOccupiedTable('${tbl.name.replace(/'/g, "\\'")}')">Free Table</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const tokens = [];
+                let allRawItems = [];
+                let runningTotal = 0;
+                const orderIds = [];
+
+                ordersForTable.forEach(o => {
+                    orderIds.push(o.id);
+                    runningTotal += parseFloat(o.grandTotal || 0);
+                    const tk = window.getOrderTokenKey ? window.getOrderTokenKey(o) : (o.tokenNumber ? String(o.tokenNumber).replace('#', '') : '');
+                    if (tk && !tokens.includes(`#${tk}`)) tokens.push(`#${tk}`);
+                    allRawItems = allRawItems.concat(o.items || []);
+                });
+
+                const aggregatedItems = window.aggregateOrderItems ? window.aggregateOrderItems(allRawItems) : allRawItems;
+                const itemsHtml = aggregatedItems.map(i => {
+                    const pQty = parseInt(i.quantity || i.qty || 1);
+                    const pAmt = (parseFloat(i.price || 0) * pQty).toFixed(2);
+                    return `
+                        <div class="table-mgmt-item-row">
+                            <span><strong>${i.productName || i.name || 'Item'}</strong> &times; ${pQty}</span>
+                            <span style="font-weight:700;">₹${pAmt}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const escapedTable = tbl.name.replace(/'/g, "\\'");
+                const lastOrderId = orderIds[orderIds.length - 1];
+
+                return `
+                    <div class="table-mgmt-card ${statusClass}">
+                        <div class="table-mgmt-card-header">
+                            <div>
+                                <div class="table-mgmt-title">${tbl.name}</div>
+                                <div style="font-size: 0.75rem; font-weight: 700; color: var(--orange-primary); margin-top: 2px;">
+                                    ${ordersForTable.length} Active Order${ordersForTable.length > 1 ? 's' : ''} &bull; Tokens: ${tokens.join(', ') || 'N/A'}
+                                </div>
+                            </div>
+                            <span class="table-status-pill ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="table-mgmt-items">${itemsHtml}</div>
+                        <div class="table-mgmt-total-row">
+                            <span>Running Total</span>
+                            <span>₹${runningTotal.toFixed(2)}</span>
+                        </div>
+                        <div class="table-mgmt-actions">
+                            <button type="button" class="final-bill-btn" onclick="window.openFinalBillForTable('${escapedTable}')">
+                                <i data-lucide="printer" style="width:15px; height:15px;"></i> Final Bill
+                            </button>
+                            <button type="button" class="saas-btn saas-btn-secondary" style="padding:8px 10px; font-weight:700;" onclick="window.openBillingForTable('${escapedTable}')" title="Add more items to this table">+ Add</button>
+                            <button type="button" class="saas-btn saas-btn-secondary" style="padding:8px 10px; font-weight:700;" onclick="window.viewActiveTableBill('${escapedTable}')" title="Preview bill">View</button>
+                            <button type="button" class="saas-btn saas-btn-danger" style="padding:8px 10px; font-weight:700; background:#ef4444; color:#fff; border:none; border-radius:8px; cursor:pointer;" onclick="window.deletePOSOrder('${lastOrderId}', false, '${orderIds.join(',')}')" title="Void active table orders">Void</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        const nonTableSection = document.getElementById("activeNonTableOrdersSection");
+        const nonTableGrid = document.getElementById("activeNonTableOrdersGrid");
+        if (nonTableSection && nonTableGrid) {
+            if (nonTableOrders.length === 0) {
+                nonTableSection.style.display = "none";
+                nonTableGrid.innerHTML = "";
+            } else {
+                nonTableSection.style.display = "block";
+                nonTableGrid.innerHTML = nonTableOrders.map(ord => {
+                    const tk = window.getOrderTokenKey ? window.getOrderTokenKey(ord) : (ord.tokenNumber || '');
+                    const itemsHtml = (ord.items || []).map(i => `
+                        <div class="table-mgmt-item-row">
+                            <span><strong>${i.productName || i.name || 'Item'}</strong> &times; ${i.quantity || 1}</span>
+                            <span style="font-weight:700;">₹${((parseFloat(i.price) || 0) * (parseInt(i.quantity) || 1)).toFixed(2)}</span>
+                        </div>
+                    `).join('');
+                    return `
+                        <div class="table-mgmt-card occupied">
+                            <div class="table-mgmt-card-header">
+                                <div>
+                                    <div class="table-mgmt-title">${ord.orderType || 'Takeaway'} &bull; Token #${tk || 'N/A'}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 2px;">${ord.customerName || 'Walk-in Guest'} &bull; ${ord.time || ''}</div>
+                                </div>
+                                <span class="table-status-pill occupied">Pending Bill</span>
+                            </div>
+                            <div class="table-mgmt-items">${itemsHtml}</div>
+                            <div class="table-mgmt-total-row">
+                                <span>Total Due</span>
+                                <span>₹${(parseFloat(ord.grandTotal) || 0).toFixed(2)}</span>
+                            </div>
+                            <div class="table-mgmt-actions">
+                                <button type="button" class="final-bill-btn" onclick="window.openFinalBillForTable(null, ['${ord.id}'])">
+                                    <i data-lucide="printer" style="width:15px; height:15px;"></i> Final Bill
+                                </button>
+                                <button type="button" class="saas-btn saas-btn-danger" style="padding:8px 10px; font-weight:700; background:#ef4444; color:#fff; border:none; border-radius:8px; cursor:pointer;" onclick="window.deletePOSOrder('${ord.id}')">Void</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    async function processPayment(paymentMethod, splitCashAmount = 0, splitUpiAmount = 0) {
+        if (posCart.length === 0) {
+            alert("No items in the cart to settle!");
+            return;
+        }
+
+        const { orderPayload, orderObj } = createPOSOrderDraft({
+            paymentMethod,
+            status: 'Completed',
+            splitCashAmount,
+            splitUpiAmount
+        });
 
         // Render GST Invoice and Kitchen Slip immediately so user gets continuous print dialog without lag
         renderGSTInvoice(orderObj);
@@ -11820,17 +12504,7 @@ function initApp() {
 
         window._pendingOrderCommit = commitOrderToDatabase;
 
-        // Clear billing cart & reset selected table so next order chooses explicitly
-        posCart = [];
-        posEditingOrder = null;
-        posAppliedCoupon = null;
-        posSelectedTable = '';
-        const _pts = document.getElementById("posTableSelect"); if (_pts) _pts.value = "";
-        const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
-        const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
-        if (typeof renderTableDropdown === 'function') renderTableDropdown();
-        if (typeof renderTableFloorPlan === 'function') renderTableFloorPlan();
-        syncCartStateAndUI();
+        clearPOSBillingCartAndResetTable();
 
         // Trigger customer bill print dialog instantly
         requestAnimationFrame(() => {
@@ -12166,7 +12840,10 @@ function initApp() {
         const tableKey = window.getOrderTableKey ? window.getOrderTableKey(order) : null;
         if (!order.isCombined && tableKey && window.getCombinedOrderByTable) {
             const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
-            const combined = window.getCombinedOrderByTable(tableKey, order.store, orderDate, order);
+            const combineOpts = order.status === 'Active'
+                ? { statusFilter: 'Active' }
+                : (order.settlementId ? { settlementId: order.settlementId, excludeActive: true } : { excludeActive: true });
+            const combined = window.getCombinedOrderByTable(tableKey, order.store, orderDate, order, combineOpts);
             if (combined && combined.isCombined) {
                 order = combined;
             }
@@ -12284,9 +12961,9 @@ function initApp() {
                             <span>Paid Via: Split</span>
                             <span>Cash: ₹${(parseFloat(order.splitCashAmount) || 0).toFixed(2)} | UPI: ₹${(parseFloat(order.splitUpiAmount) || 0).toFixed(2)}</span>
                          </div>` : 
-                        `<span>Paid Via: ${order.paymentMethod}</span>`
+                        `<span>Paid Via: ${order.status === 'Active' ? 'Pending' : (order.paymentMethod || 'Cash')}</span>`
                     }
-                    <span>Status: PAID</span>
+                    <span>Status: ${order.status === 'Active' ? 'ACTIVE / UNPAID' : 'PAID'}</span>
                 </div>
                 
                 <!-- UPI QR removed based on user request -->

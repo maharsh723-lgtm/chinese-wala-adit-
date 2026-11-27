@@ -7650,3 +7650,176 @@ body:not(.dark-theme) #screen-guest-intelligence select[style*="color: #fff" i] 
     border: 1px solid var(--border) !important;
 }
 
+/* ─── SAVE ORDER BUTTON & TABLES MANAGEMENT SCREEN ───────────────────────── */
+
+.save-order-btn-new {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #0D52BF 0%, #1d4ed8 100%);
+    color: #ffffff;
+    font-family: var(--pos-font-sans);
+    font-weight: 800;
+    font-size: 0.92rem;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(13, 82, 191, 0.28);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.save-order-btn-new:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(13, 82, 191, 0.36);
+    filter: brightness(1.06);
+}
+
+.save-order-btn-new:active {
+    transform: translateY(0);
+}
+
+.tables-filter-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tables-filter-btn.active {
+    background: #0D52BF;
+    color: #ffffff;
+}
+
+.tables-grid-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 16px;
+}
+
+.table-mgmt-card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.table-mgmt-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.table-mgmt-card.occupied {
+    border-color: #ef4444;
+    border-top: 4px solid #ef4444;
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.04) 0%, var(--bg-card) 45%);
+}
+
+.table-mgmt-card.available {
+    border-color: rgba(16, 185, 129, 0.35);
+    border-top: 4px solid #10b981;
+}
+
+.table-mgmt-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.table-mgmt-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.table-status-pill {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    letter-spacing: 0.4px;
+}
+
+.table-status-pill.occupied {
+    background: rgba(239, 68, 68, 0.14);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.table-status-pill.available {
+    background: rgba(16, 185, 129, 0.14);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.table-mgmt-items {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: var(--bg-hover);
+    border-radius: 8px;
+    padding: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+}
+
+.table-mgmt-item-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--text-primary);
+}
+
+.table-mgmt-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.table-mgmt-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.table-mgmt-actions .final-bill-btn {
+    flex: 1;
+    min-width: 120px;
+    background: #10b981;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-weight: 800;
+    font-size: 0.82rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.table-mgmt-actions .final-bill-btn:hover {
+    background: #059669;
+}
+
+

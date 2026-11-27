@@ -19,8 +19,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
     <script defer src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-  <script type="module" crossorigin src="./assets/index-Bk1FCx-c.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-rlwscLax.css">
+  <script type="module" crossorigin src="./assets/index-COkJMn87.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BsC_nAmm.css">
 </head>
 <body>
 
@@ -77,6 +77,11 @@
                     <div class="nav-item" data-target="billing">
                         <i data-lucide="shopping-cart"></i>
                         <span>Billing</span>
+                    </div>
+                    <div class="nav-item" data-target="tables">
+                        <i data-lucide="utensils-crossed"></i>
+                        <span>Tables &amp; Bills</span>
+                        <span id="navOccupiedTablesBadge" style="display:none; margin-left:auto; background:#ef4444; color:#fff; font-size:0.7rem; font-weight:800; padding:1px 7px; border-radius:9999px;">0</span>
                     </div>
                 </div>
 
@@ -2721,6 +2726,76 @@
                     </div>
                 </div>
 
+                <!-- SCREEN: TABLES & ACTIVE ORDERS -->
+                <div class="app-screen" id="screen-tables">
+                    <div class="screen-header-layout" style="margin-bottom: 16px;">
+                        <div class="screen-title-desc">
+                            <h1>Tables &amp; Active Orders</h1>
+                            <p>View all tables, occupied running orders, add rounds, and print Final Bills.</p>
+                        </div>
+                        <div class="screen-actions" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <div class="tables-filter-pills" style="display:flex; gap:6px; background:var(--bg-card); padding:4px; border:1px solid var(--border); border-radius:8px;">
+                                <button type="button" class="saas-btn tables-filter-btn active" data-table-filter="all" style="padding:5px 12px; font-size:0.78rem; font-weight:700;">All Tables</button>
+                                <button type="button" class="saas-btn tables-filter-btn" data-table-filter="occupied" style="padding:5px 12px; font-size:0.78rem; font-weight:700;">Occupied</button>
+                                <button type="button" class="saas-btn tables-filter-btn" data-table-filter="available" style="padding:5px 12px; font-size:0.78rem; font-weight:700;">Available</button>
+                            </div>
+                            <button type="button" class="saas-btn saas-btn-primary" id="btnTablesGoToBilling" style="padding:7px 14px; font-size:0.82rem; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+                                <i data-lucide="plus-circle" style="width:15px; height:15px;"></i> New Order (Billing)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Summary KPI Strip -->
+                    <div class="kpi-grid" style="margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+                        <div class="kpi-card" style="border-left: 4px solid var(--blue-primary);">
+                            <div class="kpi-header">
+                                <span>Total Tables</span>
+                                <i data-lucide="layout-grid" style="color: var(--blue-primary);"></i>
+                            </div>
+                            <div class="kpi-value" id="tablesTotalCount">0</div>
+                        </div>
+                        <div class="kpi-card" style="border-left: 4px solid #ef4444;">
+                            <div class="kpi-header">
+                                <span>Occupied Tables</span>
+                                <i data-lucide="users" style="color: #ef4444;"></i>
+                            </div>
+                            <div class="kpi-value" style="color:#ef4444;" id="tablesOccupiedCount">0</div>
+                        </div>
+                        <div class="kpi-card" style="border-left: 4px solid #10b981;">
+                            <div class="kpi-header">
+                                <span>Available Tables</span>
+                                <i data-lucide="check-circle-2" style="color: #10b981;"></i>
+                            </div>
+                            <div class="kpi-value" style="color:#10b981;" id="tablesAvailableCount">0</div>
+                        </div>
+                        <div class="kpi-card" style="border-left: 4px solid #f59e0b;">
+                            <div class="kpi-header">
+                                <span>Active Unsettled Amount</span>
+                                <i data-lucide="indian-rupee" style="color: #f59e0b;"></i>
+                            </div>
+                            <div class="kpi-value" style="color:#f59e0b;" id="tablesActiveAmountTotal">₹0.00</div>
+                        </div>
+                    </div>
+
+                    <!-- Tables Grid -->
+                    <div id="tablesOverviewGrid" class="tables-grid-overview">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+
+                    <!-- Saved Non-Table Orders (Takeaway / Delivery awaiting Final Bill) -->
+                    <div id="activeNonTableOrdersSection" style="display:none; margin-top: 24px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px;">
+                            <h3 style="font-weight:800; font-size:1rem; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+                                <i data-lucide="shopping-bag" style="width:18px; height:18px; color:var(--orange-primary);"></i>
+                                Active Takeaway &amp; Delivery Orders
+                            </h3>
+                        </div>
+                        <div id="activeNonTableOrdersGrid" class="tables-grid-overview">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- SCREEN 14.5: LIVE SALES STREAM -->
                 <div class="app-screen" id="screen-live-sales-stream">
                     <div class="screen-header-layout" style="margin-bottom:16px;">
@@ -5142,6 +5217,11 @@
 
                         <!-- Right Block: Operational Info -->
                         <div class="command-bar-actions">
+                            <button type="button" id="btnGoToTablesScreen" style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.14); color:#fff; font-weight:700; font-size:0.78rem; cursor:pointer; white-space:nowrap;">
+                                <i data-lucide="utensils-crossed" style="width:14px; height:14px;"></i>
+                                <span>Tables &amp; Bills</span>
+                                <span id="billingOccupiedTablesCount" style="display:none; background:#ef4444; color:#fff; font-size:0.68rem; font-weight:800; padding:1px 6px; border-radius:9999px;">0</span>
+                            </button>
                             
                             <div class="sync-status-indicator">
                                 <div class="sync-badge-pill online" id="posOnlineBadge">
@@ -5375,20 +5455,16 @@
                                 </div>
                             </div>
 
-                            <!-- Settlement keys -->
+                            <!-- Save Order Action (Replaces Direct Settle) -->
                             <div class="checkout-card-new quick-pay-card-new">
-                                <span class="section-title-new"><i data-lucide="shield-check"></i> Complete Settlement</span>
-                                <div class="payment-action-buttons-new">
-                                    <button type="button" class="pay-btn pay-btn-new cash" data-method="Cash">
-                                        <i data-lucide="banknote"></i> <span>CASH</span>
-                                    </button>
-                                    <button type="button" class="pay-btn pay-btn-new upi" data-method="UPI">
-                                        <i data-lucide="qr-code"></i> <span>UPI / QR</span>
+                                <span class="section-title-new"><i data-lucide="bookmark-check"></i> Save Order</span>
+                                <div class="payment-action-buttons-new" style="grid-template-columns: 1fr;">
+                                    <button type="button" class="save-order-btn-new" id="btnSavePOSOrder">
+                                        <i data-lucide="save"></i> <span id="btnSavePOSOrderLabel">SAVE ORDER</span>
                                     </button>
                                 </div>
-                                <div id="billingQrSection" style="display:none; margin-top: 15px; text-align: center;">
-                                    <img src="upi_qr.jpg" alt="UPI QR Code" style="width: 180px; height: 180px; border-radius: 8px;">
-                                    <button type="button" class="saas-btn saas-btn-primary" id="btnConfirmUpiPayment" style="margin-top: 10px; width: 100%;">Confirm Payment</button>
+                                <div id="billingSaveHelperText" style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 6px; text-align: center; font-weight: 600;">
+                                    Saves order &amp; marks table occupied. Print Final Bill in Tables &amp; Bills.
                                 </div>
                             </div>
 
@@ -5506,13 +5582,13 @@
                                     <span class="shortcut">Ctrl+K</span>
                                 </button>
                                 
-                                <button type="button" class="dock-btn payment-btn" id="btnDockPayment" title="Proceed to Payment / Settle Bill [Enter]">
-                                    <i data-lucide="credit-card"></i>
+                                <button type="button" class="dock-btn payment-btn" id="btnDockPayment" title="Save Current Order [Enter]">
+                                    <i data-lucide="save"></i>
                                     <div class="payment-btn-text">
                                         <small>Grand Total</small>
                                         <span id="dockGrandTotal">₹0.00</span>
                                     </div>
-                                    <span class="payment-action-text">Pay →</span>
+                                    <span class="payment-action-text">Save →</span>
                                 </button>
                             </div>
                         </div>

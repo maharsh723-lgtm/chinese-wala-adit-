@@ -229,7 +229,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
         SELECT o.store, oi.productName, SUM(oi.quantity) as qty
         FROM pos_order_items oi
         JOIN pos_orders o ON oi.orderId = o.id
-        WHERE o.date >= ? AND o.status NOT IN ('Refunded', 'Cancelled', 'Deleted')
+        WHERE o.date >= ? AND o.status NOT IN ('Refunded', 'Cancelled', 'Deleted', 'Active')
         GROUP BY o.store, oi.productName
         ORDER BY o.store, qty DESC
       `).all(sixtyDaysAgo);
@@ -1087,7 +1087,7 @@ function computePLReportData(user, query) {
       JOIN pos_orders o ON o.id = i.orderId
       JOIN pos_products p ON p.id = i.productId
       JOIN recipes r ON r.id = p.recipeId
-      WHERE ${oDateWhere} ${posCogsBranch}
+      WHERE ${oDateWhere} ${posCogsBranch} AND o.status NOT IN ('Cancelled', 'Deleted', 'Refunded', 'Active')
     `).all(...posCogsParams);
     posCogsRows.forEach(row => {
       cogsVal += parseFloat(row.quantity || 0) * parseFloat(row.rawCost || 0);
@@ -1140,7 +1140,7 @@ function computePLReportData(user, query) {
   try {
     totalGstCollected = db.prepare(`
       SELECT SUM(tax) as total FROM pos_orders 
-      WHERE ${dateQuery} ${branchQuery.replace('branch_id', 'store')} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')
+      WHERE ${dateQuery} ${branchQuery.replace('branch_id', 'store')} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded', 'Active')
     `).get(...sqlParams).total || (totalSales * 0.05);
 
     totalGstPaid = db.prepare(`
@@ -1157,7 +1157,7 @@ function computePLReportData(user, query) {
     const paymentSplit = db.prepare(`
       SELECT paymentMethod, SUM(grandTotal) as total, SUM(splitCashAmount) as totalSplitCash, SUM(splitUpiAmount) as totalSplitUpi
       FROM pos_orders 
-      WHERE ${dateQuery} ${branchQuery.replace('branch_id', 'store')} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')
+      WHERE ${dateQuery} ${branchQuery.replace('branch_id', 'store')} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded', 'Active')
       GROUP BY paymentMethod
     `).all(...sqlParams);
     
@@ -1219,7 +1219,7 @@ function computePLReportData(user, query) {
     totalOrdersCount = db.prepare(`
       SELECT COUNT(*) as count 
       FROM pos_orders 
-      WHERE ${dateQuery} ${ordersBranch} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')
+      WHERE ${dateQuery} ${ordersBranch} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded', 'Active')
     `).get(...ordersParams).count || 0;
   } catch (e) {}
   const avgOrderValue = totalOrdersCount > 0 ? (netSales / totalOrdersCount) : 0;
@@ -1245,7 +1245,7 @@ function computePLReportData(user, query) {
     }
     yearlyRevenue = db.prepare(`
       SELECT SUM(grandTotal) as total FROM pos_orders 
-      WHERE date BETWEEN ? AND ? ${yearBranch} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')
+      WHERE date BETWEEN ? AND ? ${yearBranch} AND status NOT IN ('Cancelled', 'Deleted', 'Refunded', 'Active')
     `).get(...yearParams).total || 0;
   } catch (e) {
     yearlyRevenue = totalSales;
@@ -1275,12 +1275,12 @@ function computePLReportData(user, query) {
 
   branches.forEach(bName => {
     // today values
-    const tOrders = db.prepare("SELECT SUM(grandTotal) as total FROM pos_orders WHERE store = ? AND date = ? AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')").get(bName, todayStr).total || 0;
+    const tOrders = db.prepare("SELECT SUM(grandTotal) as total FROM pos_orders WHERE store = ? AND date = ? AND status NOT IN ('Cancelled', 'Deleted', 'Refunded', 'Active')").get(bName, todayStr).total || 0;
     const tExps = db.prepare("SELECT SUM(amount) as total FROM expenses WHERE store = ? AND date = ?").get(bName, todayStr).total || 0;
     
     // month values
     const mStart = todayStr.slice(0, 8) + "01";
-    const mOrders = db.prepare("SELECT SUM(grandTotal) as total FROM pos_orders WHERE store = ? AND date BETWEEN ? AND ? AND status NOT IN ('Cancelled', 'Deleted', 'Refunded')").get(bName, mStart, todayStr).total || 0;
+    const mOrders = db.prepare("SELECT SUM(grandTotal) as total FROM pos_orders WHERE store = ? AND date BETWEEN ? AND ? AND status NOT IN ('Cancelled', 'Deleted', 'Refunded', 'Active')").get(bName, mStart, todayStr).total || 0;
     const mExps = db.prepare("SELECT SUM(amount) as total FROM expenses WHERE store = ? AND date BETWEEN ? AND ?").get(bName, mStart, todayStr).total || 0;
 
     branchDetails[bName] = {
@@ -4342,6 +4342,170 @@ app.put('/api/pos/tables/merge', authenticateToken, (req, res) => {
   }
 });
 
+// Shared helper to sync finalized POS order items into product_sales ledger
+function syncOrderItemsToProductSales(store, dateStr, items) {
+  (items || []).forEach((item, idx) => {
+    try {
+      const pQty = parseInt(item.quantity || 1);
+      const pPrice = parseFloat(item.price || 0);
+      const pRev = pQty * pPrice;
+      const prod = db.prepare('SELECT category, image FROM pos_products WHERE id = ? OR name = ?').get(item.productId, item.productName);
+      const existingPs = db.prepare('SELECT id, qty, revenue FROM product_sales WHERE store = ? AND date = ? AND itemName = ?').get(store, dateStr, item.productName);
+      if (existingPs) {
+        db.prepare('UPDATE product_sales SET qty = qty + ?, revenue = revenue + ? WHERE id = ?').run(pQty, pRev, existingPs.id);
+      } else {
+        db.prepare(`
+          INSERT INTO product_sales (id, store, date, recipeId, itemName, category, qty, revenue, image)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          `ps-${store}-${dateStr}-${Date.now()}-${idx}`,
+          store,
+          dateStr,
+          item.productId || 'rec-pos',
+          item.productName,
+          prod ? prod.category : 'General',
+          pQty,
+          pRev,
+          prod ? prod.image : '🍽️'
+        );
+      }
+    } catch (psErr) {
+      console.warn('Error auto-syncing product_sales:', psErr.message);
+    }
+  });
+}
+
+// POST /api/pos/tables/finalize - Settle active saved order(s) for a table (or orderIds) and release table
+app.post('/api/pos/tables/finalize', authenticateToken, (req, res) => {
+  const {
+    tableName = null,
+    orderIds = [],
+    paymentMethod = 'Cash',
+    splitCashAmount = 0,
+    splitUpiAmount = 0
+  } = req.body || {};
+
+  const store = (req.body && req.body.store) || req.headers['x-store-name'] || (req.user && req.user.store) || 'ADIT CAMPUS';
+
+  try {
+    try { db.exec('ALTER TABLE pos_orders ADD COLUMN settlementId TEXT'); } catch (e) {}
+
+    let activeOrders = [];
+    if (Array.isArray(orderIds) && orderIds.length > 0) {
+      const placeholders = orderIds.map(() => '?').join(',');
+      activeOrders = db.prepare(
+        `SELECT * FROM pos_orders WHERE id IN (${placeholders}) AND store = ? AND status = 'Active'`
+      ).all(...orderIds, store);
+    } else if (tableName) {
+      activeOrders = db.prepare(
+        "SELECT * FROM pos_orders WHERE lower(tableName) = lower(?) AND store = ? AND status = 'Active'"
+      ).all(tableName, store);
+    }
+
+    const settlementId = 'settle-' + Date.now();
+    const totalGrand = activeOrders.reduce((sum, o) => sum + (parseFloat(o.grandTotal) || 0), 0);
+    const totalSplitCash = parseFloat(splitCashAmount) || 0;
+    const totalSplitUpi = parseFloat(splitUpiAmount) || 0;
+    const isSplit = paymentMethod === 'Split';
+
+    let remainingCash = totalSplitCash;
+    let remainingUpi = totalSplitUpi;
+
+    const finalizeTx = db.transaction(() => {
+      activeOrders.forEach((ord, idx) => {
+        const isLast = idx === activeOrders.length - 1;
+        let ordCash = 0;
+        let ordUpi = 0;
+        if (isSplit) {
+          if (isLast || totalGrand <= 0) {
+            ordCash = Math.round(remainingCash * 100) / 100;
+            ordUpi = Math.round(remainingUpi * 100) / 100;
+          } else {
+            const ratio = (parseFloat(ord.grandTotal) || 0) / totalGrand;
+            ordCash = Math.round(totalSplitCash * ratio * 100) / 100;
+            ordUpi = Math.round(totalSplitUpi * ratio * 100) / 100;
+            remainingCash -= ordCash;
+            remainingUpi -= ordUpi;
+          }
+        }
+
+        db.prepare(`
+          UPDATE pos_orders
+          SET status = 'Completed',
+              paymentMethod = ?,
+              paymentStatus = 'Verified',
+              splitCashAmount = ?,
+              splitUpiAmount = ?,
+              settlementId = ?
+          WHERE id = ?
+        `).run(paymentMethod, ordCash, ordUpi, settlementId, ord.id);
+
+        db.prepare(`
+          INSERT OR IGNORE INTO transactions (id, branch_id, type, category, amount, date)
+          VALUES (?, ?, 'income', ?, ?, ?)
+        `).run(`order-${ord.id}`, ord.store || store, ord.orderType || 'Dine In', ord.grandTotal || 0, ord.date);
+
+        const ordItems = db.prepare('SELECT * FROM pos_order_items WHERE orderId = ?').all(ord.id);
+        syncOrderItemsToProductSales(ord.store || store, ord.date, ordItems);
+
+        db.prepare("UPDATE pos_kitchen_orders SET status = 'Served' WHERE orderId = ? AND status = 'Pending'").run(ord.id);
+      });
+
+      const resolvedTable = tableName || (activeOrders[0] && activeOrders[0].tableName) || null;
+      if (resolvedTable) {
+        db.prepare("UPDATE pos_tables SET status = 'Available' WHERE lower(name) = lower(?) AND store = ?").run(resolvedTable, store);
+      }
+
+      db.prepare(`
+        INSERT INTO pos_audit_logs (id, timestamp, action, userId, userName, details, store)
+        VALUES (?, ?, 'FINALIZE_TABLE_BILL', ?, ?, ?, ?)
+      `).run(
+        `audit-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+        new Date().toISOString(),
+        (req.user && req.user.id) || 'system',
+        (req.user && req.user.name) || 'POS System',
+        JSON.stringify({ settlementId, tableName: resolvedTable, orderIds: activeOrders.map(o => o.id), paymentMethod, totalGrand }),
+        store
+      );
+    });
+
+    finalizeTx();
+
+    const io = req.app.get('io');
+    activeOrders.forEach(ord => processPosOrderInventoryConsumption(ord.id, ord.store || store, io));
+    if (io) {
+      io.emit('table_update', { store });
+      io.emit('pl_update');
+      io.emit('live_sales_update');
+    }
+
+    res.json({
+      success: true,
+      settlementId,
+      finalizedOrderIds: activeOrders.map(o => o.id),
+      tableName: tableName || (activeOrders[0] && activeOrders[0].tableName) || null
+    });
+  } catch (err) {
+    console.error('Failed to finalize table bill:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/pos/tables/release - Release a table manually if no active unpaid orders remain
+app.post('/api/pos/tables/release', authenticateToken, (req, res) => {
+  const { tableName, store: bodyStore } = req.body || {};
+  const store = bodyStore || req.headers['x-store-name'] || (req.user && req.user.store) || 'ADIT CAMPUS';
+  if (!tableName) return res.status(400).json({ error: 'tableName is required' });
+  try {
+    db.prepare("UPDATE pos_tables SET status = 'Available' WHERE lower(name) = lower(?) AND store = ?").run(tableName, store);
+    const io = req.app.get('io');
+    if (io) io.emit('table_update', { store });
+    res.json({ success: true, tableName, status: 'Available' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/pos/kitchen-orders', authenticateToken, (req, res) => {
   try {
     const store = req.query.store || 'ADIT CAMPUS';
@@ -4583,36 +4747,42 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
       db.prepare('UPDATE pos_customers SET loyaltyPoints = loyaltyPoints + ? WHERE id = ?').run(pointsEarned, customerId);
     }
 
-    const isUpiPayment = (paymentMethod === 'UPI' || paymentMethod === 'UPI / QR' || paymentMethod === 'Bank Transfer / UPI QR');
-    // POS orders are immediately considered Completed & Verified because the cashier manually confirms them on the spot.
-    const orderStatus = 'Completed'; 
-    const payStatus = 'Verified';
+    const requestedStatus = req.body.status === 'Active' ? 'Active' : 'Completed';
+    const isUpiPayment = requestedStatus === 'Completed' && (paymentMethod === 'UPI' || paymentMethod === 'UPI / QR' || paymentMethod === 'Bank Transfer / UPI QR');
+    const orderStatus = requestedStatus;
+    const payStatus = requestedStatus === 'Completed' ? 'Verified' : 'Pending';
+    const effectivePaymentMethod = paymentMethod || (requestedStatus === 'Active' ? 'Unpaid' : 'Cash');
+    const settlementId = req.body.settlementId || null;
     try { db.exec("ALTER TABLE pos_orders ADD COLUMN tokenNumber INTEGER DEFAULT 0"); } catch(e){}
+    try { db.exec("ALTER TABLE pos_orders ADD COLUMN settlementId TEXT"); } catch(e){}
 
     // Insert order record
     db.prepare(`
       INSERT INTO pos_orders (
         id, date, time, customerId, customerName, orderType, tableName, address, subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod, status, store,
-        customerPhone, utr, screenshot, paymentStatus, bankName, upiId, adminNotes, splitCashAmount, splitUpiAmount, tokenNumber
+        customerPhone, utr, screenshot, paymentStatus, bankName, upiId, adminNotes, splitCashAmount, splitUpiAmount, tokenNumber, settlementId
       )
       VALUES (
         ?, ?, ?, ?, ?, ?, ?, ?, 
         ?, ?, ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )
     `).run(
       id, dateStr, timeStr, customerId, customerName, orderType, tableName, address, 
-      subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod, orderStatus, store,
+      subtotal, tax, discount, serviceCharge, grandTotal, effectivePaymentMethod, orderStatus, store,
       customerPhone || null, utr || null, screenshot || null, payStatus,
       bankName || null, upiId || null, notes || null, splitCashAmount || 0, splitUpiAmount || 0,
-      req.body.tokenNumber !== undefined ? parseInt(req.body.tokenNumber) : 0
+      req.body.tokenNumber !== undefined ? parseInt(req.body.tokenNumber) : 0,
+      settlementId
     );
 
-    // Insert P&L transaction
-    db.prepare(`
-      INSERT OR IGNORE INTO transactions (id, branch_id, type, category, amount, date)
-      VALUES (?, ?, 'income', ?, ?, ?)
-    `).run(`order-${id}`, store, orderType || 'Dine In', grandTotal, dateStr);
+    // Insert P&L transaction only once order is Completed/Settled
+    if (orderStatus === 'Completed') {
+      db.prepare(`
+        INSERT OR IGNORE INTO transactions (id, branch_id, type, category, amount, date)
+        VALUES (?, ?, 'income', ?, ?, ?)
+      `).run(`order-${id}`, store, orderType || 'Dine In', grandTotal, dateStr);
+    }
 
     if (isUpiPayment) {
       db.prepare(`
@@ -4645,36 +4815,12 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
         JSON.stringify(item.modifiers || []),
         item.instructions || ''
       );
-
-      // Auto-sync into product_sales ledger
-      try {
-        const pQty = parseInt(item.quantity || 1);
-        const pPrice = parseFloat(item.price || 0);
-        const pRev = pQty * pPrice;
-        const prod = db.prepare('SELECT category, image FROM pos_products WHERE id = ? OR name = ?').get(item.productId, item.productName);
-        const existingPs = db.prepare('SELECT id, qty, revenue FROM product_sales WHERE store = ? AND date = ? AND itemName = ?').get(store, dateStr, item.productName);
-        if (existingPs) {
-          db.prepare('UPDATE product_sales SET qty = qty + ?, revenue = revenue + ? WHERE id = ?').run(pQty, pRev, existingPs.id);
-        } else {
-          db.prepare(`
-            INSERT INTO product_sales (id, store, date, recipeId, itemName, category, qty, revenue, image)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `).run(
-            `ps-${store}-${dateStr}-${Date.now()}-${idx}`,
-            store,
-            dateStr,
-            item.productId || 'rec-pos',
-            item.productName,
-            prod ? prod.category : 'General',
-            pQty,
-            pRev,
-            prod ? prod.image : '🍽️'
-          );
-        }
-      } catch (psErr) {
-        console.warn("Error auto-syncing product_sales:", psErr.message);
-      }
     });
+
+    // Auto-sync into product_sales ledger only when Completed/Settled
+    if (orderStatus === 'Completed') {
+      syncOrderItemsToProductSales(store, dateStr, items);
+    }
 
     // Create Kitchen Order (KOT) with 24-hour daily resetting sequence (KOT-01, KOT-02...)
     let todayKotCount = 0;
@@ -4724,10 +4870,10 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
       store
     );
 
-    // If Dine In, mark table status as Occupied
-    if (orderType === 'Dine In' && tableName) {
-      db.prepare("UPDATE pos_tables SET status = 'Occupied' WHERE name = ? AND store = ?").run(tableName, store);
-    }
+      // If Dine In, mark table status as Occupied
+      if (orderType === 'Dine In' && tableName) {
+        db.prepare("UPDATE pos_tables SET status = 'Occupied' WHERE lower(name) = lower(?) AND store = ?").run(tableName, store);
+      }
 
     if (io) {
       io.emit('order_placed', {
@@ -4753,11 +4899,12 @@ app.post('/api/pos/orders', authenticateToken, (req, res) => {
         time: timeStr,
         grandTotal,
         kotNumber,
-        store
+        store,
+        status: orderStatus
       }
     });
 
-    if (!isUpiPayment) {
+    if (orderStatus === 'Completed' && !isUpiPayment) {
       sendBackgroundNotification(id);
     }
   } catch (err) {
@@ -4829,32 +4976,34 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
       // Mark as Deleted to track deleted count while removing from active sales
       db.prepare("UPDATE pos_orders SET status = 'Deleted' WHERE id = ?").run(id);
 
-      // Release table if no other active orders remain for this table today
+      // Release table if no remaining Active (unsettled) orders remain for this table
       if (order.tableName) {
         const ordStore = order.store || 'ADIT CAMPUS';
         const rem = db.prepare(
-          "SELECT COUNT(*) as cnt FROM pos_orders WHERE lower(tableName) = lower(?) AND store = ? AND date = ? AND status NOT IN ('Deleted', 'Cancelled', 'Refunded')"
-        ).get(order.tableName, ordStore, todayStr);
+          "SELECT COUNT(*) as cnt FROM pos_orders WHERE lower(tableName) = lower(?) AND store = ? AND status = 'Active'"
+        ).get(order.tableName, ordStore);
         if (!rem || rem.cnt === 0) {
           db.prepare("UPDATE pos_tables SET status = 'Available' WHERE lower(name) = lower(?) AND store = ?").run(order.tableName, ordStore);
           if (io) io.emit('table_update', { store: ordStore });
         }
       }
 
-      // Subtract items from product_sales
-      try {
-        const orderItems = db.prepare('SELECT * FROM pos_order_items WHERE orderId = ?').all(id);
-        orderItems.forEach(item => {
-          const safeName = (item.productName || 'item').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-          const psId = `ps-${order.store || 'ADIT CAMPUS'}-${order.date}-${safeName}`;
-          db.prepare(`
-            UPDATE product_sales
-            SET qty = MAX(0, qty - ?), revenue = MAX(0, revenue - ?)
-            WHERE id = ?
-          `).run(item.quantity || 1, (item.price || 0) * (item.quantity || 1), psId);
-        });
-      } catch (err) {
-        console.warn('Error adjusting product_sales on order delete:', err.message);
+      // Subtract items from product_sales only if order was Completed/Settled
+      if (order.status !== 'Active') {
+        try {
+          const orderItems = db.prepare('SELECT * FROM pos_order_items WHERE orderId = ?').all(id);
+          orderItems.forEach(item => {
+            const safeName = (item.productName || 'item').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+            const psId = `ps-${order.store || 'ADIT CAMPUS'}-${order.date}-${safeName}`;
+            db.prepare(`
+              UPDATE product_sales
+              SET qty = MAX(0, qty - ?), revenue = MAX(0, revenue - ?)
+              WHERE id = ?
+            `).run(item.quantity || 1, (item.price || 0) * (item.quantity || 1), psId);
+          });
+        } catch (err) {
+          console.warn('Error adjusting product_sales on order delete:', err.message);
+        }
       }
     }
     // Delete from transactions (income) - handle both order- and pos- and raw ID
