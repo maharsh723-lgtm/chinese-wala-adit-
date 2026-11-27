@@ -5244,10 +5244,22 @@
                         <!-- LEFT AREA (70%): Product Showcase & Catalog -->
                         <div class="pos-left-area-new">
 
-                            <!-- Redesigned Category Tabs with Sliding Indicator & Icons -->
-                            <div class="pos-categories-scroller-new">
-                                <div class="pos-category-tabs-new" id="posCategoryTabs">
-                                    <!-- Populated dynamically by JS based on current menu database -->
+                            <!-- Redesigned Category Tabs with Pinned "All Items" Dropdown & Horizontal Scroller -->
+                            <div class="pos-category-bar-row">
+                                <div class="pos-all-items-dropdown" id="posAllItemsDropdownWrapper">
+                                    <button type="button" class="category-pill-new active" id="btnAllItemsDropdown" title="Select menu segment">
+                                        <i data-lucide="layout-grid"></i>
+                                        <span id="allItemsDropdownLabel">All Items</span>
+                                        <i data-lucide="chevron-down" id="allItemsDropdownChevron" style="width: 14px; height: 14px; transition: transform 0.2s ease;"></i>
+                                    </button>
+                                    <div class="pos-category-dropdown-menu" id="posCategoryDropdownMenu" style="display: none;">
+                                        <!-- Populated dynamically by JS with All Items + every segment -->
+                                    </div>
+                                </div>
+                                <div class="pos-categories-scroller-new">
+                                    <div class="pos-category-tabs-new" id="posCategoryTabs">
+                                        <!-- Populated dynamically by JS based on current menu database -->
+                                    </div>
                                 </div>
                             </div>
 

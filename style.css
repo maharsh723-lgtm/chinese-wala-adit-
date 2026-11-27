@@ -3268,6 +3268,95 @@ body.sidebar-collapsed .sidebar-collapse-toggle-btn {
 }
 
 /* Category Tabs Slider & Custom Scroller */
+.pos-category-bar-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.pos-all-items-dropdown {
+    position: relative;
+    flex-shrink: 0;
+    padding: 6px 0 10px 2px;
+    z-index: 250;
+}
+
+.pos-all-items-dropdown .category-pill-new {
+    white-space: nowrap;
+}
+
+.pos-category-dropdown-menu {
+    position: absolute;
+    top: calc(100% - 4px);
+    left: 2px;
+    min-width: 245px;
+    max-height: 360px;
+    overflow-y: auto;
+    background: var(--bg-card, #ffffff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 12px;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
+    padding: 6px;
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.pos-category-dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text-primary, #1f2937);
+    transition: background 0.15s ease, color 0.15s ease;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+}
+
+.pos-category-dropdown-item:hover {
+    background: var(--bg-hover, #f3f4f6);
+}
+
+.pos-category-dropdown-item.active {
+    background: #0D52BF;
+    color: #ffffff;
+}
+
+.pos-category-dropdown-item-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.pos-category-dropdown-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    background: rgba(13, 82, 191, 0.1);
+    color: #0D52BF;
+}
+
+.pos-category-dropdown-item.active .pos-category-dropdown-count {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+
+.pos-category-bar-row .pos-categories-scroller-new {
+    flex: 1;
+    min-width: 0;
+}
+
 .pos-categories-scroller-new {
     overflow-x: auto;
     white-space: nowrap;

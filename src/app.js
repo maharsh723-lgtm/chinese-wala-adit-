@@ -10252,41 +10252,86 @@ function initApp() {
         });
     }
 
+    function getCategoryIconName(cat) {
+        if (!cat) return 'chef-hat';
+        const catLower = String(cat).toLowerCase();
+        if (catLower.includes('noodle') || catLower.includes('rice')) return 'utensils';
+        if (catLower.includes('chinese starter') || catLower.includes('starter')) return 'flame';
+        if (catLower.includes('fries')) return 'container';
+        if (catLower.includes('momo') || catLower.includes('chaat') || catLower.includes('tikki') || catLower.includes('samosa')) return 'soup';
+        if (catLower.includes('cold drink') || catLower.includes('drink') || catLower.includes('cooler') || catLower.includes('shake') || catLower.includes('lassi')) return 'cup-soda';
+        if (catLower.includes('chai') || catLower.includes('coffee') || catLower.includes('breakfast')) return 'coffee';
+        if (catLower.includes('pizza')) return 'pizza';
+        if (catLower.includes('burger')) return 'beef';
+        if (catLower.includes('sandwich') || catLower.includes('garlic bread') || catLower.includes('bread')) return 'sandwich';
+        if (catLower.includes('thali') || catLower.includes('gujarati')) return 'utensils-crossed';
+        if (catLower.includes('paratha') || catLower.includes('thepla')) return 'circle';
+        if (catLower.includes('dessert') || catLower.includes('sweet')) return 'cookie';
+        return 'chef-hat';
+    }
+
+    function selectPosCategory(cat) {
+        posSelectedCategory = cat || 'all';
+        const menu = document.getElementById("posCategoryDropdownMenu");
+        const chevron = document.getElementById("allItemsDropdownChevron");
+        if (menu) menu.style.display = "none";
+        if (chevron) chevron.style.transform = "rotate(0deg)";
+        renderCategoryTabs();
+        renderPosProductsList();
+    }
+
     function renderCategoryTabs() {
         const container = document.getElementById("posCategoryTabs");
+        const dropdownBtn = document.getElementById("btnAllItemsDropdown");
+        const dropdownLabel = document.getElementById("allItemsDropdownLabel");
+        const dropdownMenu = document.getElementById("posCategoryDropdownMenu");
+
+        const categoryCounts = new Map();
+        (posProducts || []).forEach(p => {
+            if (!p.category) return;
+            categoryCounts.set(p.category, (categoryCounts.get(p.category) || 0) + 1);
+        });
+        const categories = [...categoryCounts.keys()];
+
+        if (dropdownLabel) {
+            dropdownLabel.textContent = posSelectedCategory === 'all' ? 'All Items' : posSelectedCategory;
+        }
+        if (dropdownBtn) {
+            dropdownBtn.classList.toggle('active', true);
+        }
+
+        if (dropdownMenu) {
+            let menuHtml = `
+                <button type="button" class="pos-category-dropdown-item ${posSelectedCategory === 'all' ? 'active' : ''}" data-category="all">
+                    <span class="pos-category-dropdown-item-left">
+                        <i data-lucide="layout-grid" style="width:15px; height:15px;"></i>
+                        <span>All Items</span>
+                    </span>
+                    <span class="pos-category-dropdown-count">${(posProducts || []).length}</span>
+                </button>
+            `;
+            categories.forEach(cat => {
+                const icon = getCategoryIconName(cat);
+                const activeClass = cat === posSelectedCategory ? 'active' : '';
+                menuHtml += `
+                    <button type="button" class="pos-category-dropdown-item ${activeClass}" data-category="${cat}">
+                        <span class="pos-category-dropdown-item-left">
+                            <i data-lucide="${icon}" style="width:15px; height:15px;"></i>
+                            <span>${cat}</span>
+                        </span>
+                        <span class="pos-category-dropdown-count">${categoryCounts.get(cat) || 0}</span>
+                    </button>
+                `;
+            });
+            dropdownMenu.innerHTML = menuHtml;
+        }
+
         if (!container) return;
 
-        const categories = [...new Set(posProducts.map(p => p.category))];
-
-        let html = `
-            <div class="category-tab category-pill-new ${posSelectedCategory === 'all' ? 'active' : ''}" data-category="all">
-                <i data-lucide="layout-grid"></i> <span>All Items</span>
-            </div>
-        `;
-
+        let html = '';
         categories.forEach(cat => {
-            if (!cat) return;
             const activeClass = cat === posSelectedCategory ? 'active' : '';
-            let icon = 'chef-hat';
-            const catLower = cat.toLowerCase();
-            if (catLower.includes('noodle')) icon = 'utensils';
-            else if (catLower.includes('rice')) icon = 'utensils';
-            else if (catLower.includes('chinese starter') || catLower.includes('starter')) icon = 'flame';
-            else if (catLower.includes('fries')) icon = 'container';
-            else if (catLower.includes('momo')) icon = 'soup';
-            else if (catLower.includes('cold drink') || catLower.includes('drink')) icon = 'cup-soda';
-            else if (catLower.includes('chai') || catLower.includes('coffee')) icon = 'coffee';
-            else if (catLower.includes('breakfast')) icon = 'coffee';
-            else if (catLower.includes('pizza')) icon = 'pizza';
-            else if (catLower.includes('burger')) icon = 'beef';
-            else if (catLower.includes('sandwich')) icon = 'sandwich';
-            else if (catLower.includes('garlic bread') || catLower.includes('bread')) icon = 'sandwich';
-            else if (catLower.includes('thali') || catLower.includes('gujarati')) icon = 'utensils-crossed';
-            else if (catLower.includes('chaat') || catLower.includes('tikki') || catLower.includes('samosa')) icon = 'soup';
-            else if (catLower.includes('paratha') || catLower.includes('thepla')) icon = 'circle';
-            else if (catLower.includes('dessert') || catLower.includes('sweet')) icon = 'cookie';
-            else if (catLower.includes('cooler') || catLower.includes('shake') || catLower.includes('lassi')) icon = 'cup-soda';
-
+            const icon = getCategoryIconName(cat);
             html += `
                 <div class="category-tab category-pill-new ${activeClass}" data-category="${cat}">
                     <i data-lucide="${icon}"></i> <span>${cat}</span>
@@ -10952,9 +10997,43 @@ function initApp() {
             categoryTabsContainer.addEventListener("click", (e) => {
                 const tab = e.target.closest(".category-tab");
                 if (tab) {
-                    posSelectedCategory = tab.getAttribute("data-category");
-                    renderCategoryTabs();
-                    renderPosProductsList();
+                    selectPosCategory(tab.getAttribute("data-category"));
+                }
+            });
+        }
+
+        const allItemsBtn = document.getElementById("btnAllItemsDropdown");
+        const allItemsMenu = document.getElementById("posCategoryDropdownMenu");
+        if (allItemsBtn && !allItemsBtn.dataset.listenerBound) {
+            allItemsBtn.dataset.listenerBound = "true";
+            allItemsBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (!allItemsMenu) return;
+                const isOpen = allItemsMenu.style.display === "flex";
+                allItemsMenu.style.display = isOpen ? "none" : "flex";
+                const chev = document.getElementById("allItemsDropdownChevron");
+                if (chev) chev.style.transform = isOpen ? "rotate(0deg)" : "rotate(180deg)";
+            });
+        }
+        if (allItemsMenu && !allItemsMenu.dataset.listenerBound) {
+            allItemsMenu.dataset.listenerBound = "true";
+            allItemsMenu.addEventListener("click", (e) => {
+                const item = e.target.closest(".pos-category-dropdown-item");
+                if (item) {
+                    e.stopPropagation();
+                    selectPosCategory(item.getAttribute("data-category"));
+                }
+            });
+        }
+        if (!window._allItemsDropdownOutsideBound) {
+            window._allItemsDropdownOutsideBound = true;
+            document.addEventListener("click", (e) => {
+                const wrap = document.getElementById("posAllItemsDropdownWrapper");
+                const menu = document.getElementById("posCategoryDropdownMenu");
+                if (menu && menu.style.display === "flex" && wrap && !wrap.contains(e.target)) {
+                    menu.style.display = "none";
+                    const chev = document.getElementById("allItemsDropdownChevron");
+                    if (chev) chev.style.transform = "rotate(0deg)";
                 }
             });
         }
@@ -15523,6 +15602,10 @@ function initApp() {
             if (selectPaymentModal) selectPaymentModal.style.display = "none";
             const qrModal = document.getElementById("modalPOSQRPayment");
             if (qrModal) qrModal.style.display = "none";
+            const catMenu = document.getElementById("posCategoryDropdownMenu");
+            if (catMenu) catMenu.style.display = "none";
+            const catChev = document.getElementById("allItemsDropdownChevron");
+            if (catChev) catChev.style.transform = "rotate(0deg)";
             window._pendingFinalizeContext = null;
             return;
         }
