@@ -4786,8 +4786,10 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
     const order = db.prepare('SELECT * FROM pos_orders WHERE id = ?').get(id);
     if (order) {
       const todayStr = order.date || new Date().toISOString().split('T')[0];
-      const auditId = 'audit-' + Date.now();
+      const auditId = 'audit-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
       const orderItems = db.prepare('SELECT * FROM pos_order_items WHERE orderId = ?').all(id);
+      const deletedByName = (req.user && req.user.name) || 'Manager';
+      const deletedById = (req.user && req.user.id) || 'admin';
       
       const auditDetails = {
         orderId: id,
@@ -4803,7 +4805,7 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
         orderType: order.orderType || 'Dine In',
         tableName: order.tableName || '',
         customerName: order.customerName || 'Walk-in Guest',
-        deletedBy: req.user ? req.user.name : 'Manager',
+        deletedBy: deletedByName,
         items: (orderItems || []).map(i => ({
           productId: i.productId,
           productName: i.productName || i.name || 'Item',
@@ -4819,13 +4821,25 @@ app.delete('/api/pos/orders/:id', authenticateToken, (req, res) => {
       `).run(
         auditId,
         new Date().toISOString(),
-        req.user ? req.user.id : 'admin',
-        req.user ? req.user.name : 'Manager',
+        deletedById,
+        deletedByName,
         JSON.stringify(auditDetails),
         order.store || 'ADIT CAMPUS'
       );
       // Mark as Deleted to track deleted count while removing from active sales
       db.prepare("UPDATE pos_orders SET status = 'Deleted' WHERE id = ?").run(id);
+
+      // Release table if no other active orders remain for this table today
+      if (order.tableName) {
+        const ordStore = order.store || 'ADIT CAMPUS';
+        const rem = db.prepare(
+          "SELECT COUNT(*) as cnt FROM pos_orders WHERE lower(tableName) = lower(?) AND store = ? AND date = ? AND status NOT IN ('Deleted', 'Cancelled', 'Refunded')"
+        ).get(order.tableName, ordStore, todayStr);
+        if (!rem || rem.cnt === 0) {
+          db.prepare("UPDATE pos_tables SET status = 'Available' WHERE lower(name) = lower(?) AND store = ?").run(order.tableName, ordStore);
+          if (io) io.emit('table_update', { store: ordStore });
+        }
+      }
 
       // Subtract items from product_sales
       try {
@@ -4885,11 +4899,11 @@ app.post('/api/pos/orders/:id/refund', authenticateToken, (req, res) => {
       INSERT INTO pos_audit_logs (id, timestamp, action, userId, userName, details, store)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(
-      `audit-${Date.now()}`,
+      `audit-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
       new Date().toISOString(),
       'REFUND_ORDER',
-      req.user.id || 'system',
-      req.user.name || 'POS System',
+      (req.user && req.user.id) || 'system',
+      (req.user && req.user.name) || 'POS System',
       `Order ${id} refunded`,
       store
     );

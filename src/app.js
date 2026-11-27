@@ -3934,6 +3934,132 @@ function initApp() {
         return combined;
     };
 
+    window.getOrderTableKey = function(order) {
+        if (!order) return null;
+        let tbl = order.tableName;
+        if (tbl === undefined || tbl === null) return null;
+        tbl = String(tbl).trim();
+        if (!tbl || tbl.toLowerCase() === 'null' || tbl.toLowerCase() === 'undefined' || tbl === '-' || tbl.toLowerCase() === 'none') return null;
+        return tbl;
+    };
+
+    window.getCombinedOrderByTable = function(tableName, storeName, dateStr, extraOrder = null) {
+        if (!tableName) return null;
+        const targetTable = String(tableName).trim().toLowerCase();
+        if (!targetTable) return null;
+
+        const allOrders = typeof posOrders !== 'undefined' ? posOrders : [];
+        const allItems = typeof posOrderItems !== 'undefined' ? posOrderItems : [];
+
+        const matching = (allOrders || []).filter(o => {
+            if (o.status === 'Deleted' || o.status === 'Cancelled' || o.status === 'Refunded') return false;
+            const ordTbl = window.getOrderTableKey(o);
+            if (!ordTbl || ordTbl.toLowerCase() !== targetTable) return false;
+
+            if (dateStr && dateStr !== 'ALL') {
+                const oDate = o.date || (o.timestamp ? o.timestamp.split('T')[0] : '');
+                if (oDate && oDate !== dateStr) return false;
+            }
+
+            if (storeName && storeName !== 'All') {
+                const s1 = (o.store || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                const s2 = (storeName || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (s1 && s2 && !s1.includes(s2) && !s2.includes(s1)) return false;
+            }
+
+            return true;
+        });
+
+        if (extraOrder && extraOrder.id && !matching.some(o => o.id === extraOrder.id)) {
+            const extraTbl = window.getOrderTableKey(extraOrder);
+            if (extraTbl && extraTbl.toLowerCase() === targetTable) {
+                matching.push(extraOrder);
+            }
+        }
+
+        if (matching.length === 0) return null;
+
+        matching.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
+
+        if (matching.length === 1) {
+            const single = { ...matching[0] };
+            if (!single.items || !Array.isArray(single.items) || single.items.length === 0) {
+                single.items = (allItems || []).filter(i => i.orderId === single.id);
+            }
+            return single;
+        }
+
+        const latestOrder = matching[matching.length - 1];
+        let allRawItems = [];
+        let totalSubtotal = 0;
+        let totalTax = 0;
+        let totalDiscount = 0;
+        let totalServiceCharge = 0;
+        let totalGrandTotal = 0;
+        let totalCashAmount = 0;
+        let totalUpiAmount = 0;
+        let totalCardAmount = 0;
+        let totalSplitCashAmount = 0;
+        let totalSplitUpiAmount = 0;
+        const paymentMethods = new Set();
+        const orderIds = [];
+        const tokens = [];
+
+        matching.forEach(ord => {
+            orderIds.push(ord.id);
+            const tk = window.getOrderTokenKey ? window.getOrderTokenKey(ord) : (ord.tokenNumber ? String(ord.tokenNumber).replace('#', '').trim() : null);
+            if (tk && !tokens.includes(tk)) tokens.push(tk);
+            if (ord.paymentMethod) paymentMethods.add(ord.paymentMethod);
+            totalSubtotal += parseFloat(ord.subtotal || 0);
+            totalTax += parseFloat(ord.tax || 0);
+            totalDiscount += parseFloat(ord.discount || 0);
+            totalServiceCharge += parseFloat(ord.serviceCharge || 0);
+            totalGrandTotal += parseFloat(ord.grandTotal || ord.total || 0);
+            totalCashAmount += parseFloat(ord.cashAmount || 0);
+            totalUpiAmount += parseFloat(ord.upiAmount || 0);
+            totalCardAmount += parseFloat(ord.cardAmount || 0);
+            totalSplitCashAmount += parseFloat(ord.splitCashAmount || 0);
+            totalSplitUpiAmount += parseFloat(ord.splitUpiAmount || 0);
+
+            let ordItems = ord.items;
+            if (!ordItems || !Array.isArray(ordItems) || ordItems.length === 0) {
+                ordItems = (allItems || []).filter(i => i.orderId === ord.id);
+            }
+            allRawItems = allRawItems.concat(ordItems || []);
+        });
+
+        const aggregatedItems = window.aggregateOrderItems(allRawItems);
+        const combinedTokenStr = tokens.map(t => `#${t}`).join(', ');
+
+        return {
+            ...latestOrder,
+            id: latestOrder.id,
+            combinedOrderIds: orderIds,
+            isCombined: true,
+            combinedCount: matching.length,
+            combinedTokens: tokens,
+            combinedTokenStr: combinedTokenStr,
+            tokenNumber: latestOrder.tokenNumber || tokens[tokens.length - 1] || '',
+            customerName: latestOrder.customerName || 'Walk-in Guest',
+            customerPhone: latestOrder.customerPhone || '',
+            orderType: latestOrder.orderType || 'Dine In',
+            tableName: latestOrder.tableName || tableName,
+            paymentMethod: Array.from(paymentMethods).join(' / ') || 'Cash',
+            subtotal: totalSubtotal,
+            tax: totalTax,
+            discount: totalDiscount,
+            serviceCharge: totalServiceCharge,
+            grandTotal: totalGrandTotal,
+            cashAmount: totalCashAmount,
+            upiAmount: totalUpiAmount,
+            cardAmount: totalCardAmount,
+            splitCashAmount: totalSplitCashAmount,
+            splitUpiAmount: totalSplitUpiAmount,
+            items: aggregatedItems,
+            matchingOrders: matching
+        };
+    };
+
     window.getCombinedOrderByToken = function(tokenKey, storeName, dateStr) {
         if (!tokenKey) return null;
         const allOrders = typeof posOrders !== 'undefined' ? posOrders : [];
@@ -4186,70 +4312,84 @@ function initApp() {
 
         const baseStartingToken = 1;
 
-        // Group orders by token number so multiple bills for the same token number are combined!
-        const tokenGroups = new Map();
-        const nonTokenGroup = [];
+        // Group orders by Table Name (per store & date) so multiple bills for the same Table are combined!
+        // Orders without a table (e.g. Takeaway / Delivery) remain individual rows.
+        const tableGroups = new Map();
+        const nonTableGroup = [];
 
         filteredStoreOrders.forEach((item, idx) => {
             const ord = item.order;
-            const tokenKey = window.getOrderTokenKey ? window.getOrderTokenKey(ord) : null;
-            if (tokenKey) {
-                if (!tokenGroups.has(tokenKey)) {
-                    tokenGroups.set(tokenKey, []);
+            const tableKey = window.getOrderTableKey ? window.getOrderTableKey(ord) : null;
+            if (tableKey) {
+                const ordStore = (ord.store || 'ADIT CAMPUS').toUpperCase().trim();
+                const ordDate = ord.date || (ord.timestamp ? ord.timestamp.split('T')[0] : '') || 'NODATE';
+                const groupKey = `${ordStore}__${ordDate}__${tableKey.toLowerCase()}`;
+                if (!tableGroups.has(groupKey)) {
+                    tableGroups.set(groupKey, []);
                 }
-                tokenGroups.get(tokenKey).push(item);
+                tableGroups.get(groupKey).push({ item, idx, tableKey });
             } else {
-                nonTokenGroup.push({ item, idx });
+                nonTableGroup.push({ item, idx });
             }
         });
 
-        // Add grouped token bills
-        tokenGroups.forEach((groupItems, tokenKey) => {
-            if (groupItems.length === 1) {
-                const single = groupItems[0];
+        // Add grouped table bills
+        tableGroups.forEach((groupEntries) => {
+            if (groupEntries.length === 1) {
+                const { item: single, idx, tableKey } = groupEntries[0];
                 const ord = single.order;
+                const tokenKey = window.getOrderTokenKey ? window.getOrderTokenKey(ord) : null;
+                const tokenStr = tokenKey ? `#${tokenKey}` : `#${baseStartingToken + idx}`;
                 liveBills.push({
                     id: ord.id,
                     allOrderIds: [ord.id],
                     isCombined: false,
                     billCount: 1,
-                    tokenNumber: `#${tokenKey}`,
+                    tokenNumber: tokenStr,
+                    allTokensStr: tokenStr,
                     orderTime: ord.timestamp || (ord.date + (ord.time ? `T${ord.time}` : '')),
                     store: ord.store || 'ADIT CAMPUS',
                     orderType: ord.orderType || 'Dine In',
-                    tableName: ord.tableName,
+                    tableName: ord.tableName || tableKey,
                     customerName: ord.customerName || 'Walk-in Guest',
                     paymentMethod: ord.paymentMethod || 'Cash',
                     grandTotal: single.billAmount,
                     items: single.items
                 });
             } else {
-                // Combine multiple bills for the same token
-                const latestOrd = groupItems[groupItems.length - 1].order;
+                // Combine multiple bills for the same table
+                const latestEntry = groupEntries[groupEntries.length - 1];
+                const latestOrd = latestEntry.item.order;
                 let combinedTotal = 0;
                 let allRawItems = [];
                 const pMethods = new Set();
                 const ids = [];
+                const tokens = [];
 
-                groupItems.forEach(g => {
+                groupEntries.forEach(({ item: g, idx }) => {
                     ids.push(g.order.id);
+                    const tk = window.getOrderTokenKey ? window.getOrderTokenKey(g.order) : null;
+                    const tkStr = tk ? `#${tk}` : `#${baseStartingToken + idx}`;
+                    if (!tokens.includes(tkStr)) tokens.push(tkStr);
                     combinedTotal += g.billAmount;
                     if (g.order.paymentMethod) pMethods.add(g.order.paymentMethod);
                     allRawItems = allRawItems.concat(g.items || []);
                 });
 
                 const aggregatedItems = window.aggregateOrderItems ? window.aggregateOrderItems(allRawItems) : allRawItems;
+                const allTokensStr = tokens.join(', ');
 
                 liveBills.push({
                     id: latestOrd.id,
                     allOrderIds: ids,
                     isCombined: true,
-                    billCount: groupItems.length,
-                    tokenNumber: `#${tokenKey}`,
+                    billCount: groupEntries.length,
+                    tokenNumber: tokens[tokens.length - 1] || '',
+                    allTokensStr: allTokensStr,
                     orderTime: latestOrd.timestamp || (latestOrd.date + (latestOrd.time ? `T${latestOrd.time}` : '')),
                     store: latestOrd.store || 'ADIT CAMPUS',
                     orderType: latestOrd.orderType || 'Dine In',
-                    tableName: latestOrd.tableName,
+                    tableName: latestOrd.tableName || latestEntry.tableKey,
                     customerName: latestOrd.customerName || 'Walk-in Guest',
                     paymentMethod: Array.from(pMethods).join(' / ') || 'Cash',
                     grandTotal: combinedTotal,
@@ -4258,16 +4398,18 @@ function initApp() {
             }
         });
 
-        // Add non-token orders
-        nonTokenGroup.forEach(({ item, idx }) => {
+        // Add non-table orders individually
+        nonTableGroup.forEach(({ item, idx }) => {
             const ord = item.order;
-            const finalTokenStr = `#${baseStartingToken + idx}`;
+            const tokenKey = window.getOrderTokenKey ? window.getOrderTokenKey(ord) : null;
+            const finalTokenStr = tokenKey ? `#${tokenKey}` : `#${baseStartingToken + idx}`;
             liveBills.push({
                 id: ord.id,
                 allOrderIds: [ord.id],
                 isCombined: false,
                 billCount: 1,
                 tokenNumber: finalTokenStr,
+                allTokensStr: finalTokenStr,
                 orderTime: ord.timestamp || (ord.date + (ord.time ? `T${ord.time}` : '')),
                 store: ord.store || 'ADIT CAMPUS',
                 orderType: ord.orderType || 'Dine In',
@@ -4322,14 +4464,23 @@ function initApp() {
                 ? bill.items.map(i => `<span style="display:inline-block; margin:2px; padding:2px 6px; background:var(--bg-hover); border-radius:4px; font-size:0.8rem; color:var(--text-primary);"><b>${i.productName || i.name || 'Item'}</b> (x${i.quantity || i.qty || 1})</span>`).join(' ')
                 : '<span style="color:var(--text-tertiary); font-size:0.8rem;">No items logged</span>';
 
-            const tableOrType = bill.tableName ? `${bill.orderType} • Table ${bill.tableName}` : bill.orderType;
+            const formattedTable = bill.tableName
+                ? (String(bill.tableName).toLowerCase().startsWith('table') ? bill.tableName : `Table ${bill.tableName}`)
+                : '';
+            const tableOrType = formattedTable ? `${bill.orderType} • ${formattedTable}` : bill.orderType;
+            const billCellHtml = (bill.isCombined && formattedTable)
+                ? `<div>
+                        <span style="font-weight: 800; color: var(--orange-primary); font-size: 1rem;">${formattedTable}</span>
+                        <span class="pill-badge" style="background: rgba(59, 130, 246, 0.15); color: #2563eb; border: 1px solid #3b82f6; font-size: 0.7rem; font-weight: 700; margin-left: 6px; padding: 2px 6px; border-radius: 4px;">${bill.billCount} Bills Combined</span>
+                   </div>
+                   <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-top: 2px;">Tokens: ${bill.allTokensStr || bill.tokenNumber}</div>`
+                : `<span>${bill.tokenNumber}</span>`;
 
             row.innerHTML = `
                 <td style="white-space: nowrap;"><span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">${timeStr}</span></td>
                 <td><span class="pill-badge" style="background: var(--bg-hover); color: var(--text-secondary); border: 1px solid var(--border); font-size:0.75rem;">${bill.store || 'Unknown'}</span></td>
                 <td style="font-weight: 800; color: var(--orange-primary); font-size: 1rem; white-space:nowrap;">
-                    ${bill.tokenNumber}
-                    ${bill.isCombined ? `<span class="pill-badge" style="background: rgba(59, 130, 246, 0.15); color: #2563eb; border: 1px solid #3b82f6; font-size: 0.7rem; font-weight: 700; margin-left: 6px; padding: 2px 6px; border-radius: 4px;">${bill.billCount} Bills Combined</span>` : ''}
+                    ${billCellHtml}
                 </td>
                 <td style="min-width: 140px;">
                     <div style="font-weight: 700; font-size:0.88rem; color: var(--text-primary);">${bill.customerName}</div>
@@ -4652,41 +4803,15 @@ function initApp() {
         }
     };
 
-    window.showBill = function(orderId) {
-        let order = (typeof posOrders !== 'undefined' ? posOrders : []).find(o => o.id === orderId);
-        if (!order) return alert("Order not found!");
-        
-        const tokenKey = window.getOrderTokenKey ? window.getOrderTokenKey(order) : null;
-        if (tokenKey && window.getCombinedOrderByToken) {
-            const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
-            const combined = window.getCombinedOrderByToken(tokenKey, order.store, orderDate);
-            if (combined && combined.isCombined) {
-                order = combined;
-            }
-        }
+    function resolveOrderForView(orderId) {
+        let order = (typeof posOrders !== 'undefined' ? posOrders : []).find(o => o.id === orderId)
+            || (window.activeReceiptOrder && window.activeReceiptOrder.id === orderId ? window.activeReceiptOrder : null);
+        if (!order) return null;
 
-        if (!order.items) {
-            order.items = (typeof posOrderItems !== 'undefined' ? posOrderItems : []).filter(i => i.orderId === orderId).map(i => ({
-                ...i,
-                modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
-            }));
-        }
-        const kot = (typeof posKitchenOrders !== 'undefined' ? posKitchenOrders : []).find(k => k.orderId === orderId);
-        if (kot) order.kotNumber = kot.kotNumber;
-        
-        renderGSTInvoice(order);
-        const invoiceModal = document.getElementById("modalPOSInvoice");
-        if (invoiceModal) invoiceModal.style.display = "flex";
-    };
-
-    window.reprintBill = function(orderId) {
-        let order = (typeof posOrders !== 'undefined' ? posOrders : []).find(o => o.id === orderId) || (window.activeReceiptOrder && window.activeReceiptOrder.id === orderId ? window.activeReceiptOrder : null);
-        if (!order) return alert("Order not found!");
-        
-        const tokenKey = window.getOrderTokenKey ? window.getOrderTokenKey(order) : null;
-        if (tokenKey && window.getCombinedOrderByToken) {
+        const tableKey = window.getOrderTableKey ? window.getOrderTableKey(order) : null;
+        if (tableKey && window.getCombinedOrderByTable) {
             const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
-            const combined = window.getCombinedOrderByToken(tokenKey, order.store, orderDate);
+            const combined = window.getCombinedOrderByTable(tableKey, order.store, orderDate);
             if (combined && combined.isCombined) {
                 order = combined;
             }
@@ -4702,7 +4827,22 @@ function initApp() {
         }
         const kot = (typeof posKitchenOrders !== 'undefined' ? posKitchenOrders : []).find(k => k.orderId === orderId);
         if (kot) order.kotNumber = kot.kotNumber;
-        
+        return order;
+    }
+
+    window.showBill = function(orderId) {
+        const order = resolveOrderForView(orderId);
+        if (!order) return alert("Order not found!");
+
+        renderGSTInvoice(order);
+        const invoiceModal = document.getElementById("modalPOSInvoice");
+        if (invoiceModal) invoiceModal.style.display = "flex";
+    };
+
+    window.reprintBill = function(orderId) {
+        const order = resolveOrderForView(orderId);
+        if (!order) return alert("Order not found!");
+
         renderGSTInvoice(order);
         const invoiceModal = document.getElementById("modalPOSInvoice");
         if (invoiceModal) invoiceModal.style.display = "flex";
@@ -4718,28 +4858,8 @@ function initApp() {
     };
 
     window.reprintKOT = function(orderId) {
-        let order = (typeof posOrders !== 'undefined' ? posOrders : []).find(o => o.id === orderId) || (window.activeReceiptOrder && window.activeReceiptOrder.id === orderId ? window.activeReceiptOrder : null);
+        const order = resolveOrderForView(orderId);
         if (!order) return alert("Order not found!");
-        
-        const tokenKey = window.getOrderTokenKey ? window.getOrderTokenKey(order) : null;
-        if (tokenKey && window.getCombinedOrderByToken) {
-            const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
-            const combined = window.getCombinedOrderByToken(tokenKey, order.store, orderDate);
-            if (combined && combined.isCombined) {
-                order = combined;
-            }
-        }
-
-        if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
-            order.items = (typeof posOrderItems !== 'undefined' ? posOrderItems : []).filter(i => i.orderId === orderId).map(i => ({
-                ...i,
-                productName: i.productName || i.name || 'Item',
-                quantity: i.quantity || i.qty || 1,
-                modifiers: typeof i.modifiers === 'string' ? JSON.parse(i.modifiers || '[]') : (i.modifiers || [])
-            }));
-        }
-        const kot = (typeof posKitchenOrders !== 'undefined' ? posKitchenOrders : []).find(k => k.orderId === orderId);
-        if (kot) order.kotNumber = kot.kotNumber;
 
         renderGSTInvoice(order);
         const invoiceModal = document.getElementById("modalPOSInvoice");
@@ -4759,21 +4879,45 @@ function initApp() {
         const idsToDelete = allOrderIdsStr ? allOrderIdsStr.split(',').filter(Boolean) : [orderId];
         const isMulti = idsToDelete.length > 1;
         const confirmMsg = isMulti 
-            ? `Are you sure you want to delete this combined bill (${idsToDelete.length} orders)? This will remove all associated orders for this token.`
+            ? `Are you sure you want to delete this combined bill (${idsToDelete.length} orders)? This will remove all associated orders for this table.`
             : "Are you sure you want to delete this bill? This will remove the entire order.";
         if (!skipConfirm && !confirm(confirmMsg)) return;
         try {
+            const affectedTables = [];
             for (const id of idsToDelete) {
                 const res = await fetch(`/api/pos/orders/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem("bk_jwt_token")}` }
                 });
-                if (res.ok) {
-                    const targetOrd = (posOrders || []).find(o => o.id === id);
-                    if (targetOrd) {
-                        targetOrd.status = 'Deleted';
+                if (!res.ok) {
+                    const errTxt = await res.text().catch(() => res.status);
+                    throw new Error(`Delete failed (${res.status}): ${errTxt}`);
+                }
+                const targetOrd = (posOrders || []).find(o => o.id === id);
+                if (targetOrd) {
+                    targetOrd.status = 'Deleted';
+                    if (targetOrd.tableName) {
+                        affectedTables.push({ tableName: targetOrd.tableName, store: targetOrd.store });
                     }
                 }
+            }
+            if (typeof posTables !== 'undefined' && Array.isArray(posTables) && affectedTables.length > 0) {
+                affectedTables.forEach(({ tableName, store }) => {
+                    const stillHasActive = (posOrders || []).some(o =>
+                        o.status !== 'Deleted' && o.status !== 'Cancelled' && o.status !== 'Refunded' &&
+                        o.tableName && String(o.tableName).toLowerCase() === String(tableName).toLowerCase() &&
+                        (!store || !o.store || o.store === store)
+                    );
+                    if (!stillHasActive) {
+                        const tblObj = posTables.find(t =>
+                            t.name && String(t.name).toLowerCase() === String(tableName).toLowerCase() &&
+                            (!store || !t.store || t.store === store)
+                        );
+                        if (tblObj) tblObj.status = 'Available';
+                    }
+                });
+                if (typeof renderTableDropdown === 'function') renderTableDropdown();
+                if (typeof renderTableFloorPlan === 'function') renderTableFloorPlan();
             }
             initReconciliationState();
             if (typeof window.renderLiveSalesStream === "function") {
@@ -11574,6 +11718,7 @@ function initApp() {
             orderType: posSelectedOrderType,
             tableName: orderPayload.tableName,
             subtotal, tax, discount, serviceCharge, grandTotal, paymentMethod,
+            splitCashAmount, splitUpiAmount,
             items: [...posCart],
             orderNumber: `#${currentTokenForBill}`,
             tokenNumber: currentTokenForBill,
@@ -11651,6 +11796,17 @@ function initApp() {
                 });
             });
 
+            // Mark table occupied locally if Dine In table assigned
+            if (orderObj.tableName && typeof posTables !== 'undefined' && Array.isArray(posTables)) {
+                const tbl = posTables.find(t =>
+                    t.name && String(t.name).toLowerCase() === String(orderObj.tableName).toLowerCase() &&
+                    (!orderObj.store || !t.store || t.store === orderObj.store)
+                );
+                if (tbl) tbl.status = 'Occupied';
+                if (typeof renderTableDropdown === 'function') renderTableDropdown();
+                if (typeof renderTableFloorPlan === 'function') renderTableFloorPlan();
+            }
+
             if (currentActiveScreen === "live-sales-stream" && typeof window.renderLiveSalesStream === "function") {
                 window.renderLiveSalesStream();
             }
@@ -11664,12 +11820,16 @@ function initApp() {
 
         window._pendingOrderCommit = commitOrderToDatabase;
 
-        // Clear billing cart
+        // Clear billing cart & reset selected table so next order chooses explicitly
         posCart = [];
         posEditingOrder = null;
         posAppliedCoupon = null;
+        posSelectedTable = '';
+        const _pts = document.getElementById("posTableSelect"); if (_pts) _pts.value = "";
         const _pci = document.getElementById("posCouponInput"); if(_pci) _pci.value = "";
         const _poi = document.getElementById("posOrderInstructions"); if(_poi) _poi.value = "";
+        if (typeof renderTableDropdown === 'function') renderTableDropdown();
+        if (typeof renderTableFloorPlan === 'function') renderTableFloorPlan();
         syncCartStateAndUI();
 
         // Trigger customer bill print dialog instantly
@@ -12002,14 +12162,13 @@ function initApp() {
         const printArea = document.getElementById("invoicePrintArea");
         if (!printArea || !order) return;
 
-        if (!order.isCombined && window.getOrderTokenKey && window.getCombinedOrderByToken) {
-            const tokenKey = window.getOrderTokenKey(order);
-            if (tokenKey) {
-                const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
-                const combined = window.getCombinedOrderByToken(tokenKey, order.store, orderDate);
-                if (combined && combined.isCombined) {
-                    order = combined;
-                }
+        const originalOrderForKot = order;
+        const tableKey = window.getOrderTableKey ? window.getOrderTableKey(order) : null;
+        if (!order.isCombined && tableKey && window.getCombinedOrderByTable) {
+            const orderDate = order.date || (order.timestamp ? order.timestamp.split('T')[0] : '');
+            const combined = window.getCombinedOrderByTable(tableKey, order.store, orderDate, order);
+            if (combined && combined.isCombined) {
+                order = combined;
             }
         }
 
@@ -12054,6 +12213,7 @@ function initApp() {
             `;
         });
 
+        const singleTokenStr = order.tokenNumber ? String(order.tokenNumber).replace(/^#/, '') : '';
         const invoiceHtml = `
             <div class="receipt-container">
                 <div class="bill-print-section">
@@ -12064,15 +12224,21 @@ function initApp() {
                     <div style="font-size:10px;">Store: ${order.store || currentStore}</div>
                     ${(order.store || currentStore).includes('ADIT CAMPUS') ? '<div style="font-size:10px;">Contact: +91 9428510400</div>' : ''}
                     <div style="font-size:10px; margin-top:4px;">GSTIN: 27AABCB1234F1Z0</div>
-                    ${order.tokenNumber ? `
+                    ${(order.isCombined && order.tableName) ? `
                     <div style="margin-top: 10px; padding: 6px; border: 2px dashed #000; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 1.15rem; font-family: monospace; background: #fcfcfc;">
-                        TOKEN: #${order.tokenNumber}
+                        TABLE: ${String(order.tableName).toUpperCase()}
+                    </div>
+                    <div style="margin-top: 6px; padding: 4px 8px; background: #000; color: #fff; font-weight: 800; font-size: 0.85rem; border-radius: 4px; letter-spacing: 0.5px; text-align: center;">
+                        *** COMBINED BILL (${order.combinedCount} ORDERS${order.combinedTokenStr ? ` • TOKENS: ${order.combinedTokenStr}` : ''}) ***
+                    </div>` : (singleTokenStr ? `
+                    <div style="margin-top: 10px; padding: 6px; border: 2px dashed #000; border-radius: 4px; display: inline-block; font-weight: 700; font-size: 1.15rem; font-family: monospace; background: #fcfcfc;">
+                        TOKEN: #${singleTokenStr}
                     </div>
                     ${order.isCombined ? `
                     <div style="margin-top: 6px; padding: 4px 8px; background: #000; color: #fff; font-weight: 800; font-size: 0.85rem; border-radius: 4px; letter-spacing: 0.5px; text-align: center;">
                         *** COMBINED BILL (${order.combinedCount} ORDERS) ***
                     </div>` : ''}
-                    ` : ''}
+                    ` : '')}
                 </div>
                 
                 <div class="receipt-row">
@@ -12080,7 +12246,7 @@ function initApp() {
                     <span>Time: ${order.time || '12:00:00'}</span>
                 </div>
                 <div class="receipt-row">
-                    <span>Order: ${order.isCombined ? `#${order.tokenNumber} (Combined)` : order.id}</span>
+                    <span>Order: ${order.isCombined ? `${order.tableName || `#${singleTokenStr}`} (Combined)` : order.id}</span>
                     <span>Type: ${order.orderType}</span>
                 </div>
                 <div class="receipt-row">
@@ -12135,21 +12301,25 @@ function initApp() {
                 
                 <!-- KOT SECTION APPENDED TO BILL (CONTINUOUS PRINT) -->
                 ${(function() {
-                    const paniPuriItems = order.items.filter(i => (i.productName || i.name || '').toLowerCase().includes('pani puri'));
-                    const mainItems = order.items.filter(i => !(i.productName || i.name || '').toLowerCase().includes('pani puri'));
+                    const kotSource = (originalOrderForKot && !originalOrderForKot.isCombined && order.isCombined) ? originalOrderForKot : order;
+                    const kotItemsList = (kotSource.items && kotSource.items.length > 0) ? kotSource.items : (order.items || []);
+                    const paniPuriItems = kotItemsList.filter(i => (i.productName || i.name || '').toLowerCase().includes('pani puri'));
+                    const mainItems = kotItemsList.filter(i => !(i.productName || i.name || '').toLowerCase().includes('pani puri'));
                     let kotHtml = '';
 
                     const generateKOT = (items, title) => {
                         if (items.length === 0) return '';
-                        const kotDisplay = order.kotNumber || 'KOT-01';
-                        const tokenDisplay = order.tokenNumber ? `#${order.tokenNumber}` : (order.dToken ? `#${order.dToken}` : (order.tableName || `#${order.id.substring(0,6)}`));
+                        const kotDisplay = kotSource.kotNumber || order.kotNumber || 'KOT-01';
+                        const tokenDisplay = (kotSource.isCombined && kotSource.combinedTokenStr)
+                            ? kotSource.combinedTokenStr
+                            : (kotSource.tokenNumber ? `#${String(kotSource.tokenNumber).replace(/^#/, '')}` : (kotSource.dToken ? `#${kotSource.dToken}` : (kotSource.tableName || `#${(kotSource.id || '').substring(0,6)}`)));
                         return `
                             <div class="tear-line-section" style="text-align:center; margin-top: 30px; font-weight: bold; font-size: 12px; letter-spacing: 2px;">✂ --- TEAR HERE --- ✂</div>
                             <div class="kot-print-section" style="margin-top: 10px; padding-top: 20px; border-top: 2px dashed #000;">
                                 <div style="text-align:center; font-weight: 700; font-size: 18px; margin-bottom: 4px;">CHINESE WALA</div>
-                                <div style="text-align:center; font-weight: 700; font-size: 14px; margin-bottom: 8px;">${title}</div>
+                                <div style="text-align:center; font-weight: 700; font-size: 14px; margin-bottom: 8px;">${title}${kotSource.tableName ? ` • ${String(kotSource.tableName).toUpperCase()}` : ''}</div>
                                 
-                                <div style="text-align:center; margin-bottom:10px; display:flex; justify-content:center; gap:8px; align-items:center;">
+                                <div style="text-align:center; margin-bottom:10px; display:flex; justify-content:center; gap:8px; align-items:center; flex-wrap:wrap;">
                                     <span style="font-size: 16px; font-weight: 700; border: 2px solid #000; color: #000; background: #fff; padding: 2px 10px; border-radius: 4px;">
                                         ${kotDisplay.startsWith('KOT') ? kotDisplay : 'KOT: ' + kotDisplay}
                                     </span>
@@ -12215,10 +12385,20 @@ function initApp() {
         doc.text("GSTIN: 27AABCB1234F1Z0", 40, startHeaderY, { align: "center" });
         startHeaderY += 4;
         
-        if (order.tokenNumber) {
+        if (order.isCombined && order.tableName) {
             doc.setFont("courier", "bold");
             doc.setFontSize(12);
-            doc.text(`TOKEN: #${order.tokenNumber}`, 40, startHeaderY, { align: "center" });
+            doc.text(`TABLE: ${String(order.tableName).toUpperCase()}`, 40, startHeaderY, { align: "center" });
+            startHeaderY += 4;
+            doc.setFontSize(7);
+            doc.text(`COMBINED (${order.combinedCount} ORDERS • ${order.combinedTokenStr || ''})`, 40, startHeaderY, { align: "center" });
+            doc.setFontSize(8);
+            doc.setFont("courier", "normal");
+            startHeaderY += 5;
+        } else if (order.tokenNumber) {
+            doc.setFont("courier", "bold");
+            doc.setFontSize(12);
+            doc.text(`TOKEN: #${String(order.tokenNumber).replace(/^#/, '')}`, 40, startHeaderY, { align: "center" });
             doc.setFontSize(8);
             doc.setFont("courier", "normal");
             startHeaderY += 5;
@@ -12226,7 +12406,7 @@ function initApp() {
         
         doc.line(5, startHeaderY, 75, startHeaderY);
         doc.text(`Date: ${order.date}  Time: ${order.time || '12:00:00'}`, 5, startHeaderY + 4);
-        doc.text(`Order: ${order.id.substr(0,18)}`, 5, startHeaderY + 8);
+        doc.text(`Order: ${order.isCombined ? `${order.tableName || ''} (Combined)` : order.id.substr(0,18)}`, 5, startHeaderY + 8);
         doc.text(`Type: ${order.orderType}  Cust: ${order.customerName}`, 5, startHeaderY + 12);
         
         let currentY = startHeaderY + 16;
