@@ -11934,8 +11934,25 @@ function initApp() {
         incrementToken();
         if (typeof renderTablesScreen === 'function') renderTablesScreen();
 
+        // Render and immediately print KOT for the kitchen (without opening the customer settlement modal)
+        renderGSTInvoice(orderObj);
+        const invoiceModalEl = document.getElementById("modalPOSInvoice");
+        if (invoiceModalEl) invoiceModalEl.style.display = "none";
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                if (typeof window.triggerThermalPrint === 'function') {
+                    window.triggerThermalPrint('kot', false);
+                } else {
+                    document.body.classList.add('print-kot-only');
+                    document.body.classList.remove('print-bill-only');
+                    window.print();
+                    setTimeout(() => document.body.classList.remove('print-kot-only'), 500);
+                }
+            }, 50);
+        });
+
         const targetLabel = orderObj.tableName || orderObj.orderType || 'Order';
-        showToast(`Order #${orderObj.tokenNumber} saved for ${targetLabel}.`);
+        showToast(`Order #${orderObj.tokenNumber} saved for ${targetLabel} & KOT sent to print.`);
     }
 
     function getActiveOrdersGrouped(storeName) {
@@ -12192,13 +12209,16 @@ function initApp() {
         window._pendingFinalizeContext = null;
 
         if (finalReceiptOrder) {
+            if ((!finalReceiptOrder.items || finalReceiptOrder.items.length === 0) && typeof posOrderItems !== 'undefined') {
+                finalReceiptOrder.items = posOrderItems.filter(i => i.orderId === finalReceiptOrder.id);
+            }
             renderGSTInvoice(finalReceiptOrder);
             const invoiceModal = document.getElementById("modalPOSInvoice");
             if (invoiceModal) invoiceModal.style.display = "flex";
             requestAnimationFrame(() => {
                 setTimeout(() => {
                     if (typeof window.triggerThermalPrint === 'function') {
-                        window.triggerThermalPrint('bill');
+                        window.triggerThermalPrint('bill', true);
                     } else {
                         document.body.classList.add('print-bill-only');
                         document.body.classList.remove('print-kot-only');
@@ -12209,7 +12229,12 @@ function initApp() {
             });
         }
 
-        showToast(`Final Bill printed! ${ctx.tableName || 'Order'} is now unoccupied.`);
+        // Persist fresh server state in background for Live Sales Stream consistency
+        if (typeof syncStateFromServer === 'function') {
+            setTimeout(() => syncStateFromServer(), 300);
+        }
+
+        showToast(`Final Bill printed & saved to Live Sales Stream! ${ctx.tableName || 'Order'} is now unoccupied.`);
     };
 
     function renderTablesScreen() {
@@ -12737,7 +12762,7 @@ function initApp() {
         window.open(url, '_blank');
     }
 
-    window.triggerThermalPrint = function(printMode = 'bill') {
+    window.triggerThermalPrint = function(printMode = 'bill', showModal = true) {
         const printArea = document.getElementById("invoicePrintArea");
         if (!printArea || !printArea.innerHTML.trim()) {
             alert("No receipt content available to print!");
@@ -12745,7 +12770,7 @@ function initApp() {
         }
 
         const invoiceModal = document.getElementById("modalPOSInvoice");
-        if (invoiceModal) invoiceModal.style.display = "flex";
+        if (showModal && invoiceModal) invoiceModal.style.display = "flex";
 
         const isKOT = (printMode === 'kot');
         const billSection = printArea.querySelector(".bill-print-section")?.outerHTML || "";
