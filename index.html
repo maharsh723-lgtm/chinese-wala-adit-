@@ -2625,7 +2625,13 @@
                             <div class="settings-card-header">
                                 <div>
                                     <h3>Add New Food Item</h3>
-                                    <p>Add a new dish to Billing immediately with its segment and price.</p>
+                                    <p>Add a dish manually below or upload an Excel (.xlsx, .xls, .csv) / PDF menu to review and confirm items.</p>
+                                </div>
+                                <div class="settings-upload-actions">
+                                    <input type="file" id="settingsMenuImportFileInput" accept=".xlsx,.xls,.csv,.pdf" style="display: none;">
+                                    <button type="button" id="btnSettingsUploadMenuFile" class="saas-btn settings-upload-btn">
+                                        <i data-lucide="file-up"></i> Upload PDF / Excel
+                                    </button>
                                 </div>
                             </div>
                             <div class="settings-add-item-grid">
@@ -6867,6 +6873,62 @@
         </div>
     </div>
 
+    <!-- SETTINGS MENU EXCEL / PDF IMPORT CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="modalSettingsMenuImportConfirm" style="z-index: 10020; display: none;">
+        <div class="modal-content settings-import-modal">
+            <div class="modal-header settings-import-header">
+                <div>
+                    <h3>Confirm Imported Menu Items</h3>
+                    <p id="settingsImportFileSummary" class="settings-import-subtitle">Review and edit extracted items before adding them to the menu.</p>
+                </div>
+                <button type="button" class="modal-close" id="btnCloseMenuImportModal" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div class="settings-import-controls">
+                <div class="settings-import-left-controls">
+                    <button type="button" id="btnSettingsImportToggleAll" class="saas-btn settings-mini-btn">Deselect All</button>
+                    <label class="settings-import-checkbox-label">
+                        <input type="checkbox" id="settingsImportUpdateExisting" checked>
+                        <span>Update price if item name already exists</span>
+                    </label>
+                </div>
+                <div class="settings-import-batch-segment">
+                    <select id="settingsImportBatchCategory" class="saas-form-select"></select>
+                    <button type="button" id="btnSettingsImportApplyBatchCat" class="saas-btn settings-mini-btn">Set Segment for Checked</button>
+                </div>
+            </div>
+
+            <div class="settings-menu-table-wrap settings-import-table-wrap">
+                <table class="settings-menu-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 44px; text-align: center;">Add</th>
+                            <th style="width: 125px;">Status</th>
+                            <th>Food Item Name</th>
+                            <th style="width: 170px;">Segment</th>
+                            <th style="width: 115px;">Type</th>
+                            <th style="width: 130px;">Cost / Price (₹)</th>
+                            <th style="width: 60px; text-align: center;">Drop</th>
+                        </tr>
+                    </thead>
+                    <tbody id="settingsImportPreviewBody"></tbody>
+                </table>
+            </div>
+
+            <div class="settings-import-footer">
+                <div id="settingsImportSelectedSummary" class="settings-import-selected-count">0 items selected</div>
+                <div class="settings-import-footer-actions">
+                    <button type="button" id="btnCancelMenuImport" class="saas-btn settings-mini-btn">Cancel</button>
+                    <button type="button" id="btnConfirmMenuImport" class="saas-btn saas-btn-primary">
+                        <i data-lucide="check"></i> Confirm &amp; Add to Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="./src/app.js"></script>
     <script type="module" src="./src/accounting.js"></script>
     <script type="module" src="./src/sales.js"></script>

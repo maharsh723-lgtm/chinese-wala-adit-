@@ -748,6 +748,8 @@ function initApp() {
     ];
     let settingsActiveTab = 'menu';
     let settingsMenuListenersBound = false;
+    let settingsImportDraftItems = [];
+    let settingsImportFileMeta = { fileName: '', fileType: '' };
 
     function getAllMenuSegments() {
         const ordered = [];
@@ -1043,6 +1045,362 @@ function initApp() {
                 }
             });
         }
+
+        // Excel / PDF upload & confirmation preview modal bindings
+        const uploadBtn = document.getElementById('btnSettingsUploadMenuFile');
+        const uploadInput = document.getElementById('settingsMenuImportFileInput');
+        if (uploadBtn && uploadInput) {
+            uploadBtn.addEventListener('click', () => {
+                if (currentRole !== 'owner') {
+                    showToast('Only the Owner can upload and import menu files.');
+                    return;
+                }
+                uploadInput.value = '';
+                uploadInput.click();
+            });
+            uploadInput.addEventListener('change', (e) => {
+                const file = e.target && e.target.files ? e.target.files[0] : null;
+                if (file) handleSettingsMenuFileUpload(file);
+            });
+        }
+
+        const closeModalBtn = document.getElementById('btnCloseMenuImportModal');
+        const cancelImportBtn = document.getElementById('btnCancelMenuImport');
+        const confirmImportBtn = document.getElementById('btnConfirmMenuImport');
+        const toggleAllBtn = document.getElementById('btnSettingsImportToggleAll');
+        const applyBatchCatBtn = document.getElementById('btnSettingsImportApplyBatchCat');
+        const importModal = document.getElementById('modalSettingsMenuImportConfirm');
+
+        if (closeModalBtn) closeModalBtn.addEventListener('click', closeSettingsImportConfirmModal);
+        if (cancelImportBtn) cancelImportBtn.addEventListener('click', closeSettingsImportConfirmModal);
+        if (confirmImportBtn) confirmImportBtn.addEventListener('click', confirmSettingsMenuImport);
+        if (importModal) {
+            importModal.addEventListener('click', (e) => {
+                if (e.target === importModal) closeSettingsImportConfirmModal();
+            });
+        }
+        if (toggleAllBtn) {
+            toggleAllBtn.addEventListener('click', () => {
+                const allSelected = settingsImportDraftItems.length > 0 && settingsImportDraftItems.every(it => it.selected);
+                const nextVal = !allSelected;
+                settingsImportDraftItems.forEach(it => { it.selected = nextVal; });
+                renderSettingsImportPreview();
+            });
+        }
+        if (applyBatchCatBtn) {
+            applyBatchCatBtn.addEventListener('click', () => {
+                const batchSelect = document.getElementById('settingsImportBatchCategory');
+                const seg = (batchSelect?.value || '').trim();
+                if (!seg) return;
+                settingsImportDraftItems.forEach(it => {
+                    if (it.selected) it.category = seg;
+                });
+                renderSettingsImportPreview();
+            });
+        }
+
+        const previewBody = document.getElementById('settingsImportPreviewBody');
+        if (previewBody) {
+            const syncDraftField = (target) => {
+                const row = target.closest('tr[data-import-idx]');
+                if (!row) return;
+                const idx = parseInt(row.getAttribute('data-import-idx'), 10);
+                const item = settingsImportDraftItems[idx];
+                if (!item) return;
+                if (target.classList.contains('settings-import-row-check')) {
+                    item.selected = Boolean(target.checked);
+                    updateSettingsImportSummary();
+                } else if (target.classList.contains('settings-import-name-input')) {
+                    item.name = target.value;
+                } else if (target.classList.contains('settings-import-cat-select')) {
+                    item.category = target.value;
+                } else if (target.classList.contains('settings-import-veg-select')) {
+                    item.isVeg = target.value === '0' ? 0 : 1;
+                } else if (target.classList.contains('settings-import-price-input')) {
+                    item.price = target.value === '' ? '' : Number(target.value);
+                }
+            };
+            previewBody.addEventListener('input', (e) => syncDraftField(e.target));
+            previewBody.addEventListener('change', (e) => syncDraftField(e.target));
+            previewBody.addEventListener('click', (e) => {
+                const dropBtn = e.target.closest('.settings-import-drop-btn');
+                if (!dropBtn) return;
+                const row = dropBtn.closest('tr[data-import-idx]');
+                if (!row) return;
+                const idx = parseInt(row.getAttribute('data-import-idx'), 10);
+                if (!isNaN(idx)) {
+                    settingsImportDraftItems.splice(idx, 1);
+                    renderSettingsImportPreview();
+                }
+            });
+        }
+    }
+
+    function getImportModalSegments() {
+        const ordered = [];
+        const seen = new Set();
+        const pushSeg = (s) => {
+            const clean = String(s || '').trim();
+            if (!clean) return;
+            const key = clean.toLowerCase();
+            if (!seen.has(key)) {
+                seen.add(key);
+                ordered.push(clean);
+            }
+        };
+        getAllMenuSegments().forEach(pushSeg);
+        (settingsImportDraftItems || []).forEach(it => pushSeg(it.category));
+        return ordered;
+    }
+
+    function updateSettingsImportSummary() {
+        const total = settingsImportDraftItems.length;
+        const selectedItems = settingsImportDraftItems.filter(it => it.selected);
+        const existingCount = selectedItems.filter(it => it.isExisting).length;
+        const newCount = selectedItems.length - existingCount;
+        const summaryEl = document.getElementById('settingsImportSelectedSummary');
+        const toggleAllBtn = document.getElementById('btnSettingsImportToggleAll');
+        const confirmBtn = document.getElementById('btnConfirmMenuImport');
+
+        if (summaryEl) {
+            summaryEl.textContent = existingCount > 0
+                ? `${selectedItems.length} of ${total} selected (${newCount} new, ${existingCount} existing)`
+                : `${selectedItems.length} of ${total} items selected`;
+        }
+        if (toggleAllBtn) {
+            const allSelected = total > 0 && selectedItems.length === total;
+            toggleAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
+        }
+        if (confirmBtn) {
+            confirmBtn.disabled = selectedItems.length === 0;
+        }
+    }
+
+    function renderSettingsImportPreview() {
+        const tbody = document.getElementById('settingsImportPreviewBody');
+        const summaryHeader = document.getElementById('settingsImportFileSummary');
+        const batchCatSelect = document.getElementById('settingsImportBatchCategory');
+        if (!tbody) return;
+
+        const segments = getImportModalSegments();
+        if (batchCatSelect) {
+            syncSelectOptionsPreservingValue(
+                batchCatSelect,
+                segments.map(s => ({ value: s, label: s })),
+                segments[0] || 'General'
+            );
+        }
+
+        if (summaryHeader) {
+            const typeLabel = settingsImportFileMeta.fileType === 'pdf' ? 'PDF' : 'Excel / CSV';
+            const fname = settingsImportFileMeta.fileName || 'Uploaded File';
+            summaryHeader.textContent = `"${fname}" (${typeLabel}) — ${settingsImportDraftItems.length} items detected. Review or edit, then confirm.`;
+        }
+
+        if (settingsImportDraftItems.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="settings-empty-row">No items remaining in import list.</td></tr>`;
+            updateSettingsImportSummary();
+            return;
+        }
+
+        tbody.innerHTML = settingsImportDraftItems.map((item, idx) => {
+            const itemCat = String(item.category || 'General');
+            const catOptions = segments.map(seg =>
+                `<option value="${escapeHTML(seg)}" ${seg === itemCat ? 'selected' : ''}>${escapeHTML(seg)}</option>`
+            ).join('');
+            const vegVal = (item.isVeg === 0 || item.isVeg === false) ? '0' : '1';
+            const statusHtml = item.isExisting
+                ? `<span class="settings-import-status-pill is-existing" title="Already in menu">Exists (₹${escapeHTML(String(item.existingPrice ?? ''))})</span>`
+                : `<span class="settings-import-status-pill is-new">New Item</span>`;
+
+            return `
+                <tr data-import-idx="${idx}">
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="settings-import-row-check" ${item.selected ? 'checked' : ''} aria-label="Select item to import">
+                    </td>
+                    <td>${statusHtml}</td>
+                    <td>
+                        <input type="text" class="saas-form-input settings-menu-name-input settings-import-name-input" value="${escapeHTML(item.name || '')}" aria-label="Imported item name">
+                    </td>
+                    <td>
+                        <select class="saas-form-select settings-menu-cat-select settings-import-cat-select" aria-label="Imported item segment">
+                            ${catOptions}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="saas-form-select settings-menu-veg-select settings-import-veg-select" aria-label="Imported food type">
+                            <option value="1" ${vegVal === '1' ? 'selected' : ''}>Veg</option>
+                            <option value="0" ${vegVal === '0' ? 'selected' : ''}>Non-Veg</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="settings-menu-price-wrap">
+                            <span class="settings-menu-price-prefix">₹</span>
+                            <input type="number" class="settings-menu-price-input settings-import-price-input" min="1" step="1" value="${escapeHTML(String(item.price ?? ''))}" aria-label="Imported item price">
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <button type="button" class="settings-import-drop-btn" title="Remove row">✕</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        updateSettingsImportSummary();
+    }
+
+    function openSettingsImportConfirmModal() {
+        const modal = document.getElementById('modalSettingsMenuImportConfirm');
+        if (!modal) return;
+        renderSettingsImportPreview();
+        modal.style.display = 'flex';
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    function closeSettingsImportConfirmModal() {
+        const modal = document.getElementById('modalSettingsMenuImportConfirm');
+        if (modal) modal.style.display = 'none';
+        settingsImportDraftItems = [];
+        settingsImportFileMeta = { fileName: '', fileType: '' };
+        const fileInput = document.getElementById('settingsMenuImportFileInput');
+        if (fileInput) fileInput.value = '';
+    }
+
+    async function handleSettingsMenuFileUpload(file) {
+        if (currentRole !== 'owner') {
+            showToast('Only the Owner can upload and import menu files.');
+            return;
+        }
+        if (!file) return;
+
+        const uploadBtn = document.getElementById('btnSettingsUploadMenuFile');
+        const prevBtnHtml = uploadBtn ? uploadBtn.innerHTML : '';
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Reading File...';
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await fetch(`${API_BASE}/api/pos/products/parse-import`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
+
+            settingsImportDraftItems = (data.items || []).map((item, i) => ({
+                ...item,
+                tempId: item.tempId || `imp-client-${i}`,
+                selected: item.selected !== false
+            }));
+            settingsImportFileMeta = {
+                fileName: data.fileName || file.name || 'Menu File',
+                fileType: data.fileType || 'excel'
+            };
+
+            if (settingsImportDraftItems.length === 0) {
+                showToast('No menu items with valid prices were detected in that file.');
+                return;
+            }
+
+            openSettingsImportConfirmModal();
+        } catch (err) {
+            showToast(`Could not read menu file: ${err.message}`);
+        } finally {
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = prevBtnHtml;
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            }
+        }
+    }
+
+    async function confirmSettingsMenuImport() {
+        if (currentRole !== 'owner') {
+            showToast('Only the Owner can add imported items.');
+            return;
+        }
+        const selected = (settingsImportDraftItems || []).filter(it => it.selected);
+        if (selected.length === 0) {
+            showToast('Please select at least one item to add to the menu.');
+            return;
+        }
+
+        for (let i = 0; i < selected.length; i++) {
+            const it = selected[i];
+            const cleanName = String(it.name || '').trim();
+            const priceNum = Number(it.price);
+            if (!cleanName) {
+                showToast('One of the selected items has an empty name.');
+                return;
+            }
+            if (!Number.isFinite(priceNum) || priceNum <= 0) {
+                showToast(`Please enter a valid price (> 0) for "${cleanName}".`);
+                return;
+            }
+        }
+
+        const updateExisting = Boolean(document.getElementById('settingsImportUpdateExisting')?.checked);
+        const confirmBtn = document.getElementById('btnConfirmMenuImport');
+        const prevBtnHtml = confirmBtn ? confirmBtn.innerHTML : '';
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Adding Items...';
+        }
+
+        try {
+            const payloadItems = selected.map(it => ({
+                name: String(it.name || '').trim(),
+                category: String(it.category || 'General').trim() || 'General',
+                price: Math.round(Number(it.price) * 100) / 100,
+                isVeg: it.isVeg === 0 ? 0 : 1
+            }));
+
+            const res = await fetch(`${API_BASE}/api/pos/products/bulk-import`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: payloadItems, updateExisting })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || `Confirm import failed (${res.status})`);
+
+            if (!Array.isArray(posProducts)) posProducts = [];
+            (data.products || []).forEach(prod => {
+                const idx = posProducts.findIndex(p => String(p.id) === String(prod.id));
+                if (idx >= 0) posProducts[idx] = prod;
+                else posProducts.push(prod);
+            });
+
+            lastStateJson = '';
+            closeSettingsImportConfirmModal();
+            if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
+            if (typeof renderPosProductsList === 'function') renderPosProductsList();
+            renderSettingsScreen(true);
+
+            const parts = [];
+            if (data.addedCount > 0) parts.push(`${data.addedCount} added`);
+            if (data.updatedCount > 0) parts.push(`${data.updatedCount} updated`);
+            if (data.skippedCount > 0) parts.push(`${data.skippedCount} skipped`);
+            showToast(`Menu confirmed: ${parts.join(', ') || 'done'}!`);
+            syncStateFromServer(true);
+        } catch (err) {
+            showToast(`Failed to confirm menu import: ${err.message}`);
+        } finally {
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = prevBtnHtml;
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            }
+        }
     }
 
     function renderSettingsMenuTable(force = false) {
@@ -1169,6 +1527,10 @@ function initApp() {
     window.saveSettingsMenuItem = saveSettingsMenuItem;
     window.deleteSettingsMenuItem = deleteSettingsMenuItem;
     window.addSettingsMenuItem = addSettingsMenuItem;
+    window.handleSettingsMenuFileUpload = handleSettingsMenuFileUpload;
+    window.confirmSettingsMenuImport = confirmSettingsMenuImport;
+    window.openSettingsImportConfirmModal = openSettingsImportConfirmModal;
+    window.closeSettingsImportConfirmModal = closeSettingsImportConfirmModal;
 
     function enableWriteControls(enable) {
         const createButtons = document.querySelectorAll("#dashGlobalCreateBtn, #btnCreatePrTop, #quickSopBtn, #quickInvBtn, #quickWastageBtn, #quickReportBtn, #quickEmpBtn");

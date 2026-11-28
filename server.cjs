@@ -4420,6 +4420,538 @@ app.delete('/api/pos/products/:id', authenticateToken, (req, res) => {
   }
 });
 
+// Helper: Normalize price strings ("₹120/-", "Rs. 1,250.00", WinAnsi "¹110") to positive finite numbers
+function parseMenuPriceValue(raw) {
+  if (typeof raw === 'number') {
+    return Number.isFinite(raw) && raw > 0 && raw <= 50000 ? Math.round(raw * 100) / 100 : null;
+  }
+  const str = String(raw == null ? '' : raw).trim();
+  if (!str) return null;
+  const cleaned = str.replace(/(?:₹|rs\.?|inr|¹|\ufffd|\/-)/gi, '').replace(/^\?\s*/, '').replace(/,/g, '').trim();
+  if (!/^\d+(?:\.\d{1,2})?$/.test(cleaned)) return null;
+  const num = parseFloat(cleaned);
+  return Number.isFinite(num) && num > 0 && num <= 50000 ? Math.round(num * 100) / 100 : null;
+}
+
+// Helper: Match known category spelling cleanly or title-case unknown headings
+function normalizeMenuSegment(rawSeg, knownSegments = [], fallback = 'General') {
+  const clean = String(rawSeg || '').replace(/[:\-–—]+$/, '').replace(/\s+/g, ' ').trim();
+  if (!clean || clean.length < 2 || clean.length > 48) return fallback;
+  const found = knownSegments.find(k => String(k).toLowerCase() === clean.toLowerCase());
+  if (found) return found;
+  if (/^[A-Z0-9\s&\/\-]+$/.test(clean) && /[A-Z]/.test(clean)) {
+    return clean.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
+  }
+  return clean;
+}
+
+function detectMenuVegFlag(rawVeg, itemName = '', category = '') {
+  const vegStr = String(rawVeg == null ? '' : rawVeg).trim().toLowerCase();
+  if (vegStr) {
+    if (vegStr === '0' || vegStr === 'false' || vegStr === 'no' || vegStr === 'nv' || /non[\s\-]?veg|egg|chicken|mutton|fish|prawn/i.test(vegStr)) {
+      return 0;
+    }
+    if (vegStr === '1' || vegStr === 'true' || vegStr === 'yes' || /\bveg\b/i.test(vegStr)) {
+      return 1;
+    }
+  }
+  const combined = `${itemName} ${category}`;
+  if (/\b(chicken|egg|eggs|omelette|omlet|mutton|fish|prawn|prawns|shrimp|crab|keema|lamb|non[\s\-]?veg)\b/i.test(combined)) {
+    return 0;
+  }
+  return 1;
+}
+
+function isIgnoredMenuLine(text) {
+  const clean = String(text || '').trim();
+  if (!clean || !/[a-zA-Z]{2,}/.test(clean)) return true;
+  if (/^(total|sub\s*total|grand\s*total|gst|cgst|sgst|tax|discount|round\s*off|net\s*amount|bill\s*amount|s\.?\s*no|sr\.?\s*no|item\s*name|food\s*item|description|particulars|price|rate|amount)$/i.test(clean)) {
+    return true;
+  }
+  if (/(gstin|invoice|thank\s+you|visit\s+again|www\.|http:\/\/|https:\/\/|@gmail|@yahoo|^page\s+\d+)/i.test(clean)) {
+    return true;
+  }
+  return false;
+}
+
+function parseMenuExcelBuffer(buffer, knownSegments = []) {
+  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  const results = [];
+
+  for (const sheetName of (workbook.SheetNames || [])) {
+    const ws = workbook.Sheets[sheetName];
+    if (!ws) continue;
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    if (!rows || rows.length === 0) continue;
+
+    const genericSheet = /^(sheet\s*\d*|data|menu|items|list)$/i.test(String(sheetName || '').trim());
+    let currentSegment = genericSheet ? 'General' : normalizeMenuSegment(sheetName, knownSegments, 'General');
+
+    let headerRowIdx = -1;
+    let colIdx = { name: -1, category: -1, price: -1, veg: -1 };
+
+    const headerAliases = {
+      name: ['name', 'item', 'item name', 'food item', 'food name', 'dish', 'dish name', 'product', 'product name', 'menu item', 'particulars', 'description', 'title'],
+      category: ['category', 'segment', 'section', 'group', 'menu category', 'menu segment', 'department', 'sub category', 'subcategory'],
+      price: ['price', 'cost', 'selling price', 'rate', 'amount', 'mrp', 'rs', 'inr', 'price (rs)', 'price (₹)', 'cost (₹)', 'rate (rs)'],
+      veg: ['veg', 'isveg', 'food type', 'diet', 'veg/non-veg', 'veg / non veg', 'veg/nonveg', 'veg/nv']
+    };
+
+    for (let r = 0; r < Math.min(rows.length, 25); r++) {
+      const cells = (rows[r] || []).map(c => String(c == null ? '' : c).trim().toLowerCase().replace(/\s+/g, ' '));
+      if (!cells.some(Boolean)) continue;
+
+      let matchedCols = 0;
+      const candidate = { name: -1, category: -1, price: -1, veg: -1 };
+      cells.forEach((cell, idx) => {
+        if (!cell) return;
+        if (candidate.name === -1 && headerAliases.name.includes(cell)) {
+          candidate.name = idx;
+          matchedCols++;
+        } else if (candidate.category === -1 && headerAliases.category.includes(cell)) {
+          candidate.category = idx;
+          matchedCols++;
+        } else if (candidate.price === -1 && (headerAliases.price.includes(cell) || /(^|\b)(price|cost|rate|mrp)(\b|$)/i.test(cell))) {
+          candidate.price = idx;
+          matchedCols++;
+        } else if (candidate.veg === -1 && headerAliases.veg.includes(cell)) {
+          candidate.veg = idx;
+          matchedCols++;
+        }
+      });
+
+      if (candidate.name !== -1 && candidate.price !== -1) {
+        headerRowIdx = r;
+        colIdx = candidate;
+        break;
+      }
+      if (matchedCols >= 2 && candidate.price !== -1) {
+        headerRowIdx = r;
+        colIdx = candidate;
+        break;
+      }
+    }
+
+    const startRow = headerRowIdx !== -1 ? headerRowIdx + 1 : 0;
+
+    for (let r = startRow; r < rows.length; r++) {
+      const row = rows[r] || [];
+      const nonEmpty = [];
+      row.forEach((val, idx) => {
+        const s = String(val == null ? '' : val).trim();
+        if (s !== '') nonEmpty.push({ idx, raw: val, str: s });
+      });
+      if (nonEmpty.length === 0) continue;
+
+      if (headerRowIdx !== -1 && colIdx.name !== -1 && colIdx.price !== -1) {
+        const rawName = String(row[colIdx.name] == null ? '' : row[colIdx.name]).trim();
+        const rawPrice = row[colIdx.price];
+        const parsedPrice = parseMenuPriceValue(rawPrice);
+        const rawCat = colIdx.category !== -1 ? String(row[colIdx.category] == null ? '' : row[colIdx.category]).trim() : '';
+        const rawVeg = colIdx.veg !== -1 ? row[colIdx.veg] : '';
+
+        // Section header row inside structured spreadsheet (name filled, no price)
+        if (rawName && parsedPrice === null && nonEmpty.length <= 2 && !isIgnoredMenuLine(rawName)) {
+          currentSegment = normalizeMenuSegment(rawName, knownSegments, currentSegment);
+          continue;
+        }
+        if (!rawName || parsedPrice === null || isIgnoredMenuLine(rawName)) continue;
+
+        const cleanName = rawName.replace(/^\d{1,3}[\.\)\-:]\s+/, '').trim();
+        if (isIgnoredMenuLine(cleanName)) continue;
+        const segment = rawCat ? normalizeMenuSegment(rawCat, knownSegments, currentSegment) : currentSegment;
+        const isVeg = detectMenuVegFlag(rawVeg, cleanName, segment);
+        results.push({ name: cleanName, category: segment, price: parsedPrice, isVeg });
+      } else {
+        // Headerless / ad-hoc sheet fallback
+        const priceCells = nonEmpty.filter(c => parseMenuPriceValue(c.raw) !== null && !/^\d{1,3}$/.test(c.str) ? true : false);
+        let pickedPriceCell = null;
+        for (let i = nonEmpty.length - 1; i >= 0; i--) {
+          const p = parseMenuPriceValue(nonEmpty[i].raw);
+          if (p !== null) {
+            // Skip leading S.No integer if another numeric price exists later
+            if (nonEmpty[i].idx === 0 && nonEmpty.length >= 3 && /^\d{1,3}$/.test(nonEmpty[i].str)) continue;
+            pickedPriceCell = { ...nonEmpty[i], num: p };
+            break;
+          }
+        }
+        if (!pickedPriceCell && priceCells.length > 0) {
+          pickedPriceCell = { ...priceCells[priceCells.length - 1], num: parseMenuPriceValue(priceCells[priceCells.length - 1].raw) };
+        }
+
+        const textCells = nonEmpty.filter(c => c !== pickedPriceCell && !/^\d{1,4}$/.test(c.str) && parseMenuPriceValue(c.raw) === null);
+        if (!pickedPriceCell) {
+          if (textCells.length === 1 && !isIgnoredMenuLine(textCells[0].str)) {
+            currentSegment = normalizeMenuSegment(textCells[0].str, knownSegments, currentSegment);
+          }
+          continue;
+        }
+        if (textCells.length === 0) continue;
+
+        const rawName = textCells[0].str.replace(/^\d{1,3}[\.\)\-:]\s+/, '').trim();
+        if (isIgnoredMenuLine(rawName)) continue;
+
+        let seg = currentSegment;
+        let vegVal = '';
+        for (let t = 1; t < textCells.length; t++) {
+          const val = textCells[t].str;
+          if (/^(veg|non[\s\-]?veg|nv|egg)$/i.test(val)) {
+            vegVal = val;
+          } else if (seg === currentSegment && val.length >= 2 && val.length <= 40) {
+            seg = normalizeMenuSegment(val, knownSegments, currentSegment);
+          }
+        }
+        const isVeg = detectMenuVegFlag(vegVal, rawName, seg);
+        results.push({ name: rawName, category: seg, price: pickedPriceCell.num, isVeg });
+      }
+    }
+  }
+
+  return results;
+}
+
+function parseMenuPdfText(fullText, knownSegments = []) {
+  const rawLines = String(fullText || '')
+    .split(/\r?\n/)
+    .map(l => l.replace(/\t+/g, '  ').replace(/\u00a0/g, ' ').trim())
+    .filter(Boolean);
+
+  const results = [];
+  let currentSegment = 'General';
+  const standalonePriceRe = /^(?:₹|rs\.?|inr|¹|\ufffd|\?)?\s*(\d{1,5}(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/-)?\s*$/i;
+  const trailingPriceRe = /^(.*?)(?:[\s.\-:|]+(?:₹|rs\.?|inr|¹|\ufffd|\?)?\s*|[\s.\-:|]*(?:₹|¹|\ufffd)\s*)(\d{1,5}(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/-)?\s*$/i;
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    if (/^[-=_*.~]{3,}$/.test(line) || /^page\s+\d+/i.test(line)) continue;
+    if (/(gstin|invoice|thank\s+you|visit\s+again|www\.|http:\/\/|https:\/\/|@gmail|@yahoo|\+91[\s\-]?\d{5}|\b\d{10}\b)/i.test(line)) continue;
+
+    // 1. Multi-column text split by >=2 spaces or pipes (e.g., "1  Paneer Chilli  Starters  180")
+    const cols = line.split(/\s{2,}|\s*\|\s*/).map(c => c.trim()).filter(Boolean);
+    if (cols.length >= 2) {
+      let trimmedCols = cols.slice();
+      if (/^\d{1,3}[\.\)]?$/.test(trimmedCols[0]) && trimmedCols.length >= 3) {
+        trimmedCols.shift();
+      }
+      const lastPrice = parseMenuPriceValue(trimmedCols[trimmedCols.length - 1]);
+      if (lastPrice !== null && trimmedCols.length >= 2) {
+        const rawName = trimmedCols[0].replace(/^[•●▪▫■□◆◇★☆\-*✓✔\d\.\)\s]+/, m => m.replace(/^\d+[\.\)]\s*/, '')).replace(/^[\s•●▪▫■□◆◇★☆\-*✓✔]+/, '').trim();
+        if (!isIgnoredMenuLine(rawName)) {
+          let seg = currentSegment;
+          let vegStr = '';
+          if (trimmedCols.length >= 3) {
+            const middle = trimmedCols[1];
+            if (/^(veg|non[\s\-]?veg|nv|egg)$/i.test(middle)) vegStr = middle;
+            else if (/[a-zA-Z]{2,}/.test(middle) && !parseMenuPriceValue(middle)) {
+              seg = normalizeMenuSegment(middle, knownSegments, currentSegment);
+            }
+          }
+          results.push({
+            name: rawName,
+            category: seg,
+            price: lastPrice,
+            isVeg: detectMenuVegFlag(vegStr, rawName, seg)
+          });
+          continue;
+        }
+      }
+    }
+
+    // 2. Single line with dot leaders / dash / rupee sign / space before trailing price
+    const trailMatch = line.match(trailingPriceRe);
+    if (trailMatch) {
+      let rawName = trailMatch[1]
+        .replace(/^\d{1,3}[\.\)\-:]\s+/, '')
+        .replace(/^[\s•●▪▫■□◆◇★☆\-*✓✔]+/, '')
+        .replace(/[\s.\-:|]+$/g, '')
+        .trim();
+      const priceVal = parseMenuPriceValue(trailMatch[2]);
+      if (priceVal !== null && !isIgnoredMenuLine(rawName) && rawName.length <= 80) {
+        results.push({
+          name: rawName,
+          category: currentSegment,
+          price: priceVal,
+          isVeg: detectMenuVegFlag('', rawName, currentSegment)
+        });
+        continue;
+      }
+    }
+
+    // 3. Two-line PDF table wrap: item name on line i, standalone price on line i + 1
+    if (i + 1 < rawLines.length) {
+      const nextPriceMatch = rawLines[i + 1].match(standalonePriceRe);
+      if (nextPriceMatch) {
+        const nextPrice = parseMenuPriceValue(nextPriceMatch[1]);
+        const candidateName = line
+          .replace(/^\d{1,3}[\.\)\-:]\s+/, '')
+          .replace(/^[\s•●▪▫■□◆◇★☆\-*✓✔]+/, '')
+          .replace(/[\s.\-:|]+$/g, '')
+          .trim();
+        if (nextPrice !== null && !isIgnoredMenuLine(candidateName) && candidateName.length <= 80) {
+          results.push({
+            name: candidateName,
+            category: currentSegment,
+            price: nextPrice,
+            isVeg: detectMenuVegFlag('', candidateName, currentSegment)
+          });
+          i += 1;
+          continue;
+        }
+      }
+    }
+
+    // 4. Otherwise treat short non-ignored text line as potential menu segment heading
+    const headingCandidate = line.replace(/^[•●▪▫■□◆◇★☆\-*]+\s*/, '').replace(/[:\-–—]+$/, '').trim();
+    if (
+      headingCandidate.length >= 2 &&
+      headingCandidate.length <= 42 &&
+      !isIgnoredMenuLine(headingCandidate) &&
+      !/\d{3,}/.test(headingCandidate) &&
+      headingCandidate.split(/\s+/).length <= 5 &&
+      !headingCandidate.endsWith('.')
+    ) {
+      const knownMatch = knownSegments.find(k => k.toLowerCase() === headingCandidate.toLowerCase());
+      const looksLikeSection =
+        Boolean(knownMatch) ||
+        line.endsWith(':') ||
+        /^[A-Z0-9\s&\/\-]+$/.test(headingCandidate) ||
+        /\b(noodles|rice|starter|starters|momo|momos|soup|soups|fries|drink|drinks|beverage|beverages|chai|coffee|breakfast|pizza|burger|sandwich|bread|thali|combo|combos|main\s*course|rolls|chinese|special|specials|dessert|desserts)\b/i.test(headingCandidate);
+      if (looksLikeSection) {
+        currentSegment = normalizeMenuSegment(headingCandidate, knownSegments, currentSegment);
+      }
+    }
+  }
+
+  return results;
+}
+
+function finalizeParsedImportCandidates(rawItems, existingProducts = []) {
+  const existingMap = new Map();
+  existingProducts.forEach(p => {
+    if (p && p.name) existingMap.set(String(p.name).trim().toLowerCase(), p);
+  });
+
+  const seen = new Set();
+  const deduped = [];
+  rawItems.forEach((item, idx) => {
+    const cleanName = String(item.name || '').replace(/\s+/g, ' ').trim();
+    const cleanCat = String(item.category || 'General').replace(/\s+/g, ' ').trim() || 'General';
+    const priceNum = parseMenuPriceValue(item.price);
+    if (!cleanName || priceNum === null) return;
+    const dedupKey = `${cleanName.toLowerCase()}::${cleanCat.toLowerCase()}`;
+    if (seen.has(dedupKey)) return;
+    seen.add(dedupKey);
+
+    const existing = existingMap.get(cleanName.toLowerCase());
+    deduped.push({
+      tempId: `imp-${Date.now()}-${idx}`,
+      name: cleanName,
+      category: cleanCat,
+      price: priceNum,
+      isVeg: item.isVeg === 0 ? 0 : 1,
+      selected: true,
+      isExisting: Boolean(existing),
+      existingId: existing ? existing.id : null,
+      existingPrice: existing ? Number(existing.price || 0) : null,
+      existingCategory: existing ? existing.category : null
+    });
+  });
+
+  return deduped;
+}
+
+// POST /api/pos/products/parse-import (Excel / CSV / PDF preview before confirmation)
+app.post('/api/pos/products/parse-import', authenticateToken, upload.single('file'), async (req, res) => {
+  let parser = null;
+  try {
+    const file = req.file;
+    if (!file || !file.buffer) {
+      return res.status(400).json({ error: 'Please choose an Excel (.xlsx, .xls, .csv) or PDF (.pdf) file to upload.' });
+    }
+
+    const originalName = String(file.originalname || 'menu-upload');
+    const ext = path.extname(originalName).toLowerCase();
+    const mime = String(file.mimetype || '').toLowerCase();
+    const isPdf = ext === '.pdf' || mime.includes('pdf');
+    const isExcel = ['.xlsx', '.xls', '.csv'].includes(ext) || mime.includes('spreadsheet') || mime.includes('excel') || mime.includes('csv');
+
+    if (!isPdf && !isExcel) {
+      return res.status(400).json({ error: 'Unsupported file format. Please upload an Excel (.xlsx, .xls, .csv) or PDF (.pdf) menu file.' });
+    }
+
+    const existingProducts = db.prepare('SELECT id, name, category, price, isVeg FROM pos_products').all();
+    const defaultSegments = [
+      'Noodles', 'Rice', 'Chinese Starters', 'French Fries', 'Momos',
+      'Cold Drinks', 'Chai Coffee', 'Breakfast', 'Pizza', 'Burger',
+      'Sandwich', 'Garlic Bread', 'Gujarati Thali'
+    ];
+    const knownSegments = Array.from(new Set([
+      ...defaultSegments,
+      ...existingProducts.map(p => String(p.category || '').trim()).filter(Boolean)
+    ]));
+
+    let extracted = [];
+    if (isExcel) {
+      extracted = parseMenuExcelBuffer(file.buffer, knownSegments);
+    } else {
+      parser = new pdf.PDFParse(new Uint8Array(file.buffer));
+      const parsedPdf = await parser.getText();
+      const pageTexts = Array.isArray(parsedPdf && parsedPdf.pages)
+        ? parsedPdf.pages.map(p => p.text || '').join('\n')
+        : (parsedPdf && parsedPdf.text ? parsedPdf.text : '');
+      if (!String(pageTexts).trim()) {
+        return res.status(400).json({ error: 'Uploaded PDF has no readable text layer (scanned image PDFs cannot be extracted).' });
+      }
+      extracted = parseMenuPdfText(pageTexts, knownSegments);
+    }
+
+    const candidates = finalizeParsedImportCandidates(extracted, existingProducts);
+    if (candidates.length === 0) {
+      return res.status(400).json({
+        error: isPdf
+          ? 'Could not detect food items with prices in this PDF. Ensure each line has an item name and price (e.g. "Veg Noodles  120").'
+          : 'Could not detect valid menu items with prices in this Excel/CSV file.'
+      });
+    }
+
+    res.json({
+      success: true,
+      fileName: originalName,
+      fileType: isPdf ? 'pdf' : 'excel',
+      detectedCount: candidates.length,
+      items: candidates
+    });
+  } catch (err) {
+    console.error('Failed to parse menu import file:', err);
+    res.status(500).json({ error: err.message || 'Failed to parse uploaded file.' });
+  } finally {
+    if (parser && typeof parser.destroy === 'function') {
+      try { await parser.destroy(); } catch (e) {}
+    }
+  }
+});
+
+// POST /api/pos/products/bulk-import (Commits confirmed items into SQLite pos_products)
+app.post('/api/pos/products/bulk-import', authenticateToken, (req, res) => {
+  try {
+    const rawItems = Array.isArray(req.body && req.body.items) ? req.body.items : [];
+    const updateExisting = Boolean(req.body && req.body.updateExisting);
+    if (rawItems.length === 0) {
+      return res.status(400).json({ error: 'No menu items provided to confirm.' });
+    }
+
+    const existingRows = db.prepare('SELECT * FROM pos_products').all();
+    const existingByName = new Map();
+    const catImageMap = new Map();
+    existingRows.forEach(row => {
+      if (row.name) existingByName.set(String(row.name).trim().toLowerCase(), row);
+      if (row.category && row.image && !catImageMap.has(String(row.category).trim().toLowerCase())) {
+        catImageMap.set(String(row.category).trim().toLowerCase(), row.image);
+      }
+    });
+
+    const insertStmt = db.prepare(`
+      INSERT INTO pos_products (id, name, category, price, image, isVeg, isPopular, isFavorite, stock, ingredients, recipeId)
+      VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, NULL)
+    `);
+    const updateStmt = db.prepare(`
+      UPDATE pos_products SET name = ?, category = ?, price = ?, isVeg = ?, ingredients = ? WHERE id = ?
+    `);
+
+    const savedProducts = [];
+    let addedCount = 0;
+    let updatedCount = 0;
+    let skippedCount = 0;
+
+    db.exec('BEGIN');
+    try {
+      rawItems.forEach((item, idx) => {
+        const cleanName = typeof item.name === 'string' ? item.name.trim() : '';
+        const cleanCat = typeof item.category === 'string' && item.category.trim() ? item.category.trim() : 'General';
+        const numericPrice = parseMenuPriceValue(item.price);
+        if (!cleanName || numericPrice === null) {
+          skippedCount++;
+          return;
+        }
+        const vegFlag = (item.isVeg === 0 || item.isVeg === '0' || item.isVeg === false) ? 0 : 1;
+        const estCost = Math.round(numericPrice * 0.30 * 100) / 100;
+        const ingredientsArr = [{ name: 'Ingredients', qty: 1, unit: 'portion', cost: estCost }];
+        const ingredientsJson = JSON.stringify(ingredientsArr);
+
+        const existing = existingByName.get(cleanName.toLowerCase());
+        if (existing) {
+          if (updateExisting) {
+            updateStmt.run(cleanName, cleanCat, numericPrice, vegFlag, ingredientsJson, existing.id);
+            updatedCount++;
+            savedProducts.push({
+              ...existing,
+              name: cleanName,
+              category: cleanCat,
+              price: numericPrice,
+              isVeg: vegFlag,
+              ingredients: ingredientsArr
+            });
+          } else {
+            skippedCount++;
+          }
+          return;
+        }
+
+        const resolvedImage = catImageMap.get(cleanCat.toLowerCase()) || '';
+        const newId = `cw-import-${Date.now()}-${idx}-${Math.floor(Math.random() * 1000)}`;
+        insertStmt.run(newId, cleanName, cleanCat, numericPrice, resolvedImage, vegFlag, 100, ingredientsJson);
+        addedCount++;
+        const created = {
+          id: newId,
+          name: cleanName,
+          category: cleanCat,
+          price: numericPrice,
+          image: resolvedImage,
+          isVeg: vegFlag,
+          isPopular: 0,
+          isFavorite: 0,
+          stock: 100,
+          ingredients: ingredientsArr,
+          recipeId: null
+        };
+        existingByName.set(cleanName.toLowerCase(), created);
+        savedProducts.push(created);
+      });
+
+      db.prepare(`
+        INSERT INTO pos_audit_logs (id, timestamp, action, userId, userName, details, store)
+        VALUES (?, ?, 'BULK_IMPORT_MENU_ITEMS', ?, ?, ?, ?)
+      `).run(
+        `audit-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+        new Date().toISOString(),
+        (req.user && req.user.id) || 'owner',
+        (req.user && req.user.name) || 'Owner',
+        JSON.stringify({ addedCount, updatedCount, skippedCount, totalSubmitted: rawItems.length }),
+        'ADIT CAMPUS'
+      );
+
+      db.exec('COMMIT');
+    } catch (txErr) {
+      try { db.exec('ROLLBACK'); } catch (e) {}
+      throw txErr;
+    }
+
+    const io = req.app.get('io');
+    if (io) io.emit('menu_update');
+
+    res.json({
+      success: true,
+      addedCount,
+      updatedCount,
+      skippedCount,
+      products: savedProducts
+    });
+  } catch (err) {
+    console.error('Failed to bulk import menu items:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/pos/modifiers', authenticateToken, (req, res) => {
   try {
     const modifiers = db.prepare('SELECT * FROM pos_modifiers').all();

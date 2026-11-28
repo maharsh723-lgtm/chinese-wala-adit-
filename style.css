@@ -8224,3 +8224,180 @@ body:not(.dark-theme) #screen-guest-intelligence select[style*="color: #fff" i] 
     }
 }
 
+/* Settings Menu Excel / PDF Import Upload & Confirmation Modal */
+.settings-upload-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--orange-light);
+    color: var(--orange-primary);
+    border: 1px dashed rgba(13, 82, 191, 0.4);
+    font-weight: 700;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.16s ease;
+}
+
+.settings-upload-btn:hover {
+    background: var(--orange-primary);
+    color: #ffffff;
+    border-style: solid;
+}
+
+.settings-upload-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.settings-import-modal {
+    max-width: 980px;
+    width: 96%;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 90vh;
+}
+
+.settings-import-header {
+    margin-bottom: 0;
+    align-items: flex-start;
+}
+
+.settings-import-header .modal-close {
+    background: transparent;
+    border: none;
+    padding: 4px;
+}
+
+.settings-import-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+}
+
+.settings-import-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    background: var(--bg-app);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.settings-import-left-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.settings-import-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.settings-import-batch-segment {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.settings-import-batch-segment .saas-form-select {
+    width: 170px;
+    padding: 6px 10px;
+    font-size: 0.84rem;
+}
+
+.settings-mini-btn {
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.settings-mini-btn:hover {
+    border-color: var(--orange-primary);
+    color: var(--orange-primary);
+}
+
+.settings-import-table-wrap {
+    max-height: 48vh;
+    overflow-y: auto;
+    background: var(--bg-card);
+}
+
+.settings-import-status-pill {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.settings-import-status-pill.is-new {
+    background: var(--success-light);
+    color: #047857;
+}
+
+.settings-import-status-pill.is-existing {
+    background: var(--warning-light);
+    color: #92400e;
+}
+
+.settings-import-drop-btn {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--danger);
+    border-radius: var(--radius-sm);
+    padding: 5px 9px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.settings-import-drop-btn:hover {
+    background: var(--danger-light);
+}
+
+.settings-import-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 6px;
+}
+
+.settings-import-selected-count {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.settings-import-footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
