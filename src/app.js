@@ -495,7 +495,10 @@ function initApp() {
     }
 
     // === 2. STATE SYNCHRONIZATION FROM SERVER ===
+    let _syncStatePromise = null;
     async function syncStateFromServer(isInitial = false) {
+        if (_syncStatePromise) return _syncStatePromise;
+        _syncStatePromise = (async () => {
         try {
             const response = await fetch(`${API_BASE}/api/state?_t=${Date.now()}`);
             if (response.status === 401) {
@@ -509,13 +512,13 @@ function initApp() {
             if (!response.ok) throw new Error("HTTP error " + response.status);
             const data = await response.json();
             
-            if (data.version && window._lastStateVersion && data.version === window._lastStateVersion) {
+            if (!isInitial && data.version && window._lastStateVersion && data.version === window._lastStateVersion) {
                 return;
             }
             if (data.version) window._lastStateVersion = data.version;
 
             const stateJson = JSON.stringify(data);
-            if (stateJson !== lastStateJson) {
+            if (isInitial || stateJson !== lastStateJson) {
                 lastStateJson = stateJson;
 
                 employees = data.employees || {};
@@ -581,7 +584,11 @@ function initApp() {
                 currentUser = employees[targetId] || employees["EMP104"];
                 renderAllLists();
             }
+        } finally {
+            _syncStatePromise = null;
         }
+        })();
+        return _syncStatePromise;
     }
 
     // Render all screens dynamically based on the current role
@@ -634,7 +641,7 @@ function initApp() {
 
     // Periodic Background Polling loop (every 15 seconds)
     setInterval(() => {
-        if (localStorage.getItem("bk_jwt_token") && document.visibilityState !== 'hidden') {
+        if (document.visibilityState !== 'hidden') {
             syncStateFromServer();
         }
     }, 15000);
@@ -4153,11 +4160,16 @@ function initApp() {
         const tbody = document.getElementById("liveSalesFeedBody");
         if (!tbody) return;
 
+        if (!window._liveSalesUserPickedDate) {
+            selectedLiveSalesFilterDate = getTodayDateStr();
+        }
+
         const dateInput = document.getElementById("filterLiveSalesDate");
         if (dateInput) {
             if (!dateInput.dataset.listenerBound) {
                 dateInput.dataset.listenerBound = "true";
                 dateInput.addEventListener("change", (e) => {
+                    window._liveSalesUserPickedDate = true;
                     selectedLiveSalesFilterDate = e.target.value;
                     renderLiveSalesStream();
                 });
@@ -4175,6 +4187,7 @@ function initApp() {
         if (btnToday && !btnToday.dataset.listenerBound) {
             btnToday.dataset.listenerBound = "true";
             btnToday.addEventListener("click", () => {
+                window._liveSalesUserPickedDate = false;
                 const today = getTodayDateStr();
                 selectedLiveSalesFilterDate = today;
                 if (dateInput) dateInput.value = today;
@@ -4186,6 +4199,7 @@ function initApp() {
         if (btnYesterday && !btnYesterday.dataset.listenerBound) {
             btnYesterday.dataset.listenerBound = "true";
             btnYesterday.addEventListener("click", () => {
+                window._liveSalesUserPickedDate = true;
                 const d = new Date();
                 d.setDate(d.getDate() - 1);
                 const yestStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -4199,6 +4213,7 @@ function initApp() {
         if (btnAll && !btnAll.dataset.listenerBound) {
             btnAll.dataset.listenerBound = "true";
             btnAll.addEventListener("click", () => {
+                window._liveSalesUserPickedDate = true;
                 selectedLiveSalesFilterDate = 'ALL';
                 if (dateInput) dateInput.value = '';
                 renderLiveSalesStream();
@@ -6646,6 +6661,9 @@ function initApp() {
         });
         
         renderAllLists();
+        if (screenId === 'live-sales-stream' || screenId === 'tables') {
+            syncStateFromServer(true);
+        }
     }
 
     document.querySelectorAll(".nav-item").forEach(item => {
@@ -10004,36 +10022,41 @@ function initApp() {
     // POS BILLING SYSTEM FRONTEND CONTROLLER
     // ==========================================================================
 
-    function renderBillingScreen() {
-        loadCartFromStorage();
+    function ensureSocketConnected() {
         if (!socket && typeof io !== 'undefined') {
             socket = io(API_BASE || window.location.origin, { auth: { token: localStorage.getItem('bk_jwt_token') } });
             socket.on('stock_alert', (data) => {
                 showToast(`Low Stock Alert: ${data.label} in ${data.store}! Only ${data.stock} left.`);
-                syncStateFromServer();
+                syncStateFromServer(true);
             });
             socket.on('kot_update', (data) => {
                 showToast(`KOT status updated: Order ${data.id} is now ${data.status}`);
-                syncStateFromServer();
+                syncStateFromServer(true);
             });
             socket.on('order_placed', (data) => {
-                // Removed toast and syncStateFromServer to prevent "extra requests" and annoying popups
-                // Only dispatch the event for the P&L dashboard or KDS to update
                 window.dispatchEvent(new CustomEvent('bk_order_placed', { detail: data }));
             });
             socket.on('table_update', () => {
-                syncStateFromServer();
+                syncStateFromServer(true);
+            });
+            socket.on('live_sales_update', () => {
+                syncStateFromServer(true);
             });
             socket.on('customer_created', () => {
-                syncStateFromServer();
+                syncStateFromServer(true);
             });
             socket.on('requisition_update', () => {
-                syncStateFromServer();
+                syncStateFromServer(true);
                 if (document.getElementById("sub-inventory-requisitions")?.style.display === "block") {
                     renderRequisitionsTab();
                 }
             });
         }
+    }
+
+    function renderBillingScreen() {
+        loadCartFromStorage();
+        ensureSocketConnected();
 
         // Online / Offline Indicator Check
         const offlineBadge = document.getElementById("posOfflineBadge");
@@ -11960,6 +11983,11 @@ function initApp() {
                 if (result.order) {
                     orderObj.id = result.order.id;
                     orderObj.kotNumber = result.order.kotNumber || orderObj.kotNumber;
+                    if (result.order.date) orderObj.date = result.order.date;
+                    if (result.order.time) orderObj.time = result.order.time;
+                    if (result.order.date && result.order.time) {
+                        orderObj.timestamp = `${result.order.date}T${result.order.time}`;
+                    }
                 }
             } else {
                 const errText = await response.text().catch(() => response.status);
@@ -12185,6 +12213,7 @@ function initApp() {
         const storeName = getPOSStore();
         let settlementId = 'settle-' + Date.now();
         let finalizedIds = [...ctx.orderIds];
+        let serverFinalizedOrders = [];
 
         try {
             const res = await fetch(`${API_BASE}/api/pos/tables/finalize`, {
@@ -12214,12 +12243,29 @@ function initApp() {
             if (Array.isArray(result.finalizedOrderIds) && result.finalizedOrderIds.length > 0) {
                 finalizedIds = result.finalizedOrderIds;
             }
+            if (Array.isArray(result.finalizedOrders)) {
+                serverFinalizedOrders = result.finalizedOrders;
+            }
         } catch (err) {
             console.error("Failed to finalize table bill:", err);
             alert("Failed to finalize bill: " + err.message);
             window._pendingFinalizeContext = null;
             return;
         }
+
+        // Merge any server-finalized rows missing from local posOrders and sync timestamps/status
+        serverFinalizedOrders.forEach(srvOrd => {
+            const existing = (posOrders || []).find(o => o.id === srvOrd.id);
+            if (existing) {
+                Object.assign(existing, srvOrd);
+                if (srvOrd.date && srvOrd.time && !existing.timestamp) {
+                    existing.timestamp = `${srvOrd.date}T${srvOrd.time}`;
+                }
+            } else if (Array.isArray(posOrders)) {
+                const itemsForOrd = (posOrderItems || []).filter(i => i.orderId === srvOrd.id);
+                posOrders.push({ ...srvOrd, items: itemsForOrd });
+            }
+        });
 
         const finalizedOrders = (posOrders || []).filter(o => finalizedIds.includes(o.id));
         const totalGrand = finalizedOrders.reduce((s, o) => s + (parseFloat(o.grandTotal) || 0), 0);
@@ -12273,6 +12319,8 @@ function initApp() {
         if (typeof renderTableFloorPlan === 'function') renderTableFloorPlan();
         updateOccupiedTablesBadges();
         if (typeof renderTablesScreen === 'function') renderTablesScreen();
+        window._liveSalesUserPickedDate = false;
+        selectedLiveSalesFilterDate = (finalizedOrders[finalizedOrders.length - 1]?.date) || getTodayDateStr();
         if (typeof window.renderLiveSalesStream === 'function') window.renderLiveSalesStream();
         if (typeof initReconciliationState === 'function') initReconciliationState();
 
@@ -12310,7 +12358,8 @@ function initApp() {
 
         // Persist fresh server state in background for Live Sales Stream consistency
         if (typeof syncStateFromServer === 'function') {
-            setTimeout(() => syncStateFromServer(), 300);
+            lastStateJson = '';
+            setTimeout(() => syncStateFromServer(true), 300);
         }
 
         showToast(`Final Bill printed & saved to Live Sales Stream! ${ctx.tableName || 'Order'} is now unoccupied.`);
@@ -15675,6 +15724,7 @@ function initApp() {
     const overlay = document.getElementById("login-overlay");
     if (overlay) overlay.style.display = "none";
     setRole("owner");
+    ensureSocketConnected();
     syncStateFromServer(true);
 
         // =========================================================================

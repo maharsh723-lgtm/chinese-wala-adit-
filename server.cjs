@@ -4404,7 +4404,7 @@ app.post('/api/pos/tables/finalize', authenticateToken, (req, res) => {
       ).all(tableName, store);
     }
 
-    const settlementId = 'settle-' + Date.now();
+    const settlementId = 'settle-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     const totalGrand = activeOrders.reduce((sum, o) => sum + (parseFloat(o.grandTotal) || 0), 0);
     const totalSplitCash = parseFloat(splitCashAmount) || 0;
     const totalSplitUpi = parseFloat(splitUpiAmount) || 0;
@@ -4487,10 +4487,18 @@ app.post('/api/pos/tables/finalize', authenticateToken, (req, res) => {
       io.emit('live_sales_update');
     }
 
+    let updatedOrders = [];
+    if (activeOrders.length > 0) {
+      const fIds = activeOrders.map(o => o.id);
+      const placeholders = fIds.map(() => '?').join(',');
+      updatedOrders = db.prepare(`SELECT * FROM pos_orders WHERE id IN (${placeholders})`).all(...fIds);
+    }
+
     res.json({
       success: true,
       settlementId,
       finalizedOrderIds: activeOrders.map(o => o.id),
+      finalizedOrders: updatedOrders,
       tableName: tableName || (activeOrders[0] && activeOrders[0].tableName) || null
     });
   } catch (err) {
