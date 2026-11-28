@@ -4242,6 +4242,184 @@ app.get('/api/pos/products', authenticateToken, (req, res) => {
   }
 });
 
+app.post('/api/pos/products', authenticateToken, (req, res) => {
+  try {
+    const {
+      name,
+      category,
+      price,
+      isVeg = 1,
+      stock = 100,
+      image = null,
+      cost = null
+    } = req.body || {};
+
+    const cleanName = typeof name === 'string' ? name.trim() : '';
+    const cleanCategory = typeof category === 'string' ? category.trim() : '';
+    const numericPrice = parseFloat(price);
+
+    if (!cleanName || !cleanCategory || isNaN(numericPrice) || numericPrice < 0) {
+      return res.status(400).json({ error: 'Valid item name, segment/category, and non-negative price are required.' });
+    }
+
+    let resolvedImage = image;
+    if (!resolvedImage) {
+      const matchCat = db.prepare('SELECT image FROM pos_products WHERE lower(category) = lower(?) AND image IS NOT NULL AND image != \'\' LIMIT 1').get(cleanCategory);
+      resolvedImage = (matchCat && matchCat.image) || '';
+    }
+
+    const estimatedCost = (cost !== null && cost !== undefined && cost !== '' && !isNaN(parseFloat(cost)))
+      ? Math.max(0, parseFloat(cost))
+      : Math.round(numericPrice * 0.30 * 100) / 100;
+    const ingredientsArr = [{ name: 'Ingredients', qty: 1, unit: 'portion', cost: estimatedCost }];
+    const ingredientsJson = JSON.stringify(ingredientsArr);
+
+    const id = 'cw-custom-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+    const vegFlag = (isVeg === 0 || isVeg === '0' || isVeg === false) ? 0 : 1;
+    const stockVal = !isNaN(parseInt(stock)) ? Math.max(1, parseInt(stock)) : 100;
+
+    db.prepare(`
+      INSERT INTO pos_products (id, name, category, price, image, isVeg, isPopular, isFavorite, stock, ingredients, recipeId)
+      VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, ?, NULL)
+    `).run(id, cleanName, cleanCategory, numericPrice, resolvedImage, vegFlag, stockVal, ingredientsJson);
+
+    db.prepare(`
+      INSERT INTO pos_audit_logs (id, timestamp, action, userId, userName, details, store)
+      VALUES (?, ?, 'CREATE_MENU_ITEM', ?, ?, ?, ?)
+    `).run(
+      `audit-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      new Date().toISOString(),
+      (req.user && req.user.id) || 'owner',
+      (req.user && req.user.name) || 'Owner',
+      JSON.stringify({ id, name: cleanName, category: cleanCategory, price: numericPrice }),
+      'ADIT CAMPUS'
+    );
+
+    const io = req.app.get('io');
+    if (io) io.emit('menu_update');
+
+    res.json({
+      success: true,
+      product: {
+        id,
+        name: cleanName,
+        category: cleanCategory,
+        price: numericPrice,
+        image: resolvedImage,
+        isVeg: vegFlag,
+        isPopular: 0,
+        isFavorite: 0,
+        stock: stockVal,
+        ingredients: ingredientsArr,
+        recipeId: null
+      }
+    });
+  } catch (err) {
+    console.error('Failed to add menu item:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/pos/products/:id', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = db.prepare('SELECT * FROM pos_products WHERE id = ?').get(id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
+
+    const { name, category, price, isVeg, cost } = req.body || {};
+    const nextName = (typeof name === 'string' && name.trim()) ? name.trim() : existing.name;
+    const nextCategory = (typeof category === 'string' && category.trim()) ? category.trim() : existing.category;
+    const nextPrice = price !== undefined ? parseFloat(price) : existing.price;
+
+    if (isNaN(nextPrice) || nextPrice < 0) {
+      return res.status(400).json({ error: 'Price must be a valid non-negative number.' });
+    }
+
+    const nextVeg = (isVeg === 0 || isVeg === '0' || isVeg === false)
+      ? 0
+      : ((isVeg === 1 || isVeg === '1' || isVeg === true) ? 1 : (existing.isVeg ?? 1));
+
+    let parsedIngredients = [];
+    try {
+      parsedIngredients = existing.ingredients ? JSON.parse(existing.ingredients) : [];
+    } catch (e) {
+      parsedIngredients = [];
+    }
+    if (cost !== undefined && cost !== null && cost !== '' && !isNaN(parseFloat(cost))) {
+      parsedIngredients = [{ name: 'Ingredients', qty: 1, unit: 'portion', cost: Math.max(0, parseFloat(cost)) }];
+    }
+
+    db.prepare(`
+      UPDATE pos_products
+      SET name = ?, category = ?, price = ?, isVeg = ?, ingredients = ?
+      WHERE id = ?
+    `).run(nextName, nextCategory, nextPrice, nextVeg, JSON.stringify(parsedIngredients), id);
+
+    db.prepare(`
+      INSERT INTO pos_audit_logs (id, timestamp, action, userId, userName, details, store)
+      VALUES (?, ?, 'UPDATE_MENU_ITEM', ?, ?, ?, ?)
+    `).run(
+      `audit-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      new Date().toISOString(),
+      (req.user && req.user.id) || 'owner',
+      (req.user && req.user.name) || 'Owner',
+      JSON.stringify({ id, name: nextName, category: nextCategory, prevPrice: existing.price, newPrice: nextPrice }),
+      'ADIT CAMPUS'
+    );
+
+    const io = req.app.get('io');
+    if (io) io.emit('menu_update');
+
+    res.json({
+      success: true,
+      product: {
+        ...existing,
+        name: nextName,
+        category: nextCategory,
+        price: nextPrice,
+        isVeg: nextVeg,
+        ingredients: parsedIngredients
+      }
+    });
+  } catch (err) {
+    console.error('Failed to update menu item:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/pos/products/:id', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = db.prepare('SELECT * FROM pos_products WHERE id = ?').get(id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
+
+    db.prepare('DELETE FROM pos_products WHERE id = ?').run(id);
+    db.prepare(`
+      INSERT INTO pos_audit_logs (id, timestamp, action, userId, userName, details, store)
+      VALUES (?, ?, 'DELETE_MENU_ITEM', ?, ?, ?, ?)
+    `).run(
+      `audit-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      new Date().toISOString(),
+      (req.user && req.user.id) || 'owner',
+      (req.user && req.user.name) || 'Owner',
+      JSON.stringify({ id, name: existing.name, category: existing.category, price: existing.price }),
+      'ADIT CAMPUS'
+    );
+
+    const io = req.app.get('io');
+    if (io) io.emit('menu_update');
+
+    res.json({ success: true, id });
+  } catch (err) {
+    console.error('Failed to delete menu item:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/pos/modifiers', authenticateToken, (req, res) => {
   try {
     const modifiers = db.prepare('SELECT * FROM pos_modifiers').all();

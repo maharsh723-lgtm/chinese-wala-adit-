@@ -19,8 +19,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-grid.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community/styles/ag-theme-alpine.css">
     <script defer src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-  <script type="module" crossorigin src="./assets/index-BGgBNzCq.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-CqFU8JOa.css">
+  <script type="module" crossorigin src="./assets/index-C0vLLs8p.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-fwQm0eg6.css">
 </head>
 <body>
 
@@ -2605,36 +2605,118 @@
                 <div class="app-screen" id="screen-settings-panel">
                     <div class="screen-header-layout">
                         <div class="screen-title-desc">
-                            <h1>System Configuration & Settings</h1>
-                            <p>Configure regional parameters, user access groups and security credentials.</p>
+                            <h1>Settings</h1>
+                            <p>Manage menu items, item pricing, food segments, and store configurations.</p>
                         </div>
                         <div class="screen-actions">
-                            <button class="saas-btn saas-btn-primary" onclick="alert('Settings parameters saved!')">Save Parameters</button>
+                            <div class="settings-subtabs" role="tablist" aria-label="Settings Sections">
+                                <button type="button" class="settings-subtab-btn active" id="settingsTabBtnMenu" data-settings-tab="menu" role="tab" aria-selected="true">
+                                    <i data-lucide="utensils"></i> Menu
+                                </button>
+                                <button type="button" class="settings-subtab-btn" id="settingsTabBtnGeneral" data-settings-tab="general" role="tab" aria-selected="false">
+                                    <i data-lucide="sliders"></i> General
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 32px;">
-                        <h3 style="font-weight: 800; margin-bottom: 24px;">Global Enterprise Configurations</h3>
-                        <div class="form-row-grid" style="gap: 24px;">
-                            <div class="saas-form-group">
-                                <label class="saas-form-label">Franchise Enterprise ID</label>
-                                <input type="text" class="saas-form-input" value="BK-GLOBAL-INDIA-9840" disabled>
+                    <!-- SETTINGS TAB: MENU MANAGEMENT -->
+                    <div id="settingsTabMenuPanel">
+                        <div class="settings-card" style="margin-bottom: 24px;">
+                            <div class="settings-card-header">
+                                <div>
+                                    <h3>Add New Food Item</h3>
+                                    <p>Add a new dish to Billing immediately with its segment and price.</p>
+                                </div>
                             </div>
-                            <div class="saas-form-group">
-                                <label class="saas-form-label">Target Food Cost Percentage</label>
-                                <input type="text" class="saas-form-input" value="29.0%">
+                            <div class="settings-add-item-grid">
+                                <div class="saas-form-group" style="margin-bottom: 0;">
+                                    <label class="saas-form-label" for="settingsMenuNewName">Food Item Name *</label>
+                                    <input type="text" id="settingsMenuNewName" class="saas-form-input" placeholder="e.g., Paneer Chilli Dry" autocomplete="off">
+                                </div>
+                                <div class="saas-form-group" style="margin-bottom: 0;">
+                                    <label class="saas-form-label" for="settingsMenuNewCategory">Segment / Category *</label>
+                                    <select id="settingsMenuNewCategory" class="saas-form-select"></select>
+                                    <input type="text" id="settingsMenuCustomCategory" class="saas-form-input" placeholder="Enter new segment name" style="display: none; margin-top: 8px;" autocomplete="off">
+                                </div>
+                                <div class="saas-form-group" style="margin-bottom: 0;">
+                                    <label class="saas-form-label" for="settingsMenuNewPrice">Cost / Price (₹) *</label>
+                                    <input type="number" id="settingsMenuNewPrice" class="saas-form-input" min="1" step="1" placeholder="e.g., 160">
+                                </div>
+                                <div class="saas-form-group" style="margin-bottom: 0;">
+                                    <label class="saas-form-label" for="settingsMenuNewVeg">Food Type</label>
+                                    <select id="settingsMenuNewVeg" class="saas-form-select">
+                                        <option value="1">Veg</option>
+                                        <option value="0">Non-Veg</option>
+                                    </select>
+                                </div>
+                                <div class="settings-add-item-action">
+                                    <button type="button" id="btnSettingsAddMenuItem" class="saas-btn saas-btn-primary">
+                                        <i data-lucide="plus"></i> Add Item
+                                    </button>
+                                </div>
                             </div>
-                            <div class="saas-form-group">
-                                <label class="saas-form-label">Automatic Reorder Threshold</label>
-                                <select class="saas-form-select">
-                                    <option value="15%">15% Minimum Stock</option>
-                                    <option value="25%">25% Minimum Stock</option>
-                                    <option value="35%">35% Minimum Stock</option>
-                                </select>
+                        </div>
+
+                        <div class="settings-card">
+                            <div class="settings-card-header settings-menu-toolbar">
+                                <div>
+                                    <h3>Menu Items &amp; Cost Editor <span id="settingsMenuCountBadge" class="settings-count-badge">0 items</span></h3>
+                                    <p>Edit any item's name, segment, or price (₹) and click Save to update Billing immediately.</p>
+                                </div>
+                                <div class="settings-menu-filters">
+                                    <input type="text" id="settingsMenuSearchInput" class="saas-form-input" placeholder="Search food item..." autocomplete="off">
+                                    <select id="settingsMenuCategoryFilter" class="saas-form-select"></select>
+                                </div>
                             </div>
-                            <div class="saas-form-group">
-                                <label class="saas-form-label">Notification Defrost Temp Warning</label>
-                                <input type="text" class="saas-form-input" value="-12°C">
+                            <div class="settings-menu-table-wrap">
+                                <table class="settings-menu-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Food Item Name</th>
+                                            <th>Segment</th>
+                                            <th>Type</th>
+                                            <th style="width: 150px;">Cost / Price (₹)</th>
+                                            <th style="width: 170px; text-align: right;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="settingsMenuTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SETTINGS TAB: GENERAL -->
+                    <div id="settingsTabGeneralPanel" style="display: none;">
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <div>
+                                    <h3>Global Enterprise Configurations</h3>
+                                    <p>Configure regional parameters, user access groups and security credentials.</p>
+                                </div>
+                                <button type="button" class="saas-btn saas-btn-primary" onclick="if (typeof showToast === 'function') showToast('Settings parameters saved!', 'success'); else alert('Settings parameters saved!');">Save Parameters</button>
+                            </div>
+                            <div class="form-row-grid" style="gap: 24px;">
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label">Franchise Enterprise ID</label>
+                                    <input type="text" class="saas-form-input" value="BK-GLOBAL-INDIA-9840" disabled>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label">Target Food Cost Percentage</label>
+                                    <input type="text" class="saas-form-input" value="29.0%">
+                                </div>
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label">Automatic Reorder Threshold</label>
+                                    <select class="saas-form-select">
+                                        <option value="15%">15% Minimum Stock</option>
+                                        <option value="25%">25% Minimum Stock</option>
+                                        <option value="35%">35% Minimum Stock</option>
+                                    </select>
+                                </div>
+                                <div class="saas-form-group">
+                                    <label class="saas-form-label">Notification Defrost Temp Warning</label>
+                                    <input type="text" class="saas-form-input" value="-12°C">
+                                </div>
                             </div>
                         </div>
                     </div>

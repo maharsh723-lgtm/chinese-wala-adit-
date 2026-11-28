@@ -618,6 +618,7 @@ function initApp() {
             case 'billing': renderBillingScreen(); break;
             case 'tables': renderTablesScreen(); break;
             case 'cash-reconciliation': renderCashReconciliationScreen(); break;
+            case 'settings-panel': renderSettingsScreen(); break;
             case 'excel-import': renderExcelImportScreen(); break;
             case 'reports-portal':
                 if (typeof window.refreshReportsPortal === "function") {
@@ -654,7 +655,7 @@ function initApp() {
         const am = document.getElementById("amNavGroup");
         if (am) am.style.display = "none";
         const settings = document.getElementById("settingsNavGroup");
-        if (settings) settings.style.display = "none";
+        if (settings) settings.style.display = currentRole === "owner" ? "" : "none";
 
         // Hide unused navigation options
         const unusedNavs = ["sop-management"];
@@ -736,6 +737,438 @@ function initApp() {
         renderAllLists();
         navigateToScreen("dashboard");
     }
+
+    // =====================================================
+    // OWNER SETTINGS: MENU MANAGEMENT (ADD / EDIT / COST)
+    // =====================================================
+    const DEFAULT_MENU_SEGMENTS = [
+        'Noodles', 'Rice', 'Chinese Starters', 'French Fries', 'Momos',
+        'Cold Drinks', 'Chai Coffee', 'Breakfast', 'Pizza', 'Burger',
+        'Sandwich', 'Garlic Bread', 'Gujarati Thali'
+    ];
+    let settingsActiveTab = 'menu';
+    let settingsMenuListenersBound = false;
+
+    function getAllMenuSegments() {
+        const ordered = [];
+        const seen = new Set();
+        const pushCat = (cat) => {
+            const clean = String(cat || '').trim();
+            if (!clean) return;
+            const key = clean.toLowerCase();
+            if (!seen.has(key)) {
+                seen.add(key);
+                ordered.push(clean);
+            }
+        };
+        DEFAULT_MENU_SEGMENTS.forEach(pushCat);
+        (posProducts || []).forEach(p => pushCat(p && p.category));
+        return ordered;
+    }
+
+    function syncSelectOptionsPreservingValue(selectEl, options, fallbackValue) {
+        if (!selectEl) return;
+        const prev = selectEl.value;
+        selectEl.innerHTML = options.map(opt => `<option value="${escapeHTML(opt.value)}">${escapeHTML(opt.label)}</option>`).join('');
+        const hasPrev = prev && options.some(opt => opt.value === prev);
+        if (hasPrev) {
+            selectEl.value = prev;
+        } else if (fallbackValue !== undefined && options.some(opt => opt.value === fallbackValue)) {
+            selectEl.value = fallbackValue;
+        }
+    }
+
+    function switchSettingsTab(tab) {
+        settingsActiveTab = tab === 'general' ? 'general' : 'menu';
+        const menuBtn = document.getElementById('settingsTabBtnMenu');
+        const generalBtn = document.getElementById('settingsTabBtnGeneral');
+        const menuPanel = document.getElementById('settingsTabMenuPanel');
+        const generalPanel = document.getElementById('settingsTabGeneralPanel');
+
+        if (menuBtn) {
+            menuBtn.classList.toggle('active', settingsActiveTab === 'menu');
+            menuBtn.setAttribute('aria-selected', String(settingsActiveTab === 'menu'));
+        }
+        if (generalBtn) {
+            generalBtn.classList.toggle('active', settingsActiveTab === 'general');
+            generalBtn.setAttribute('aria-selected', String(settingsActiveTab === 'general'));
+        }
+        if (menuPanel) menuPanel.style.display = settingsActiveTab === 'menu' ? 'block' : 'none';
+        if (generalPanel) generalPanel.style.display = settingsActiveTab === 'general' ? 'block' : 'none';
+    }
+
+    function applyMenuProductMutationLocally(product, mode = 'upsert') {
+        if (!Array.isArray(posProducts)) posProducts = [];
+        if (mode === 'delete') {
+            const removeId = String(product && product.id);
+            posProducts = posProducts.filter(p => String(p.id) !== removeId);
+        } else if (product && product.id) {
+            const idx = posProducts.findIndex(p => String(p.id) === String(product.id));
+            if (idx >= 0) posProducts[idx] = product;
+            else posProducts.push(product);
+        }
+        lastStateJson = '';
+        if (typeof renderCategoryTabs === 'function') renderCategoryTabs();
+        if (typeof renderPosProductsList === 'function') renderPosProductsList();
+        renderSettingsScreen(true);
+    }
+
+    async function addSettingsMenuItem() {
+        if (currentRole !== 'owner') {
+            showToast('Only the Owner can add or edit menu items.');
+            return;
+        }
+        const nameEl = document.getElementById('settingsMenuNewName');
+        const catEl = document.getElementById('settingsMenuNewCategory');
+        const customCatEl = document.getElementById('settingsMenuCustomCategory');
+        const priceEl = document.getElementById('settingsMenuNewPrice');
+        const vegEl = document.getElementById('settingsMenuNewVeg');
+        const addBtn = document.getElementById('btnSettingsAddMenuItem');
+
+        const name = (nameEl?.value || '').trim();
+        const selectedCat = (catEl?.value || '').trim();
+        const category = selectedCat === '__custom__' ? (customCatEl?.value || '').trim() : selectedCat;
+        const priceNum = Number(priceEl?.value);
+        const isVeg = vegEl?.value === '0' ? 0 : 1;
+
+        if (!name) {
+            showToast('Please enter the food item name.');
+            if (nameEl) nameEl.focus();
+            return;
+        }
+        if (!category) {
+            showToast('Please select or enter a menu segment.');
+            if (selectedCat === '__custom__' && customCatEl) customCatEl.focus();
+            else if (catEl) catEl.focus();
+            return;
+        }
+        if (!Number.isFinite(priceNum) || priceNum <= 0) {
+            showToast('Please enter a valid price greater than 0.');
+            if (priceEl) priceEl.focus();
+            return;
+        }
+
+        const cleanPrice = Math.round(priceNum * 100) / 100;
+        const prevBtnHtml = addBtn ? addBtn.innerHTML : '';
+        if (addBtn) {
+            addBtn.disabled = true;
+            addBtn.textContent = 'Adding...';
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/pos/products`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, category, price: cleanPrice, cost: cleanPrice, isVeg })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || `Failed (${res.status})`);
+
+            if (nameEl) nameEl.value = '';
+            if (priceEl) priceEl.value = '';
+            if (customCatEl) {
+                customCatEl.value = '';
+                customCatEl.style.display = 'none';
+            }
+            if (catEl && selectedCat === '__custom__') {
+                catEl.value = category;
+            }
+
+            applyMenuProductMutationLocally(data.product, 'upsert');
+            const newCatSelect = document.getElementById('settingsMenuNewCategory');
+            if (newCatSelect) newCatSelect.value = category;
+            showToast(`Added "${name}" (₹${cleanPrice}) to ${category}!`);
+            syncStateFromServer(true);
+        } catch (err) {
+            showToast(`Failed to add item: ${err.message}`);
+        } finally {
+            if (addBtn) {
+                addBtn.disabled = false;
+                addBtn.innerHTML = prevBtnHtml;
+                if (window.lucide) window.lucide.createIcons();
+            }
+        }
+    }
+
+    async function saveSettingsMenuItem(productId) {
+        if (currentRole !== 'owner') {
+            showToast('Only the Owner can change menu prices or items.');
+            return;
+        }
+        const row = Array.from(document.querySelectorAll('#settingsMenuTableBody tr[data-product-id]'))
+            .find(tr => tr.getAttribute('data-product-id') === String(productId));
+        if (!row) return;
+
+        const nameEl = row.querySelector('.settings-menu-name-input');
+        const catEl = row.querySelector('.settings-menu-cat-select');
+        const vegEl = row.querySelector('.settings-menu-veg-select');
+        const priceEl = row.querySelector('.settings-menu-price-input');
+        const saveBtn = row.querySelector('.settings-save-row-btn');
+
+        const name = (nameEl?.value || '').trim();
+        const category = (catEl?.value || '').trim();
+        const isVeg = vegEl?.value === '0' ? 0 : 1;
+        const priceNum = Number(priceEl?.value);
+
+        if (!name) {
+            showToast('Food item name cannot be empty.');
+            if (nameEl) nameEl.focus();
+            return;
+        }
+        if (!category) {
+            showToast('Please select a segment.');
+            if (catEl) catEl.focus();
+            return;
+        }
+        if (!Number.isFinite(priceNum) || priceNum <= 0) {
+            showToast('Please enter a valid price greater than 0.');
+            if (priceEl) priceEl.focus();
+            return;
+        }
+
+        const cleanPrice = Math.round(priceNum * 100) / 100;
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/pos/products/${encodeURIComponent(productId)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, category, price: cleanPrice, cost: cleanPrice, isVeg })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || `Failed (${res.status})`);
+
+            delete row.dataset.dirty;
+            applyMenuProductMutationLocally(data.product, 'upsert');
+            showToast(`Updated "${name}" to ₹${cleanPrice}!`);
+            syncStateFromServer(true);
+        } catch (err) {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save';
+            }
+            showToast(`Failed to update item: ${err.message}`);
+        }
+    }
+
+    async function deleteSettingsMenuItem(productId) {
+        if (currentRole !== 'owner') {
+            showToast('Only the Owner can remove menu items.');
+            return;
+        }
+        const existing = (posProducts || []).find(p => String(p.id) === String(productId));
+        const itemLabel = existing ? existing.name : productId;
+        if (typeof confirm === 'function' && !confirm(`Remove "${itemLabel}" from the menu? It will no longer appear in Billing.`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/pos/products/${encodeURIComponent(productId)}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || `Failed (${res.status})`);
+
+            applyMenuProductMutationLocally({ id: productId }, 'delete');
+            showToast(`Removed "${itemLabel}" from menu.`);
+            syncStateFromServer(true);
+        } catch (err) {
+            showToast(`Failed to remove item: ${err.message}`);
+        }
+    }
+
+    function bindSettingsMenuListeners() {
+        if (settingsMenuListenersBound) return;
+        settingsMenuListenersBound = true;
+
+        const menuTabBtn = document.getElementById('settingsTabBtnMenu');
+        const generalTabBtn = document.getElementById('settingsTabBtnGeneral');
+        if (menuTabBtn) menuTabBtn.addEventListener('click', () => switchSettingsTab('menu'));
+        if (generalTabBtn) generalTabBtn.addEventListener('click', () => switchSettingsTab('general'));
+
+        const newCatSelect = document.getElementById('settingsMenuNewCategory');
+        const customCatInput = document.getElementById('settingsMenuCustomCategory');
+        if (newCatSelect && customCatInput) {
+            newCatSelect.addEventListener('change', () => {
+                const isCustom = newCatSelect.value === '__custom__';
+                customCatInput.style.display = isCustom ? 'block' : 'none';
+                if (isCustom) customCatInput.focus();
+            });
+        }
+
+        const addBtn = document.getElementById('btnSettingsAddMenuItem');
+        if (addBtn) addBtn.addEventListener('click', addSettingsMenuItem);
+
+        const searchInput = document.getElementById('settingsMenuSearchInput');
+        if (searchInput) searchInput.addEventListener('input', () => renderSettingsMenuTable(true));
+
+        const catFilter = document.getElementById('settingsMenuCategoryFilter');
+        if (catFilter) catFilter.addEventListener('change', () => renderSettingsMenuTable(true));
+
+        const tbody = document.getElementById('settingsMenuTableBody');
+        if (tbody) {
+            const markDirty = (target) => {
+                const row = target.closest('tr[data-product-id]');
+                if (!row) return;
+                row.dataset.dirty = '1';
+                const saveBtn = row.querySelector('.settings-save-row-btn');
+                if (saveBtn) {
+                    saveBtn.classList.add('dirty');
+                    saveBtn.textContent = 'Save *';
+                }
+            };
+            tbody.addEventListener('input', (e) => markDirty(e.target));
+            tbody.addEventListener('change', (e) => markDirty(e.target));
+            tbody.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && (e.target.classList.contains('settings-menu-price-input') || e.target.classList.contains('settings-menu-name-input'))) {
+                    e.preventDefault();
+                    const row = e.target.closest('tr[data-product-id]');
+                    if (row) saveSettingsMenuItem(row.getAttribute('data-product-id'));
+                }
+            });
+            tbody.addEventListener('click', (e) => {
+                const saveBtn = e.target.closest('.settings-save-row-btn');
+                if (saveBtn) {
+                    const row = saveBtn.closest('tr[data-product-id]');
+                    if (row) saveSettingsMenuItem(row.getAttribute('data-product-id'));
+                    return;
+                }
+                const deleteBtn = e.target.closest('.settings-delete-row-btn');
+                if (deleteBtn) {
+                    const row = deleteBtn.closest('tr[data-product-id]');
+                    if (row) deleteSettingsMenuItem(row.getAttribute('data-product-id'));
+                }
+            });
+        }
+    }
+
+    function renderSettingsMenuTable(force = false) {
+        const tbody = document.getElementById('settingsMenuTableBody');
+        if (!tbody) return;
+
+        const searchTerm = (document.getElementById('settingsMenuSearchInput')?.value || '').trim().toLowerCase();
+        const catFilterVal = (document.getElementById('settingsMenuCategoryFilter')?.value || '').trim();
+        const allItems = Array.isArray(posProducts) ? posProducts : [];
+
+        const filtered = allItems
+            .filter(item => {
+                if (!item) return false;
+                const itemCat = String(item.category || '');
+                const matchesCat = !catFilterVal || itemCat === catFilterVal;
+                const matchesSearch = !searchTerm ||
+                    String(item.name || '').toLowerCase().includes(searchTerm) ||
+                    itemCat.toLowerCase().includes(searchTerm);
+                return matchesCat && matchesSearch;
+            })
+            .slice()
+            .sort((a, b) => {
+                const catCmp = String(a.category || '').localeCompare(String(b.category || ''));
+                return catCmp !== 0 ? catCmp : String(a.name || '').localeCompare(String(b.name || ''));
+            });
+
+        const countBadge = document.getElementById('settingsMenuCountBadge');
+        if (countBadge) {
+            countBadge.textContent = filtered.length === allItems.length
+                ? `${allItems.length} items`
+                : `${filtered.length} of ${allItems.length} items`;
+        }
+
+        if (!force) {
+            const activeInsideTable = document.activeElement && tbody.contains(document.activeElement);
+            const hasDirtyRow = Boolean(tbody.querySelector('tr[data-dirty="1"]'));
+            if (activeInsideTable || hasDirtyRow) return;
+        }
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="settings-empty-row">No matching food items found. Use "Add New Food Item" above to create one.</td></tr>`;
+            return;
+        }
+
+        const segments = getAllMenuSegments();
+        tbody.innerHTML = filtered.map(item => {
+            const idAttr = escapeHTML(String(item.id));
+            const itemCat = String(item.category || '');
+            const catList = segments.includes(itemCat) || !itemCat ? segments : [...segments, itemCat];
+            const catOptions = catList.map(seg =>
+                `<option value="${escapeHTML(seg)}" ${seg === itemCat ? 'selected' : ''}>${escapeHTML(seg)}</option>`
+            ).join('');
+            const vegVal = (item.isVeg === 0 || item.isVeg === false) ? '0' : '1';
+            const cleanPrice = Number(item.price || 0);
+
+            return `
+                <tr data-product-id="${idAttr}">
+                    <td>
+                        <input type="text" class="saas-form-input settings-menu-name-input" value="${escapeHTML(item.name || '')}" aria-label="Food item name">
+                    </td>
+                    <td>
+                        <select class="saas-form-select settings-menu-cat-select" aria-label="Menu segment">
+                            ${catOptions}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="saas-form-select settings-menu-veg-select" aria-label="Food type">
+                            <option value="1" ${vegVal === '1' ? 'selected' : ''}>Veg</option>
+                            <option value="0" ${vegVal === '0' ? 'selected' : ''}>Non-Veg</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="settings-menu-price-wrap">
+                            <span class="settings-menu-price-prefix">₹</span>
+                            <input type="number" class="settings-menu-price-input" min="1" step="1" value="${escapeHTML(String(cleanPrice))}" aria-label="Item price in rupees">
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="settings-row-actions">
+                            <button type="button" class="settings-save-row-btn">Save</button>
+                            <button type="button" class="settings-delete-row-btn">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderSettingsScreen(force = false) {
+        bindSettingsMenuListeners();
+        switchSettingsTab(settingsActiveTab);
+
+        const segments = getAllMenuSegments();
+        const newCatSelect = document.getElementById('settingsMenuNewCategory');
+        if (newCatSelect) {
+            const newCatOptions = [
+                ...segments.map(seg => ({ value: seg, label: seg })),
+                { value: '__custom__', label: '+ Custom Segment...' }
+            ];
+            syncSelectOptionsPreservingValue(newCatSelect, newCatOptions, segments[0] || '');
+        }
+
+        const catFilter = document.getElementById('settingsMenuCategoryFilter');
+        if (catFilter) {
+            const filterOptions = [
+                { value: '', label: 'All Segments' },
+                ...segments.map(seg => ({ value: seg, label: seg }))
+            ];
+            syncSelectOptionsPreservingValue(catFilter, filterOptions, '');
+        }
+
+        const isOwner = currentRole === 'owner';
+        const addBtn = document.getElementById('btnSettingsAddMenuItem');
+        if (addBtn) addBtn.disabled = !isOwner;
+
+        renderSettingsMenuTable(force);
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    window.renderSettingsScreen = renderSettingsScreen;
+    window.switchSettingsTab = switchSettingsTab;
+    window.saveSettingsMenuItem = saveSettingsMenuItem;
+    window.deleteSettingsMenuItem = deleteSettingsMenuItem;
+    window.addSettingsMenuItem = addSettingsMenuItem;
 
     function enableWriteControls(enable) {
         const createButtons = document.querySelectorAll("#dashGlobalCreateBtn, #btnCreatePrTop, #quickSopBtn, #quickInvBtn, #quickWastageBtn, #quickReportBtn, #quickEmpBtn");
@@ -10043,6 +10476,10 @@ function initApp() {
                 syncStateFromServer(true);
             });
             socket.on('customer_created', () => {
+                syncStateFromServer(true);
+            });
+            socket.on('menu_update', () => {
+                lastStateJson = '';
                 syncStateFromServer(true);
             });
             socket.on('requisition_update', () => {
